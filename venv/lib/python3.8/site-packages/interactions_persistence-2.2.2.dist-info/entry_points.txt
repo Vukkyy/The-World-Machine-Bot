@@ -1,0 +1,2 @@
+[console_scripts]
+persistence-generate-key = interactions.ext.persistence:keygen
