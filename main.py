@@ -665,25 +665,50 @@ async def action(ctx : interactions.CommandContext, user : str, choices : str):
 
     
     if (user.id == bot.me.id):
-        embed = interactions.Embed(
-            title = f'A {title_} back!',
-            description = f'<@{user.id}> {verb} <@{ctx.author.user.id}> back.'
-        )
+
+        button_ctx = ctx
+        
+        if (choices == 'murder'):
+            embed = interactions.Embed(
+                title = f'lol',
+                description = f'<@{user.id}> could not murder <@{ctx.author.user.id}> back. For they are very much deceased.' 
+            )
+
+            await msg.edit(components = [])
+        
+            await button_ctx.send(embeds=embed)
+        else:
     
-        await msg.edit(components = [])
-    
-        await ctx.send(embeds=embed)
+            embed = interactions.Embed(
+                title = f'A {title_} back!',
+                description = f'<@{user.id}> {verb} <@{ctx.author.user.id}> back.'
+            )
+        
+            await msg.edit(components = [])
+        
+            await button_ctx.send(embeds=embed)
     else:
         button_ctx = await wait_for_component(bot, components=button, check=check)
+        
+        if (choices == 'murder'):
+            embed = interactions.Embed(
+                title = f'lol',
+                description = f'<@{user.id}> could not murder <@{ctx.author.user.id}> back. For they are very much deceased.' 
+            )
 
-        embed = interactions.Embed(
-            title = f'A {title_} back!',
-            description = f'<@{user.id}> {verb} <@{ctx.author.user.id}> back.'
-        )
+            await msg.edit(components = [])
+        
+            await button_ctx.send(embeds=embed)
+        else:
     
-        await msg.edit(components = [])
-    
-        await button_ctx.send(embeds=embed)
+            embed = interactions.Embed(
+                title = f'A {title_} back!',
+                description = f'<@{user.id}> {verb} <@{ctx.author.user.id}> back.'
+            )
+        
+            await msg.edit(components = [])
+        
+            await button_ctx.send(embeds=embed)
 
 async def GetTitles(choice):
     if (choice == 'hugg'):
