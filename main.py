@@ -12,7 +12,6 @@ from replit import db
 # Other Scripts
 import custom_source
 import dialogue_generator
-import ask_responses
 import profile_icons as icons
 import generate_text
 
@@ -792,12 +791,12 @@ async def letter(ctx : interactions.CommandContext, user : interactions.Member, 
         await user.send(embeds=embed)
         await ctx.send('Letter sent successfully!', ephemeral=True)
     elif (not user.id in lllist):
-        await ctx.send('This user has not opted in for recieving letters. Ask the other person to use /recieve_letters to recieve letters.', ephemeral=True)
+        await ctx.send('This user has not opted in for recieving letters. Ask the other person to use /toggle_letters to recieve letters.', ephemeral=True)
     else:
-        await ctx.send('In order to send letters, you need to opt in. Use /recieve_letters to recieve and send letters.', ephemeral=True)
+        await ctx.send('In order to send letters, you need to opt in. Use /toggle_letters to recieve and send letters.', ephemeral=True)
 
 @bot.command(
-    name = 'recieve_letters',
+    name = 'toggle_letters',
     description = 'Allows you to recieve letters from anyone.',
 )
 async def allow(ctx : interactions.CommandContext):
@@ -816,9 +815,9 @@ async def allow(ctx : interactions.CommandContext):
 
         db['loveletters']  = result
 
-        await ctx.send('You have opted out from recieving letters. If you wish to recieve letters again, run this command again', ephemeral=True)
+        await ctx.send('You have opted out from recieving (and sending!) letters. If you wish to recieve or send letters again, run this command again', ephemeral=True)
     else:
-        await ctx.send('Are you sure you want to recieve letters?', components=button, ephemeral=True)
+        await ctx.send('Are you sure you want to recieve (and send) letters?', components=button, ephemeral=True)
 
         button_ctx = await wait_for_component(bot, components = button)
     
