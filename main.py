@@ -196,7 +196,7 @@ async def text_gen(ctx: interactions.CommandContext, text: str):
     ])
         
 async def music(ctx: interactions.CommandContext, sub_command: str, search: str = "", fromindex: int = 0):
-    if (ctx.author.voice == None):
+    if (not ctx.author.voice.joined):
         await ctx.send("Sorry! You need to be in a voice channel to use this command.", ephemeral = True)
         return
 
@@ -279,10 +279,13 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
         
         await ctx.send(embeds=embed)
         return
-    
 
     async def check(ctx):
-        return True
+        if (not ctx.author.voice.joined):
+            await ctx.send('Sorry! But you need to be in the voice call in order to use these buttons!', ephemeral=True)
+            return False
+        else:
+            return True
         
     while True:
         print('waiting')
