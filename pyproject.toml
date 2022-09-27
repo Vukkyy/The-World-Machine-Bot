@@ -24,6 +24,10 @@ tqdm = "^4.64.1"
 interactions-wait-for = "^1.0.6"
 interactions-tasks = "^1.0.0"
 interactions-persistence = "^2.2.2"
+"youtube.py" = "^2.1.0"
+pytube = "^12.1.0"
+openai = "^0.23.0"
+aiofiles = "^22.1.0"
 
 [tool.poetry.dev-dependencies]
 debugpy = "^1.6.2"

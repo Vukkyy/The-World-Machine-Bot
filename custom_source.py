@@ -1,5 +1,5 @@
 import spotipy
-from youtube import Playlist
+from pytube import Playlist
 from spotipy.oauth2 import SpotifyClientCredentials
 from os import environ
 
@@ -18,5 +18,6 @@ async def SearchSpotify(url : str):
     print (final)
     return final
 
+# Uses the youtube library to get all songs from a playlist.
 async def GetPlaylist(url : str):
-    p = PlayList(url, process=True)
+    return Playlist(url)
