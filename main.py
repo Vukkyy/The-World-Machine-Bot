@@ -788,11 +788,13 @@ async def letter(ctx : interactions.CommandContext, user : interactions.Member, 
         thumbnail = interactions.EmbedImageStruct(url = 'https://www.freepnglogos.com/uploads/letter-png/letter-png-transparent-letter-images-pluspng-17.png')
     )
 
-    if (user.id in lllist):
+    if (user.id in lllist and ctx.author.id in lllist):
         await user.send(embeds=embed)
         await ctx.send('Letter sent successfully!', ephemeral=True)
+    elif (not user.id in lllist):
+        await ctx.send('This user has not opted in for recieving letters. Ask the other person to use /recieve_letters to recieve letters.', ephemeral=True)
     else:
-        await ctx.send('This user has not opted in for recieving letters. Use /recieve_letters to recieve letters.', ephemeral=True)
+        await ctx.send('In order to send letters, you need to opt in. Use /recieve_letters to recieve and send letters.', ephemeral=True)
 
 @bot.command(
     name = 'recieve_letters',
