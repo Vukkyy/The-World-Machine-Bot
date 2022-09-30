@@ -2,29 +2,32 @@ import interactions
 import os
 import random
 import lavalink
-import datetime
 import uuid
-import re
 import aiohttp        
 import aiofiles
 from replit import db
+import json
 
 # Other Scripts
 import custom_source
 import dialogue_generator
 import profile_icons as icons
 import generate_text
+import music_utilities as music
+import stamp_system as stamps
 
 # Extension Libraries
 from interactions.ext.wait_for import wait_for_component, setup, wait_for
 from interactions.ext.lavalink import VoiceClient
 from interactions.ext.files import command_send
+from interactions.ext.enhanced import cooldown
 
 TOKEN = os.environ['BOT-TOKEN']
 
 try:
     bot = VoiceClient(token=TOKEN)
 except:
+    print('Restarting.')
     os.system('kill 1') # Prevents the bot from continously getting stuck on the same server.
     
 bot.load('interactions.ext.files')
@@ -46,7 +49,7 @@ async def on_start():
         region = "eu"
     ) # Woah, neat! Free Lavalink!
     
-    bot.lavalink_client.add_event_hook(track_hook)
+    bot.lavalink_client.add_event_hook(music.track_hook)
 
     await bot.change_presence(
         interactions.ClientPresence(
@@ -58,6 +61,8 @@ async def on_start():
             ]))
 
     await change_picture()
+
+    music.bot = bot
     
     print(f"{bot.me.name} is ready!")
 
@@ -162,7 +167,7 @@ async def text_gen(ctx: interactions.CommandContext, text: str):
                 await f.write(await resp.read())
                 await f.close()
 
-    msg = await text_ctx.send("``Generating Image...``")
+    msg = await text_ctx.send("Generating Image... <a:nikooneshot:1024961281628848169>")
     await dialogue_generator.test(text)
     await msg.delete()
     file = interactions.File(filename="Images/pil_text.png")
@@ -193,9 +198,8 @@ async def text_gen(ctx: interactions.CommandContext, text: str):
             description = "See what is playing now.",
             type = interactions.OptionType.SUB_COMMAND
         )
-    ])
-        
-async def music(ctx: interactions.CommandContext, sub_command: str, search: str = "", fromindex: int = 0):
+    ])   
+async def music_(ctx: interactions.CommandContext, sub_command: str, search: str = "", fromindex: int = 0):
     if (not ctx.author.voice.joined):
         await ctx.send("Sorry! You need to be in a voice channel to use this command.", ephemeral = True)
         return
@@ -258,298 +262,10 @@ async def music(ctx: interactions.CommandContext, sub_command: str, search: str 
     elif (sub_command == "get_player"):
         player = await bot.connect(ctx.guild_id, ctx.channel_id)
 
-        await ShowPlayer(ctx, player, True)
+        await music.ShowPlayer(ctx, player, True)
 
 # --------------------------------------------------------------------
-
-async def ShowPlayer(ctx, player, show_timeline : bool):
-    message = ""
     
-    if (player.is_playing):
-        embed = await GenerateEmbed(player.current.identifier, player, show_timeline)
-        msg = await ctx.send('`Loading Player`')
-        buttons = await GetButtons(msg.id)
-        msg = await msg.edit('', embeds=embed, components=buttons)
-    else:
-        embed = interactions.Embed(
-                title = "Not Currently Playing Anything",
-                thumbnail = interactions.EmbedImageStruct( url = "https://shortcut-test2.s3.amazonaws.com/uploads/role/attachment/346765/default_Enlarged_sunicon.png"),
-                description = "Use /play music to add music."
-            )
-        
-        await ctx.send(embeds=embed)
-        return
-
-    async def check(ctx):
-        if (not ctx.author.voice.joined):
-            await ctx.send('Sorry! But you need to be in the voice call in order to use these buttons!', ephemeral=True)
-            return False
-        else:
-            return True
-        
-    while True:
-        print('waiting')
-        button_ctx = await wait_for_component(bot, components=buttons, check=check)
-        
-        data = button_ctx.data.custom_id
-
-        print(data)
-    
-        if (data == f"play {msg.id}"):
-            is_paused = player.fetch("is_paused")
-            
-            if not (is_paused):
-                await player.set_pause(True)
-                player.store("is_paused", True)
-                message = "`Paused the current track playing.`"
-            elif (is_paused):
-                await player.set_pause(False)
-                player.store("is_paused", False)
-                message = "`Resumed the current track playing.`"
-        elif (data == f"skip {msg.id}"):
-            await button_ctx.send("`Skipped this track!`")
-            await player.skip()
-        elif (data == f"queue {msg.id}"):
-            if (len(player.queue) > 0):
-                await button_ctx.edit(components=[])
-                id = uuid.uuid4()
-                
-                options = []
-                i = 0
-
-                for song in player.queue:
-                    if (i < 10):
-                        options.append(
-                            interactions.SelectOption(
-                                label = f'{i + 1}. {song.title}',
-                                value = i
-                            )
-                        )
-
-                    i += 1
-
-                select = interactions.SelectMenu(
-                    options=options,
-                    placeholder= 'What Song?',
-                    custom_id="woo",
-                )
-                
-                queue = await GenerateQueue(button_ctx, 0, player)
-
-                control_buttons = [
-                    interactions.Button(
-                        label= "Prev. Page",
-                        style = interactions.ButtonStyle.PRIMARY,
-                        custom_id = f"b {str(id)}",
-                        disabled = True,
-                    ),
-                    interactions.Button(
-                        label="Next Page",
-                        style = interactions.ButtonStyle.PRIMARY,
-                        custom_id = f"n {str(id)}",
-                        disabled = True,
-                    ),
-                ]
-
-                button_ = [
-                    interactions.Button(
-                        label="Shuffle",
-                        style = interactions.ButtonStyle.PRIMARY,
-                        custom_id = f"shuffle {str(id)}"
-                    ),
-                    interactions.Button(
-                        label="Remove Song",
-                        style = interactions.ButtonStyle.DANGER,
-                        custom_id = f"remove {str(id)}"
-                    ),
-                    interactions.Button(
-                        label="Jump To...",
-                        style = interactions.ButtonStyle.SUCCESS,
-                        custom_id = f'jump {str(id)}'
-                    ),
-                ]
-
-                row1 = interactions.ActionRow(components=button_)
-                row2 = interactions.ActionRow(components=control_buttons)
-    
-                msg = await button_ctx.send(embeds = queue, components=[row1, row2])
-
-                async def checkers(ctx):
-                    return True
-    
-                while True:
-                    shuffle_ctx = await wait_for_component(bot, components = [row1, row2], check=checkers)
-
-                    if (shuffle_ctx.data.custom_id == f'shuffle {str(id)}'):
-                        random.shuffle(player.queue)
-                    
-                        queue = await GenerateQueue(button_ctx, 0, player)
-                        await shuffle_ctx.edit('`Shuffled Queue.`', embeds = queue, components=button_)
-                    if (shuffle_ctx.data.custom_id == f'remove {str(id)}'):
-                        await shuffle_ctx.send(components=select, ephemeral = True)
-
-                        contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
-
-                        song_ = player.queue.pop(int(contexto.data.values[0]))
-                        
-                        await contexto.channel.send(f'<@{contexto.author.id}> Removed {song_.title} from the queue.')
-
-                        queue = await GenerateQueue(button_ctx, 0, player)
-                        await shuffle_ctx.edit('`Deleted Song.`', embeds = queue, components=button_)
-                    if (shuffle_ctx.data.custom_id == f'jump {str(id)}'):
-                        await shuffle_ctx.send(components=select, ephemeral = True)
-
-                        contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
-
-                        song_ = player.queue[int(contexto.data.values[0])]
-
-                        await contexto.channel.send(f'<@{contexto.author.id}> Jumped to {song_.title}.')
-
-                        del player.queue[0 : int(contexto.data.values[0])]
-                        
-                        await player.play(song_)
-            else:
-                message = "`Queue is currently empty :(`"
-        elif (data == f"stop {msg.id}"):
-            await bot.disconnect(ctx.guild_id)
-            await button_ctx.send("Stopped playback :(")
-        elif (data == f"loop {msg.id}"):
-            if not (player.repeat):
-                player.set_repeat(True)
-                message = "`Looping Queue!`"
-            else:
-                player.set_repeat(False)
-                message = "`Loop Stopped!`"
-                
-        funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-        await button_ctx.edit(message, embeds = funny_embed)
-        
-async def track_hook(event):
-    if isinstance(event, lavalink.events.TrackStartEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ShowPlayer(ctx, event.player, False)
-    elif isinstance(event, lavalink.events.QueueEndEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ctx.channel.send("`End of queue! Add more music or audio using /music play.`")
-    elif isinstance(event, lavalink.events.TrackExceptionEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ctx.send("An error occurred when attempting to play the track. Try Skipping the track and replaying it later.")
-        await ctx.send(f"`{event.exception}`")
-    elif isinstance(event, lavalink.events.TrackStuckEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ctx.send("Whoops track is stuck that kind of sucks")
-
-async def GenerateQueue(button_ctx, page_number, player):
-    full_queue = player.queue
-    list_ = ""
-
-    items_pi = 10
-
-    starting_index = (items_pi * (page_number + 1)) - items_pi
-    queue = full_queue[starting_index : starting_index + items_pi] # From 0 to 20
-
-
-    try:
-        for song in queue:
-            time = datetime.datetime.fromtimestamp(song.duration / 1000).strftime('%M:%S')
-            list_ = f"{list_}**{queue.index(song) + 1}.** `{song.title}` *({time})*\n"
-    except:
-        pass
-    
-    if (len(list_) > 0):
-        return interactions.Embed(
-        title = "Music Queue",
-        description = f"\n**Currently Playing:** `{player.current.title}`\n\n",
-        thumbnail = interactions.EmbedImageStruct( url = "https://shortcut-test2.s3.amazonaws.com/uploads/role/attachment/346765/default_Enlarged_sunicon.png" ),
-        fields = [
-            interactions.EmbedField(
-                name = "Song List",
-                value = list_,
-                inline = True
-                )
-            ]
-        )
-
-async def GenerateEmbed(id : str, player, show_timeline):
-    if (player.is_playing):
-        current_length = player.position / 1000
-        song_length = player.current.duration / 1000
-    
-        l_length = list("█░░░░░░░░░░░░░░░░░░░░")
-        
-        calc_length = round((current_length / song_length) * len(l_length))
-    
-        i = 0
-    
-        new_c_length = datetime.datetime.fromtimestamp(current_length).strftime('%M:%S')
-        new_length = datetime.datetime.fromtimestamp(song_length).strftime('%M:%S')
-        
-        for char in l_length:
-            if (i < calc_length):
-                l_length[i] = "█"
-            i += 1
-        
-        length = "".join(l_length)
-    
-        if (show_timeline):
-            return interactions.Embed(
-                title = f"**Now Playing:** [{player.current.title}]",
-                thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
-                description = f"{length} \n\n *{new_c_length} / {new_length}*",
-                footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
-                url = player.current.uri
-            )
-        else:
-            return interactions.Embed(
-                title = f"**Now Playing:** [{player.current.title}]",
-                thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
-                description = f"█░░░░░░░░░░░░░░░░░░░░\n\n *00:00 / {new_length}*",
-                footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
-                url = player.current.uri
-            )
-
-async def GetButtons(guild_id):
-    play_emoji = interactions.Emoji(name="playorpause", id=1019286927888883802)
-    stop_emoji = interactions.Emoji(name="stopmusic", id=1019286931504386168)
-    queue_emoji = interactions.Emoji(name="openqueue", id = 1019286929059086418)
-    loop_song_emoji = interactions.Emoji(name="loopsong", id=1019286926404091914)
-    skip_emoji = interactions.Emoji(name="skipmusic", id=1019286930296410133)
-
-    print(guild_id)
-    
-    return [
-        # Queue Button
-        interactions.Button(
-            style=interactions.ButtonStyle.DANGER,
-            emoji = queue_emoji,
-            custom_id = f"queue {guild_id}",
-        ),
-        # Loop Button
-        interactions.Button(
-            style=interactions.ButtonStyle.DANGER,
-            custom_id = f"loop {guild_id}",
-            emoji = loop_song_emoji
-        ),
-
-        # Play Button
-        interactions.Button(
-            style=interactions.ButtonStyle.DANGER,
-            custom_id = f"play {guild_id}",
-            emoji = play_emoji
-        ),
-        # Skip Button
-        interactions.Button(
-            style=interactions.ButtonStyle.DANGER,
-            custom_id = f"skip {guild_id}",
-            emoji = skip_emoji
-        ),
-        # Stop Button
-        interactions.Button(
-            style=interactions.ButtonStyle.DANGER,
-            custom_id = f"stop {guild_id}",
-            emoji = stop_emoji
-        ),
-    ]
 
 @bot.command(
     name = "purge",
@@ -626,6 +342,26 @@ async def testing_lol(ctx : interactions.CommandContext, amount : int):
 )
 async def action(ctx : interactions.CommandContext, user : str, choices : str):
 
+    if (choices == 'user_command'):
+        choice = GetChoices()
+
+        id = uuid.uuid4()
+
+        select = interactions.SelectMenu(
+            type = interactions.ComponentType.SELECT,
+            options = choice,
+            placeholder = "Select an Action!",
+            custom_id = str(id)
+        )
+
+        await ctx.send(f'What action do you want to do towards {user.name}?', components = select, ephemeral = True)
+
+        contexto : interactions.ComponentContext = await wait_for_component(bot, components = select)
+
+        ctx = contexto
+        
+        choices = contexto.data.values[0]
+    
     verb = f'{choices}ed'
 
     title_ = await GetTitles(choices)
@@ -637,7 +373,7 @@ async def action(ctx : interactions.CommandContext, user : str, choices : str):
         else:
             embed = interactions.Embed(
                 title = f'{title_}!',
-                description = f'<@{ctx.author.user.id}> {verb} themself.'
+                description = f'<@{ctx.author.user.id}> {verb} themselves.'
             )   
     else:
         embed = interactions.Embed(
@@ -664,7 +400,8 @@ async def action(ctx : interactions.CommandContext, user : str, choices : str):
             return False
 
     
-    if (user.id == bot.me.id):
+    
+    if (user.id == bot.me.id or user.user.bot):
 
         button_ctx = ctx
         
@@ -710,6 +447,44 @@ async def action(ctx : interactions.CommandContext, user : str, choices : str):
         
             await button_ctx.send(embeds=embed)
 
+def GetChoices():
+    return [
+            interactions.SelectOption(
+                label = "Hug",
+                value = 'hugg'
+            ),
+
+            interactions.SelectOption(
+                label = "Kiss",
+                value = 'kiss'
+            ),
+
+            interactions.SelectOption(
+                label = "Cuddle",
+                value = 'cuddl'
+            ),
+
+            interactions.SelectOption(
+                label = "Pet",
+                value = 'pett'
+            ),
+
+            interactions.SelectOption(
+                label = "Punch",
+                value = 'punch'
+            ),
+
+            interactions.SelectOption(
+                label = "Slap",
+                value = 'slapp'
+            ),
+
+            interactions.SelectOption(
+                label = "Kill",
+                value = "murder"
+            ),
+        ]
+
 async def GetTitles(choice):
     if (choice == 'hugg'):
         return 'Hug'
@@ -738,13 +513,13 @@ async def gen_text(ctx : interactions.CommandContext):
 
 @bot.modal('funny modal')
 async def on_modal(ctx, prompt : str):
-    msg = await ctx.send('`Generating text...`')
+    msg = await ctx.send('Generating text... <a:nikooneshot:1024961281628848169>')
     
     result = await generate_text.GenerateText(prompt)
 
     embed = interactions.Embed(
         title = 'Result',
-        description = prompt + result
+        description = prompt + result[0]
     )
 
     await msg.edit('', embeds=embed)
@@ -805,6 +580,8 @@ async def wow_beautiful(ctx : interactions.CommandContext, user : interactions.M
     ]
 )
 async def letter(ctx : interactions.CommandContext, user : interactions.Member, message : str):
+
+    print(user.id)
     
     lllist = db['loveletters'].split('\n')
 
@@ -817,6 +594,7 @@ async def letter(ctx : interactions.CommandContext, user : interactions.Member, 
 
     if (user.id in lllist and ctx.author.id in lllist):
         await user.send(embeds=embed)
+        print('sending letter')
         await ctx.send('Letter sent successfully!', ephemeral=True)
     elif (not user.id in lllist):
         await ctx.send('This user has not opted in for recieving letters. Ask the other person to use /toggle_letters to recieve letters.', ephemeral=True)
@@ -851,5 +629,227 @@ async def allow(ctx : interactions.CommandContext):
     
         db['loveletters'] = db['loveletters'] + f'\n{str(ctx.author.id)}'
         await button_ctx.send('You will now recieve letters. To opt out of this, run this command again.', ephemeral=True)
+
+@bot.user_command(name="Send Letter")
+async def send_letter(ctx : interactions.CommandContext):
+    modal_ = interactions.Modal(
+        custom_id = 'Mooodal',
+        title = 'Send a letter!',
+        components = [
+            interactions.TextInput(
+                style = interactions.TextStyleType.SHORT,
+                label = "Send your Letter!",
+                custom_id = 'djhsfdjkhhsdfkjh'
+            )
+        ]
+    )
+
+    async def check(ctx):
+        return True;
+        
+    await ctx.popup(modal_)
+
+    modal_ctx : interactions.CommandContext = await wait_for(bot = bot, name = 'on_modal', check=check)
+
+    letter_ = []
+
+    print('lolcat')
+
+    if modal_ctx.data.components:
+        for component in modal_ctx.data.components:
+            if component.components:
+                letter_.append([_value.value for _value in component.components][0]) # Messy solution, but it should work so who cares!
+
+    ctx.target._client = bot._http # Needs HTTP Client to be set for some reason
+    
+    await letter(modal_ctx, ctx.target, letter_[0])
+
+
+@bot.user_command(name="Action")
+async def action_command_hug(ctx : interactions.CommandContext):
+    await action(ctx, ctx.target, 'user_command')
+
+async def stop_killing_people(ctx, amount):
+    await ctx.send('Please refrain from murdering entire worlds for 1 minute please!!!', ephemeral = True)
+
+@bot.command(
+    name = 'explode',
+    description = 'what'
+)
+@cooldown(minutes=1, type='user', error = stop_killing_people)
+async def explosion(ctx):
+
+    if(random.randint(0, 1000) > 950 or ctx.guild.id == 850069038804631572):
+        embed = interactions.Embed(
+            title = '???',
+            image = interactions.EmbedImageStruct(url = 'https://i.ibb.co/bKG17c2/image.png'),
+            footer = interactions.EmbedFooter(
+                text = 'You killed Niko.'
+            )
+        )
+
+        await ctx.send(embeds=embed)
+        return
+
+    db['sun'] = str(int(db['sun']) + 1)
+
+    sun = db['sun']
+
+    img = icons.lightbulbs[random.randint(0, len(icons.lightbulbs) - 1)]
+    
+    embed = interactions.Embed(
+        title = 'oh no you have doomed us ALL',
+        image = interactions.EmbedImageStruct(url = img),
+        footer = interactions.EmbedFooter(
+            text = f'The Sun has been shattered {sun} times!'
+        )
+    )
+
+    if (db['sun'] == '69'):
+        embed = interactions.Embed(
+            title = 'Nice.',
+            image = interactions.EmbedImageStruct(url = img),
+            footer = interactions.EmbedFooter(
+                text = f'The Sun has been shattered {sun} times!'
+            )
+        )
+
+    if (db['sun'] == '100'):
+        embed = interactions.Embed(
+            title = 'A little too much.',
+            image = interactions.EmbedImageStruct(url = img),
+            footer = interactions.EmbedFooter(
+                text = f'The Sun has been shattered {sun} times!'
+            )
+        )
+
+    if (db['sun'] == '420'):
+        embed = interactions.Embed(
+            title = 'Nice. x2',
+            image = interactions.EmbedImageStruct(url = img),
+            footer = interactions.EmbedFooter(
+                text = f'The Sun has been shattered {sun} times!'
+            )
+        )
+
+    if (db['sun'] == '1000'):
+        embed = interactions.Embed(
+            title = 'Definitely too much.',
+            image = interactions.EmbedImageStruct(url = 'https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2018/07/broken-light-bulb.jpg'),
+            footer = interactions.EmbedFooter(
+                text = f'The Sun has been shattered {sun} times!'
+            )
+        )
+
+    if (db['sun'] == '69420'):
+        embed = interactions.Embed(
+            title = 'Nice. x3',
+            image = interactions.EmbedImageStruct(url = 'https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2018/07/broken-light-bulb.jpg'),
+            footer = interactions.EmbedFooter(
+                text = f'The Sun has been shattered {sun} times!'
+            )
+        )
+
+    await ctx.send(embeds=embed)
+
+@bot.command(
+    name = 'generate-battle',
+    description = 'Generate a battle using GPT-3 from OpenAI.',
+    options = [
+        interactions.Option(
+            name = 'fighter_one',
+            description = 'The first Fighter.',
+            type = interactions.OptionType.STRING,
+            required = True
+        ),
+
+        interactions.Option(
+            name = 'fighter_one_weapon',
+            description = 'The first Fighter\'s weapon or tool.',
+            type = interactions.OptionType.STRING,
+            required = True
+        ),
+
+        interactions.Option(
+            name = 'fighter_two',
+            description = 'The second Fighter.',
+            type = interactions.OptionType.STRING,
+            required = True
+        ),
+
+        interactions.Option(
+            name = 'fighter_two_weapon',
+            description = 'The second Fighter\'s weapon or tool.',
+            type = interactions.OptionType.STRING,
+            required = True
+        )
+    ]
+)
+async def fight(ctx : interactions.CommandContext, fighter_one, fighter_one_weapon, fighter_two, fighter_two_weapon):
+    msg = await ctx.send('Generating text... <a:nikooneshot:1024961281628848169>')
+    
+    battle = await generate_text.GenerateBattle(fighter_one, fighter_one_weapon, fighter_two, fighter_two_weapon)
+
+    print(len(battle))
+
+    if (len(battle) < 2):
+        embed = interactions.Embed(
+            title = 'Result',
+            description = battle[0]
+        )
+
+        await msg.edit('',embeds=embed)
+    else:
+        for btl in battle:
+            embed = interactions.Embed(
+                title = 'Result',
+                description = btl
+            )
+
+        await msg.send('',embeds=embed)
+
+@bot.event
+async def on_message_create(message: interactions.Message):
+    blacklist = ['lol']  #db['achievementblacklist'].split('\n')
+
+    if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing lol
+        return
+    
+    if (message.guild_id == 1017479547664482444):
+        db = ''
+        
+        with open('user_database.txt', 'r') as f:
+            db = f.read()
+        
+        database = db.split('\n')
+
+        print(database)
+
+        id = message.member.id
+
+        for data_ in database:
+
+            print('data', data_)
+            try:
+                data_ = json.loads(data_)
+                if (data_['user_id'] == id):
+                    data_['times_messaged'] = data_['times_messaged'] + 1
+                    return
+            except:
+                pass
+                
+            database.append(json.dumps({
+                'user_id' : id,
+                'times_messaged' : 1,
+                'suns_shattered' : 0,
+                'times_asked' : 0,
+                'letters_sent' : 0
+            }) + '\n')
+            
+        for data_ in database:
+            with open('user_database.txt', 'rw') as f:
+                f.write(f.read() + f'{data_}\n')
+
+        print('message has been sent')
 
 bot.start()

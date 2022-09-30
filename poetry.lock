@@ -156,6 +156,18 @@ lint = ["black", "flake8", "isort", "pre-commit"]
 readthedocs = ["enum-tools", "furo", "sphinx", "sphinx-copybutton", "sphinx-hoverxref"]
 
 [[package]]
+name = "enhanced"
+version = "4.0.0"
+description = "Enhanced interactions for interactions.py"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+discord-py-interactions = ">=4.3.0"
+typing-extensions = "*"
+
+[[package]]
 name = "et-xmlfile"
 version = "1.1.0"
 description = "An implementation of lxml.xmlfile for the standard library"
@@ -243,6 +255,17 @@ python-versions = "*"
 
 [package.dependencies]
 discord-py-interactions = ">=4.3.1"
+
+[[package]]
+name = "interactions-files"
+version = "1.1.4"
+description = "An extension library for interactions.py allowing files in interaction responses."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+discord-py-interactions = ">=4.3.0"
 
 [[package]]
 name = "interactions-lavalink"
@@ -936,7 +959,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8.6,<3.9"
-content-hash = "41ab49e70459b833853f66db1cf28b36514c429d52f7050313232b1cfaa2dc2d"
+content-hash = "d071b0afc8ffcc2fc405097a85999cf8d802692b853f06a5bef81793806f870f"
 
 [metadata.files]
 aiofiles = []
@@ -953,6 +976,7 @@ colorama = []
 debugpy = []
 deprecated = []
 discord-py-interactions = []
+enhanced = []
 et-xmlfile = []
 ff3 = []
 flask = []
@@ -961,6 +985,7 @@ h11 = []
 idna = []
 importlib-metadata = []
 interactions-autosharder = []
+interactions-files = []
 interactions-lavalink = []
 interactions-persistence = []
 interactions-tasks = []
