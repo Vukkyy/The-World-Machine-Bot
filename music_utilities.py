@@ -76,7 +76,7 @@ async def GenerateEmbed(id : str, player, show_timeline):
             return interactions.Embed(
                 title = f"**Now Playing:** [{player.current.title}]",
                 thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
-                description = f"{length} \n\n *{new_c_length} / {new_length}*",
+                description = f"{length} <a:nikoarcfromavolicis:1026091049782882304> \n\n *{new_c_length} / {new_length}*",
                 footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
                 url = player.current.uri
             )
@@ -84,7 +84,7 @@ async def GenerateEmbed(id : str, player, show_timeline):
             return interactions.Embed(
                 title = f"**Now Playing:** [{player.current.title}]",
                 thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
-                description = f"█░░░░░░░░░░░░░░░░░░░░\n\n *00:00 / {new_length}*",
+                description = f"█░░░░░░░░░░░░░░░░░░░░ <a:nikoarcfromavolicis:1026091049782882304> \n\n *00:00 / {new_length}*",
                 footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
                 url = player.current.uri
             )

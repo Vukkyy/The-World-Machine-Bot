@@ -15,6 +15,7 @@ import profile_icons as icons
 import generate_text
 import music_utilities as music
 import stamp_system as stamps
+import stamp_list
 
 # Extension Libraries
 from interactions.ext.wait_for import wait_for_component, setup, wait_for
@@ -39,6 +40,8 @@ responses = []
 @bot.event()
 async def on_start():
     global responses
+
+    stamps.setup(bot)
 
     random.shuffle(responses)
 
@@ -407,7 +410,7 @@ async def action(ctx : interactions.CommandContext, user : str, choices : str):
         
         if (choices == 'murder'):
             embed = interactions.Embed(
-                title = f'lol',
+                title = f'Whoops.',
                 description = f'<@{user.id}> could not murder <@{ctx.author.user.id}> back. For they are very much deceased.' 
             )
 
@@ -514,12 +517,16 @@ async def gen_text(ctx : interactions.CommandContext):
 @bot.modal('funny modal')
 async def on_modal(ctx, prompt : str):
     msg = await ctx.send('Generating text... <a:nikooneshot:1024961281628848169>')
+
+    await stamps.IncrementValue(ctx, 'times_asked', int(ctx.author.id))
     
     result = await generate_text.GenerateText(prompt)
 
+    newline = '\n'
+
     embed = interactions.Embed(
         title = 'Result',
-        description = prompt + result[0]
+        description = f'**{prompt}**' + f'\n\n[ {result[0].strip(newline)} ]'
     )
 
     await msg.edit('', embeds=embed)
@@ -589,10 +596,15 @@ async def letter(ctx : interactions.CommandContext, user : interactions.Member, 
         title = 'You got a letter!',
         description = f'{message}\n\nFrom: **{ctx.author.user.username}**\nIn: **{ctx.guild.name}**',
         footer = interactions.EmbedFooter(text= f'If you wish to send a letter, do /send_letter!'),
-        thumbnail = interactions.EmbedImageStruct(url = 'https://www.freepnglogos.com/uploads/letter-png/letter-png-transparent-letter-images-pluspng-17.png')
+        thumbnail = interactions.EmbedImageStruct(url = await stamps.GetCurrentBadge(int(ctx.author.id), False, 'none'), width= 32, height = 32)
     )
 
     if (user.id in lllist and ctx.author.id in lllist):
+        await stamps.IncrementValue(ctx, 'letters_sent', int(ctx.author.id))
+
+        if (ctx.author.id == 302883948424462346):
+            await stamps.IncrementValue(ctx, 'owner_letter', int(user.id))
+        
         await user.send(embeds=embed)
         print('sending letter')
         await ctx.send('Letter sent successfully!', ephemeral=True)
@@ -679,7 +691,9 @@ async def stop_killing_people(ctx, amount):
 @cooldown(minutes=1, type='user', error = stop_killing_people)
 async def explosion(ctx):
 
-    if(random.randint(0, 1000) > 950 or ctx.guild.id == 850069038804631572):
+    await stamps.IncrementValue(ctx, 'suns_shattered', int(ctx.author.id))
+
+    if(random.randint(0, 1000) > 990 or ctx.guild.id == 850069038804631572):
         embed = interactions.Embed(
             title = '???',
             image = interactions.EmbedImageStruct(url = 'https://i.ibb.co/bKG17c2/image.png'),
@@ -812,44 +826,34 @@ async def fight(ctx : interactions.CommandContext, fighter_one, fighter_one_weap
 async def on_message_create(message: interactions.Message):
     blacklist = ['lol']  #db['achievementblacklist'].split('\n')
 
-    if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing lol
+    if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing.
         return
+
+    print('increment')
+    await stamps.IncrementValue(message, "times_messaged", int(message.author.id)) # Increment the times messaged by 1.
+
+@bot.command(
+    name = 'select_stamp',
+    description = 'Select a stamp to put on your letters.'
+)
+async def djhsdf(ctx):
+    stamps_ = await stamp_list.OpenStampMenu(int(ctx.author.id))
+
+    select = interactions.SelectMenu(
+        options = stamps_,
+        placeholder = 'Default Stamp',
+        custom_id = 'selectmenuuusfkhjfsdkhjfsdhj'
+    )
+
+    await ctx.send('Select a badge you have unlocked.', components = select, ephemeral = True)
+
+    async def check(ctx):
+        return True
     
-    if (message.guild_id == 1017479547664482444):
-        db = ''
-        
-        with open('user_database.txt', 'r') as f:
-            db = f.read()
-        
-        database = db.split('\n')
+    select_ctx = await wait_for_component(bot=bot, components=select, check=check)
 
-        print(database)
+    await stamps.GetCurrentBadge(int(ctx.author.id), True, select_ctx.data.values[0])
 
-        id = message.member.id
-
-        for data_ in database:
-
-            print('data', data_)
-            try:
-                data_ = json.loads(data_)
-                if (data_['user_id'] == id):
-                    data_['times_messaged'] = data_['times_messaged'] + 1
-                    return
-            except:
-                pass
-                
-            database.append(json.dumps({
-                'user_id' : id,
-                'times_messaged' : 1,
-                'suns_shattered' : 0,
-                'times_asked' : 0,
-                'letters_sent' : 0
-            }) + '\n')
-            
-        for data_ in database:
-            with open('user_database.txt', 'rw') as f:
-                f.write(f.read() + f'{data_}\n')
-
-        print('message has been sent')
+    await select_ctx.send(f'Stamp change successful!', ephemeral = True)
 
 bot.start()

@@ -14,6 +14,3 @@ db['achievements'] = json.dumps({
 }) + '\n'
 
 db['achievementblacklist'] = '3458734059834'
-
-with open('loveletter.txt', 'w') as f:
-    f.write(db['achievements'])
