@@ -123,6 +123,7 @@ async def GenerateQueue(button_ctx, page_number, player):
 async def track_hook(event):
     if isinstance(event, lavalink.events.TrackStartEvent):
         ctx = event.player.fetch(f'channel {event.player.guild_id}')
+        await ReconnectPlayer()
         await ShowPlayer(ctx, event.player, False)
     elif isinstance(event, lavalink.events.QueueEndEvent):
         ctx = event.player.fetch(f'channel {event.player.guild_id}')
@@ -306,8 +307,17 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
             await button_ctx.edit(message, embeds = funny_embed)
         except:
             if (not player.current == song_):
+                print('song ended')
                 await button_ctx.edit('`Song Ended.`', embeds=[], components =[])
                 return
             
             funny_embed = await GenerateEmbed(player.current.identifier, player, True)
             await button_ctx.edit(message, embeds = funny_embed)
+
+async def ReconnectPlayer():
+    bot.lavalink_client.add_node(
+        host = '51.161.130.134',
+        port = 10333,
+        password = 'youshallnotpass',
+        region = "eu"
+    ) # Woah, neat! Free Lavalink!

@@ -38,7 +38,11 @@ stamps = [
 
     {
         "stamp_id" : 100, "stamp_url" : 1026199772232695838, "name" : "Golden Clover"
-    }
+    },
+
+    {
+        "stamp_id" : 699, "stamp_url" : 1026584035406905395, "name" : "Eyebrow Raise"
+    },
 ]
 
 async def OpenStampMenu(user_id : int):

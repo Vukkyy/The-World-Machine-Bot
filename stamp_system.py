@@ -49,8 +49,6 @@ async def IncrementValue(message : interactions.Message, value : str, targeted :
                 else:
                     badge_earned = await CompareValues(0, value, message, data_['badges_earned'], id_)
 
-                print(badge_earned)
-
                 if (badge_earned != -1):
                     data_['badges_earned'].append(badge_earned)
 
@@ -70,13 +68,12 @@ async def IncrementValue(message : interactions.Message, value : str, targeted :
                 "times_asked" : 0,
                 "letters_sent" : 0,
                 "badges_earned" : [],
-                "equipped_badge" : 'https://static.wikia.nocookie.net/oneshot/images/f/fb/Item_blue_journal.png/revision/latest?cb=20161220083842'
+                "equipped_badge" : 'https://cdn.discordapp.com/emojis/1026181554919182416.webp?size=96&quality=lossless'
             }) + '\n')
 
             ids.append(id_)
 
 async def CompareValues(value : int, type : str, ctx, badges_earned : list, user_id : int):
-    print(value)
 
     if (type == 'owner_letter'):
         if (HasEarned(0, 69, badges_earned, 0)):
@@ -216,7 +213,7 @@ async def GetCurrentBadge(user_id : int, set_badge : bool, badge_img : str):
                 "times_asked" : 0,
                 "letters_sent" : 0,
                 "badges_earned" : [],
-                "equipped_badge" : "https://static.wikia.nocookie.net/oneshot/images/f/fb/Item_blue_journal.png/revision/latest?cb=20161220083842"
+                "equipped_badge" : "https://cdn.discordapp.com/emojis/1026181554919182416.webp?size=96&quality=lossless"
             }) + '\n')
 
             ids.append(user_id)
