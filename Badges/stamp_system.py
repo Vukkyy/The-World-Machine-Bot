@@ -14,14 +14,19 @@ async def EarnBadge(ctx : interactions.Message, badge_id : str, badge_name : str
     try:
         dm = interactions.Channel(**await bot._http.create_dm(user_id))
         dm._client = bot._http
-        await dm.send(f'**You unlocked a stamp!**\n\'{badge_name}\' {badge_emoji}\n ({badge_description})')
+        embed=interactions.Embed(title=f"\"{badge_name}\"", description=f"{badge_description}")
+        embed.set_author(name="✨ You earned a badge!")
+        embed.set_thumbnail(url=badge_emoji)
+        embed.set_footer(text="Use /select_stamps to equip it.")
+        await dm.send(embeds=embed)
+
     except:
         pass
 
 async def IncrementValue(message : interactions.Message, value : str, targeted : int):
     db = ''
         
-    with open('user_database.txt', 'r') as f:
+    with open('user_database.json', 'r') as f:
         db = f.read()
     
     database = db.split('\n')
@@ -56,7 +61,7 @@ async def IncrementValue(message : interactions.Message, value : str, targeted :
 
                 full = '\n'.join(database)
 
-                with open('user_database.txt', 'r+') as f:
+                with open('user_database.json', 'r+') as f:
                     f.truncate(0)
                     f.write(full)
                 return
@@ -81,7 +86,7 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
                 ctx = ctx,
                 badge_id = 69,
                 badge_name = "Nice!",
-                badge_emoji = '<:Clover:1026135536190111755>',
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026135536190111755'),
                 badge_description = 'Have the owner of The World Machine send you a letter.',
                 user_id = user_id
             )
@@ -89,13 +94,13 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
             return 69
     
     if (type == 'times_messaged'):
-        if (HasEarned(1, 0, badges_earned, value)):
+        if (HasEarned(25, 0, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
                 badge_id = 0,
                 badge_name = "You only have One Shot.",
-                badge_emoji = '<:Sun:1026207773559619644>',
-                badge_description = 'Send a message with The World Machine in the server!',
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207773559619644'),
+                badge_description = 'Send 25 messages with The World Machine in the server!',
                 user_id = user_id
             )
 
@@ -106,20 +111,56 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
                 ctx = ctx,
                 badge_id = 0.1,
                 badge_name = "Novelty T-Shirt.",
-                badge_emoji = '<:NoveltyShirt:1026207765661761596>',
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207765661761596'),
                 badge_description = 'Send 100 messages with The World Machine in the server!',
                 user_id = user_id
             )
 
             return 0.1
 
+        if (HasEarned(500, 0.2, badges_earned, value)):
+            await EarnBadge(
+                ctx = ctx,
+                badge_id = 0.2,
+                badge_name = "Good luck on your journey, small child!",
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026181557230256128'),
+                badge_description = 'Send 500 messages with The World Machine in the server!',
+                user_id = user_id
+            )
+
+            return 0.2
+
+        if (HasEarned(1000, 0.3, badges_earned, value)):
+            await EarnBadge(
+                ctx = ctx,
+                badge_id = 0.3,
+                badge_name = "The Ultimate Photo.",
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026181559482585138'),
+                badge_description = 'Send 1000 messages with The World Machine in the server!',
+                user_id = user_id
+            )
+
+            return 0.3
+
+    if (type == 'letters_sent'):
+        if (HasEarned(25, 2, badges_earned, value)):
+            await EarnBadge(
+                ctx = ctx,
+                badge_id = 2,
+                badge_name = "Letter Lover",
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026181556051648634'),
+                badge_description = 'Send 25 letters.',
+                user_id = user_id
+            )
+            return 2
+
     if (type == 'suns_shattered'):
         if (HasEarned(25, 1, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
                 badge_id = 1,
-                badge_name = "World Ender",
-                badge_emoji = '<:shatteredsun:1026207767142342838>',
+                badge_name = "Chaotic Evil",
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207767142342838'),
                 badge_description = 'Shatter 25 Suns.',
                 user_id = user_id
             )
@@ -129,8 +170,8 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
             await EarnBadge(
                 ctx = ctx,
                 badge_id = 1.1,
-                badge_name = "Major World Ender",
-                badge_emoji = '<:shatteredsunbronze:1026207768643907705>',
+                badge_name = "That can't be good for the multiverse.",
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207768643907705'),
                 badge_description = 'Shatter 100 Suns.',
                 user_id = user_id
             )
@@ -140,8 +181,8 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
             await EarnBadge(
                 ctx = ctx,
                 badge_id = 1.2,
-                badge_name = "Professional World Ender",
-                badge_emoji = '<:shatteredsunsilver:1026207771198226462>',
+                badge_name = "Mass Genocide of the cosmos!",
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207771198226462'),
                 badge_description = 'Shatter 250 Suns.',
                 user_id = user_id
             )
@@ -151,8 +192,8 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
             await EarnBadge(
                 ctx = ctx,
                 badge_id = 1.3,
-                badge_name = "Multi-Dimensional World Ender",
-                badge_emoji = '<:shatteredsungold:1026207769969307698>',
+                badge_name = "No Nikos were harmed in the process of destroying multiverses.",
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207769969307698'),
                 badge_description = 'Shatter 500 Suns.',
                 user_id = user_id
             )
@@ -168,10 +209,10 @@ def HasEarned(goal : int, id_, earned, value):
     else:
         return False
 
-async def GetCurrentBadge(user_id : int, set_badge : bool, badge_img : str):
+async def GetCurrentBadge(user_id : int, set_badge : bool, badge_img : str, add_badge : bool = False, badge_id : int = -1):
     db = ''
         
-    with open('user_database.txt', 'r') as f:
+    with open('user_database.json', 'r') as f:
         db = f.read()
     
     database = db.split('\n')
@@ -194,18 +235,24 @@ async def GetCurrentBadge(user_id : int, set_badge : bool, badge_img : str):
                 if (set_badge == False):
                     return data_['equipped_badge']
                 else:
-                    data_['equipped_badge'] = ''
-                    data_['equipped_badge'] = badge_img
+                    if (add_badge):
+                        data_['badges_earned'].append(badge_id)
+                    else:
+                        data_['equipped_badge'] = ''
+                        data_['equipped_badge'] = badge_img
+
+                    
 
                     database[index] = json.dumps(data_)
     
                     full = '\n'.join(database)
     
-                    with open('user_database.txt', 'r+') as f:
+                    with open('user_database.json', 'r+') as f:
                         f.truncate(0)
                         f.write(full)
                     return
-        else:  
+        else:
+            print('whoops')
             database.append(json.dumps({
                 "user_id" : user_id,
                 "times_messaged" : 0,

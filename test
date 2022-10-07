@@ -1,0 +1,3 @@
+import Badges.stamp_viewer as viewer
+
+await viewer.DrawBadges([0], 'axiinyaa')

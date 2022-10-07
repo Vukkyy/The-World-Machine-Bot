@@ -76,7 +76,7 @@ async def GenerateEmbed(id : str, player, show_timeline):
             return interactions.Embed(
                 title = f"**Now Playing:** [{player.current.title}]",
                 thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
-                description = f"{length} <a:nikoarcfromavolicis:1026091049782882304> \n\n *{new_c_length} / {new_length}*",
+                description = f"{length} \n\n *{new_c_length} / {new_length}*",
                 footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
                 url = player.current.uri
             )
@@ -84,7 +84,7 @@ async def GenerateEmbed(id : str, player, show_timeline):
             return interactions.Embed(
                 title = f"**Now Playing:** [{player.current.title}]",
                 thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
-                description = f"█░░░░░░░░░░░░░░░░░░░░ <a:nikoarcfromavolicis:1026091049782882304> \n\n *00:00 / {new_length}*",
+                description = f"█░░░░░░░░░░░░░░░░░░░░ \n\n *00:00 / {new_length}*",
                 footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
                 url = player.current.uri
             )
@@ -139,12 +139,18 @@ async def track_hook(event):
 async def ShowPlayer(ctx, player, show_timeline : bool):
     message = ""
 
-    msg = await ctx.send('Loading Player... <a:nikooneshot:1024961281628848169>')
+    global uuid_
+
+    uuid_ = uuid.uuid4()
+
+    old_uuid = uuid_
+
+    msg = await ctx.send('Loading Player... <a:loading:1026539890382483576>')
     
     if (player.is_playing):
         embed = await GenerateEmbed(player.current.identifier, player, show_timeline)
         buttons = await GetButtons(msg.id)
-        msg = await msg.edit('', embeds=embed, components=buttons)
+        msg = await msg.edit('<:nikostand:1027325434905514085>', embeds=embed, components=buttons)
     else:
         embed = interactions.Embed(
                 title = "Not Currently Playing Anything",
@@ -165,6 +171,8 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
     message = ''
 
     song_ = player.current
+
+    niko = '<a:vibe:1027325436360929300>'
         
     while True:
         print('waiting')
@@ -183,13 +191,15 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
                 if not (is_paused):
                     await player.set_pause(True)
                     player.store("is_paused", True)
-                    message = "`Paused the current track playing.`"
+                    message = "Paused the current track playing."
+                    niko = '<:nikosleepy:1027492467337080872>'
                 elif (is_paused):
                     await player.set_pause(False)
                     player.store("is_paused", False)
-                    message = "`Resumed the current track playing.`"
+                    message = "Resumed the current track playing."
+                    niko = '<a:vibe:1027325436360929300>'
             elif (data == f"skip {msg.id}"):
-                await button_ctx.send("`Skipped this track!`")
+                await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Skipped.`', embeds=[], components =[])
                 await player.skip()
             elif (data == f"queue {msg.id}"):
                 if (len(player.queue) > 0):
@@ -291,28 +301,35 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
                             
                             await player.play(song_)
                 else:
-                    message = "`Queue is currently empty :(`"
+                    message = "Queue is currently empty :("
             elif (data == f"stop {msg.id}"):
+                await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
                 await bot.disconnect(ctx.guild_id)
-                await button_ctx.send("Stopped playback :(")
             elif (data == f"loop {msg.id}"):
                 if not (player.repeat):
                     player.set_repeat(True)
-                    message = "`Looping Queue!`"
+                    message = "Looping Queue!"
                 else:
                     player.set_repeat(False)
-                    message = "`Loop Stopped!`"
+                    message = "Loop Stopped!"
                     
             funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-            await button_ctx.edit(message, embeds = funny_embed)
+            funny_embed.set_author(name = message)
+            await button_ctx.edit(niko, embeds = funny_embed)
         except:
             if (not player.current == song_):
                 print('song ended')
-                await button_ctx.edit('`Song Ended.`', embeds=[], components =[])
+                await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Ended.`', embeds=[], components =[])
+                return
+
+            if (old_uuid != uuid_):
+                await button_ctx.edit('<:twmhappy:1023573455456698368> `Player Moved`', embeds=[], components = [])
                 return
             
             funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-            await button_ctx.edit(message, embeds = funny_embed)
+
+            funny_embed.set_author(name = message)
+            await button_ctx.edit(niko, embeds = funny_embed)
 
 async def ReconnectPlayer():
     bot.lavalink_client.add_node(

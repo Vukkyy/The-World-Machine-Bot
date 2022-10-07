@@ -1,11 +1,31 @@
 {
   "files": {
-    "stamp_system.py": [
+    "Badges/stamp_system.py": [
       {
-        "id": "7acc7709-149c-41ea-8ee3-ac8ebb65d8be",
-        "line": 8,
-        "version": 3645,
-        "index": 99
+        "id": "455d8590-2345-457a-baf7-dbbbfd9fe674",
+        "line": 226,
+        "version": 123,
+        "index": 8018
+      },
+      {
+        "id": "3df669ff-ece4-4139-99b6-2072cb33e678",
+        "line": 235,
+        "version": 123,
+        "index": 8199
+      }
+    ],
+    "Badges/stamp_viewer.py": [
+      {
+        "id": "d592e75e-53ba-4d0d-9ddb-7e6029e10bc7",
+        "line": 10,
+        "version": 2583,
+        "index": 277
+      },
+      {
+        "id": "8f31ce4e-5f40-480e-b952-785b1bd2bc18",
+        "line": 17,
+        "version": 2583,
+        "index": 443
       }
     ]
   }

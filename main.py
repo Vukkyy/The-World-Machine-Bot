@@ -8,6 +8,9 @@ import aiofiles
 from replit import db
 import json
 import datetime
+import sys
+import traceback
+import importlib
 
 # Other Scripts
 import custom_source
@@ -15,8 +18,9 @@ import dialogue_generator
 import profile_icons as icons
 import generate_text
 import music_utilities as music
-import stamp_system as stamps
-import stamp_list
+import Badges.stamp_system as stamps
+import Badges.stamp_list as stamp_list
+import Badges.stamp_viewer as view
 
 # Extension Libraries
 from interactions.ext.wait_for import wait_for_component, setup, wait_for
@@ -139,7 +143,6 @@ async def text_gen(ctx: interactions.CommandContext, text: str):
     text_ = None
 
     val_char : int = int(char_ctx.data.values[0])
-    print(val_char)
 
     if (val_char == 0):
         text_ = await icons.GenerateModalNiko()
@@ -149,7 +152,7 @@ async def text_gen(ctx: interactions.CommandContext, text: str):
         text_ = await icons.GenerateModalTWM()
         
     elif (val_char == 2):
-        text_ = await icons.GenerateModalNiko()
+        text_ = await icons.GenerateModalKip()
 
     print(text_)
 
@@ -158,6 +161,8 @@ async def text_gen(ctx: interactions.CommandContext, text: str):
     text_ctx : interactions.ComponentContext = await wait_for_component(bot, components=text_[0], check=check)
     
     val = int(text_ctx.data.values[0])
+
+    print(val)
 
     selection = text_[1][val] # this looks like ass but whatever
 
@@ -226,7 +231,7 @@ async def music_(ctx: interactions.CommandContext, sub_command: str, search: str
         if ('playlist' in search or 'list=PL' in search):
             playlist = await custom_source.GetPlaylist(search)
 
-            msg = await ctx.send(f'Adding **{len(playlist)}** songs to the queue. This might take a while.')
+            msg_ = await ctx.send(f'Adding **{len(playlist)}** songs to the queue. This might take a while. <a:loading:1026539890382483576>')
 
             print(playlist)
 
@@ -239,11 +244,11 @@ async def music_(ctx: interactions.CommandContext, sub_command: str, search: str
                 player.add(requester=int(ctx.author.id), track=track)
                 successful += 1
                 if (successful % 10 == 0):
-                    await msg.edit(f'Adding **{len(playlist)}** songs to the queue. This might take a while. ({successful}/{len(playlist)})')
+                    await msg_.edit(f'Adding **{len(playlist)}** songs to the queue. This might take a while. ({successful}/{len(playlist)}) <a:loading:1026539890382483576>')
                #@ except:
                     #pass
             
-            await msg.edit(f'Added **{successful}** songs to the queue successfully!')
+            await msg_.edit(f'Added **{successful}** songs to the queue successfully!')
             
             if not player.is_playing:
                 await player.play()
@@ -599,11 +604,11 @@ async def letter(ctx : interactions.CommandContext, user : interactions.Member, 
         description = f'{message}',
         footer = interactions.EmbedFooter(text= f'Sent by {ctx.author.user.username} in {ctx.guild.name}', icon_url = ctx.author.user.avatar_url),
         timestamp = datetime.datetime.utcnow(),
-        author = interactions.EmbedAuthor(name = 'You got a letter!'),
+        author = interactions.EmbedAuthor(name = '💌 You got a letter!'),
         thumbnail = interactions.EmbedImageStruct(url = await stamps.GetCurrentBadge(int(ctx.author.id), False, 0))
     )
 
-    if (user.id in lllist and ctx.author.id in lllist):
+    if (user.id in lllist and ctx.author.id in lllist or ctx.author.id == 302883948424462346):
         await stamps.IncrementValue(ctx, 'letters_sent', int(ctx.author.id))
 
         if (ctx.author.id == 302883948424462346):
@@ -625,7 +630,7 @@ async def allow(ctx : interactions.CommandContext):
     button = interactions.Button(
         style = interactions.ButtonStyle.PRIMARY,
         label = 'Yes',
-        custom_id = str(ctx.author.id)
+        custom_id = str(uuid.uuid4())
     )
 
     lllist = db['loveletters'].split('\n')
@@ -826,15 +831,7 @@ async def fight(ctx : interactions.CommandContext, fighter_one, wielding_an, fig
 
         await msg.send('',embeds=embed)
 
-@bot.event
-async def on_message_create(message: interactions.Message):
-    blacklist = ['lol']  #db['achievementblacklist'].split('\n')
-
-    if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing.
-        return
-
-    print('increment')
-    await stamps.IncrementValue(message, "times_messaged", int(message.author.id)) # Increment the times messaged by 1.
+            
 
 @bot.command(
     name = 'select_stamp',
@@ -859,5 +856,225 @@ async def djhsdf(ctx):
     await stamps.GetCurrentBadge(int(ctx.author.id), True, select_ctx.data.values[0])
 
     await select_ctx.send(f'Stamp change successful!', ephemeral = True)
+
+@bot.command(
+    name = 'assign-stamp',
+    description = 'Allows you to assign a stamp. Can only be used by the owner.',
+    options = [
+        interactions.Option(
+            name = 'user',
+            description = 'The user to assign the stamp to.',
+            required = True,
+            type = interactions.OptionType.USER
+        ),
+
+        interactions.Option(
+            name = 'stamp_id',
+            description = 'The ID of the stamp to assign.',
+            required = True,
+            type = interactions.OptionType.NUMBER
+        )
+    ]
+)
+async def assign_stamp(ctx : interactions.CommandContext, user : interactions.Member, stamp_id):
+    if (ctx.author.id == 302883948424462346):
+        await stamps.GetCurrentBadge(int(user.id), True, None, True, stamp_id)
+
+        badges = stamp_list.stamps
+
+        name = ''
+        id_ = ''
+
+        for badge in badges:
+            if (stamp_id == badge['stamp_id']):
+                name = badge['name']
+                id_ = f'https://cdn.discordapp.com/emojis/{str(badge["stamp_url"])}.png'
+        
+        await ctx.send('Assigned Stamp to ' + user.user.username)
+        await stamps.EarnBadge(ctx, stamp_id, name, id_, 'You recieved this stamp from the owner of the bot, congrats!', int(ctx.user.id))
+    else:
+        await ctx.send('Sorry, you cannot use this command!', ephemeral=True)
+
+@bot.event
+async def on_command_error(ctx, error):
+    await ctx.send(f'Whoops. An error occurred. Please report to Axiinyaa#3813```diff\n- {error} -```')
+
+@bot.command(
+    name = 'view_stamps',
+    description = 'Show off those stylish stamps!',
+    options = [interactions.Option(name = 'user', description = 'Select someone to view their stamps.', type = interactions.OptionType.USER)]
+)
+async def view_stamp(ctx : interactions.CommandContext, user = 'none'):
+
+    id_ = 0
+
+    msg = ''
+
+    user_ = ''
+
+    if (user == 'none'):
+        id_ = int(ctx.author.id)
+        msg = 'Loading your beautiful stamps... <a:loading:1026539890382483576>'
+        user_ = ctx.author.user.username
+    else:
+        id_ = int(user.id)
+        msg = f'Loading {user.user.username}\'s beautiful stamps... <a:loading:1026539890382483576>'
+        user_ = user.user.username
+    
+    msg = await ctx.send(msg)
+
+    print(user_)
+    
+    await view.DrawBadges(id_, user_)
+
+    img_ = interactions.File('Badges/result.png')
+
+    await msg.edit('', files = img_)
+
+@bot.command(
+    name = 'blacklist-server-messages',
+    description = 'Blacklist this server from getting message-based stamp achievements.',
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+)
+async def blacklist__(ctx):
+    blacklist = db['achievementblacklist'].split('\n')
+    db['achievementblacklist'] = ''
+    blacklist.append(str(ctx.guild_id))
+
+    db['achievementblacklist'] = '\n'.join(blacklist)
+
+    await ctx.send('This server has been added to the blacklist.', ephemeral = True)
+
+@bot.command(
+    name = 'transmit',
+    description = 'Use The World Machine to transmit messages to other servers.',
+)
+async def transmission(ctx : interactions.CommandContext):
+
+    if (ctx.guild_id != 850069038804631572):
+        await ctx.send('This command is a work in progress. Sorry!', ephemeral = True)
+
+    def AssignCall():
+        current_connection.append({"guild_id" : int(ctx.guild_id), "in_call" : False, "latest_message" : "none"})
+
+        init_ = {"connections" : []}
+        
+        init_['connections'] = current_connection
+        
+        with open('userphone.json', 'w', encoding='utf-8') as f:
+            json.dump(init_, f, ensure_ascii=False, indent=4)
+
+        while True:
+            sleep(1)
+            
+            f = open('userphone.json')
+            connection_data = json.load(f)
+            f.close()
+
+            for cc in connection_data['connections']:
+                if (cc['guild_id'] == ctx.guild_id):
+                    if (cc['in_call'] == True):
+                        break
+
+    
+    uuid_ = uuid.uuid4
+
+    button = interactions.Button(label = 'Start Transmission', style = interactions.ButtonStyle.PRIMARY, custom_id = str(uuid_))
+
+    await ctx.send(f'Are you sure you want to start a transmission in <#{ctx.channel.id}>?', components = button, ephemeral = True)
+
+    async def check(ctx):
+        return True
+    
+    button_ctx = await wait_for_component(bot, check=check, components=button)
+
+    msg = await ctx.send("Starting Transmission... <a:loading:1026539890382483576>")
+
+    current_connection = []
+
+    with open('userphone.json', 'r+') as f:
+        current_connection = f.read().split('\n')
+
+    cnc_guild_id = 0
+
+    '''if (current_connection[0] == '')
+        current_connection = []'''
+
+    if (len(current_connection) > 0):
+        for cnc in current_connection:
+            if (cnc['in_call'] == False):
+                cnc_guild_id = cnc['guild_id']
+                cnc_['in_call'] = True
+                break
+    else:
+        await msg.edit("Waiting for someone to connect to you... <a:loading:1026539890382483576>")
+        AssignCall()
+
+    await msg.edit("You've established a connection! Say Hello!")
+
+    current_connection.append('{"guild_id" : ctx.guild_id, "in_call" : True, "latest_message" : "none"}')
+
+    init_ = {"connections" : []}
+        
+    for cc in current_connection:
+        init_ = init_['connections'] =+ cc
+    
+    with open('userphone.json', 'w', encoding='utf-8') as f:
+        json.dump(init_, f, ensure_ascii=False, indent=4)
+        
+    last_message = 'none'
+    while True:
+        sleep(1)
+
+        f = open('userphone.json')
+        connection_data = json.load(f)
+        f.close()
+
+        i = 0
+
+        for cc in connection_data['connections']:
+            if (cc['guild_id'] == message.cnc_guild_id):
+                if (cc['latest_message'] == last_message):
+                    pass
+                else:
+                    last_message = cc['latest_message']
+
+                    await button_ctx.send(last_message)
+            i += 1
+
+    
+            
+async def UpdateMessage(message, guild_id):
+        i = 0
+        
+        for cc in current_connection:
+            if cc['guild_id'] == guild_id:
+                current_connection[i]['latest_message'] = message
+            i += 1
+            
+        init_ = {"connections" : []}
+        
+        for cc in current_connection:
+            init_ = init_['connections'] =+ cc
+        
+        with open('userphone.json', 'w', encoding='utf-8') as f:
+            json.dump(init_, f, ensure_ascii=False, indent=4)
+    
+@bot.event
+async def on_message_create(message: interactions.Message):
+    blacklist = db['achievementblacklist'].split('\n')
+
+    if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing.
+        return
+        
+    await stamps.IncrementValue(message, "times_messaged", int(message.author.id)) # Increment the times messaged by 1.
+
+    '''f = open('userphone.json')
+    connection_data = json.load(f)
+    f.close()
+    
+    for cc in connection_data['connections']:
+        if (cc['guild_id'] == message.guild_id):
+            await UpdateMessage(message, message.guild_id)'''
 
 bot.start()

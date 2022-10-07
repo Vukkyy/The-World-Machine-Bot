@@ -17,24 +17,6 @@ lightbulbs = [
     'https://previews.123rf.com/images/coprid/coprid1209/coprid120900003/15094351-broken-light-bulb-isolated-on-white.jpg',
 ]
 
-dialogue_pictures = [
-    "https://gh.princessrtfm.com/img/expressions/normal.png",
-    "https://gh.princessrtfm.com/img/expressions/niko2.png",
-    "https://gh.princessrtfm.com/img/expressions/niko5.png",
-    "https://gh.princessrtfm.com/img/expressions/niko6.png",
-    "https://gh.princessrtfm.com/img/expressions/disgusted.png",
-    "https://gh.princessrtfm.com/img/expressions/shocked.png",
-    "https://gh.princessrtfm.com/img/expressions/wtf.png",
-    "https://gh.princessrtfm.com/img/expressions/popcorn.png",
-    "https://gh.princessrtfm.com/img/expressions/wink.png",
-    "https://gh.princessrtfm.com/img/expressions/pancakes.png",
-    "https://gh.princessrtfm.com/img/expressions/blush.png",
-    "https://gh.princessrtfm.com/img/expressions/distressed_cry.png",
-    "https://gh.princessrtfm.com/img/expressions/upset.png",
-    "https://gh.princessrtfm.com/img/expressions/really.png",
-    "https://i.ibb.co/yVr8cqP/kip-cool.png"
-]
-
 awesome = None
 
 def Emojis():
@@ -119,8 +101,90 @@ async def GenerateModalTWM():
         awesome
     ]
         
+async def GenerateModalKip():
+    normal = interactions.Emoji(id=1027240024992927814)
+    left = interactions.Emoji(id=1027240038028804156)
+    right = interactions.Emoji(id=1027240029803790346)
+    sweat = interactions.Emoji(id=1027240026536431687)
+    pout = interactions.Emoji(id=1027240031032725504)
+    sad = interactions.Emoji(id=1027240032299405332)
+    pensive = interactions.Emoji(id=1027240033599627264)
+    wink = interactions.Emoji(id=1027240034430099678)
+    worry = interactions.Emoji(id=1027240035893915711)
+    cool = interactions.Emoji(id=1019605513387900978)
 
+    awesome = [
+        interactions.SelectOption(
+            label = "Normal",
+            emoji = normal,
+            value = 0
+        ),
+
+        interactions.SelectOption(
+            label = "Look Left",
+            emoji = left,
+            value = 1
+        ),
+
+        interactions.SelectOption(
+            label = "Look Right",
+            emoji = right,
+            value = 2
+        ),
+
+        interactions.SelectOption(
+            label = "Sweat",
+            emoji = sweat,
+            value = 3
+        ),
+
+        interactions.SelectOption(
+            label = "Pout",
+            emoji = pout,
+            value = 4
+        ),
+
+        interactions.SelectOption(
+            label = "Sad",
+            emoji = sad,
+            value = 5
+        ),
+
+        interactions.SelectOption(
+            label = "Pensive",
+            emoji = pensive,
+            value = 6
+        ),
+
+        interactions.SelectOption(
+            label = "Wink",
+            emoji = wink,
+            value = 7
+        ),
+
+        interactions.SelectOption(
+            label = "Worry",
+            emoji = worry,
+            value = 8
+        ),
+
+        interactions.SelectOption(
+            label = "Kip, but cool.",
+            emoji = cool,
+            value = 9
+        ),
+    ]
+
+    return [
+        interactions.SelectMenu(
+            type = interactions.ComponentType.SELECT,
+            options=awesome,
+            placeholder="Select a face!",
+            custom_id="menu_component",
+        ),
         
+        awesome
+    ]
 
 async def GenerateModalNiko():
     normal = interactions.Emoji(id=1019605517695463484)

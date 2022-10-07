@@ -6,7 +6,6 @@ stamps = [
         "stamp_id" : -1, "stamp_url" : 1026181554919182416, "name" : "Default Stamp"
     },
     
-    
     {
         "stamp_id" : 0, "stamp_url" : 1026207773559619644, "name" : "The Sun"
     },
@@ -15,6 +14,17 @@ stamps = [
         "stamp_id" : 0.1, "stamp_url" : 1026207765661761596, "name" : "Novelty T-Shirt"
     },
 
+    {
+        "stamp_id" : 0.2, "stamp_url" : 1026181557230256128, "name" : "Glowing Die"
+    },
+
+    {
+        "stamp_id" : 0.3, "stamp_url" : 1026181559482585138, "name" : "Photo of Niko"
+    },
+    
+    {
+        "stamp_id" : 2, "stamp_url" : 1026181556051648634, "name" : "Feather Pen"
+    },
 
     {
         "stamp_id" : 1, "stamp_url" : 1026207767142342838, "name" : "Shattered Sun"
@@ -41,16 +51,17 @@ stamps = [
     },
 
     {
-        "stamp_id" : 699, "stamp_url" : 1026584035406905395, "name" : "Eyebrow Raise"
+        "stamp_id" : 699, "stamp_url" : 1027306556783603813, "name" : "Eyebrow Raise"
     },
 ]
+
 
 async def OpenStampMenu(user_id : int):
     db = ''
 
     stamp_menu_list = []
         
-    with open('user_database.txt', 'r') as f:
+    with open('user_database.json', 'r') as f:
         db = f.read()
     
     database = db.split('\n')
@@ -76,15 +87,19 @@ async def OpenStampMenu(user_id : int):
         if (data_['user_id'] == user_id):
             index = 0
             for stamp in stamps:
+                print(stamp)
                 if (stamp['stamp_id'] in data_['badges_earned']):
                     emoji : interactions.Emoji = interactions.Emoji(id = stamp['stamp_url'])
                     index += 1
-                    stamp_menu_list.append(
-                        interactions.SelectOption(
-                            label = stamp['name'],
-                            value = emoji.url,
-                            emoji = emoji,
+                    try:
+                        stamp_menu_list.append(
+                            interactions.SelectOption(
+                                label = stamp['name'],
+                                value = emoji.url,
+                                emoji = emoji,
+                            )
                         )
-                    )
+                    except:
+                        pass
 
             return stamp_menu_list
