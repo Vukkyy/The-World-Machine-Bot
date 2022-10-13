@@ -1,7 +1,6 @@
 # This file is used to clean up some of the functions in the main file.
 import interactions
 import datetime
-import lavalink
 from interactions.ext.wait_for import wait_for_component
 import uuid
 import random

@@ -1,7 +1,6 @@
 import interactions
 import os
 import random
-import lavalink
 import uuid
 import aiohttp        
 import aiofiles
