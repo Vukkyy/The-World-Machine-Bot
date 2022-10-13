@@ -140,7 +140,7 @@ dev = ["tox", "bump2version (<1)", "sphinx (<2)", "importlib-metadata (<3)", "im
 
 [[package]]
 name = "discord-py-interactions"
-version = "4.3.1"
+version = "4.3.3"
 description = "Easy, simple, scalable and modular: a Python API wrapper for interactions."
 category = "main"
 optional = false
@@ -258,7 +258,7 @@ discord-py-interactions = ">=4.3.1"
 
 [[package]]
 name = "interactions-files"
-version = "1.1.4"
+version = "1.1.5"
 description = "An extension library for interactions.py allowing files in interaction responses."
 category = "main"
 optional = false
@@ -269,14 +269,14 @@ discord-py-interactions = ">=4.3.0"
 
 [[package]]
 name = "interactions-lavalink"
-version = "0.0.3"
+version = "0.1.1"
 description = "Lavalink and voice support for interactions.py"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 
 [package.dependencies]
-discord-py-interactions = ">=4.3.0"
+discord-py-interactions = ">=4.3.2"
 lavalink = ">=4.0.1,<4.1.0"
 
 [[package]]
@@ -352,7 +352,7 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "lavalink"
-version = "4.0.2"
+version = "4.0.3"
 description = "A Lavalink WebSocket & API wrapper built around coverage, reliability and performance."
 category = "main"
 optional = false
@@ -959,7 +959,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8.6,<3.9"
-content-hash = "d071b0afc8ffcc2fc405097a85999cf8d802692b853f06a5bef81793806f870f"
+content-hash = "21203b9ed43843744e2f72dc578dd99a0515d4d05c649ac5d419cd14d06366d9"
 
 [metadata.files]
 aiofiles = []

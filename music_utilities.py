@@ -6,7 +6,9 @@ from interactions.ext.wait_for import wait_for_component
 import uuid
 import random
 
-bot = None # Set bot on bot startup from the main file.
+def setup_(self):
+    global bot
+    bot = self
 
 async def GetButtons(guild_id):
     play_emoji = interactions.Emoji(name="playorpause", id=1019286927888883802)
@@ -28,14 +30,14 @@ async def GetButtons(guild_id):
         interactions.Button(
             style=interactions.ButtonStyle.DANGER,
             custom_id = f"loop {guild_id}",
-            emoji = loop_song_emoji
+            emoji = loop_song_emoji,
         ),
 
         # Play Button
         interactions.Button(
             style=interactions.ButtonStyle.DANGER,
             custom_id = f"play {guild_id}",
-            emoji = play_emoji
+            emoji = play_emoji,
         ),
         # Skip Button
         interactions.Button(
@@ -84,7 +86,7 @@ async def GenerateEmbed(id : str, player, show_timeline):
             return interactions.Embed(
                 title = f"**Now Playing:** [{player.current.title}]",
                 thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
-                description = f"█░░░░░░░░░░░░░░░░░░░░ \n\n *00:00 / {new_length}*",
+                description = f"Interact with the player to see the timeline. \n\n *00:00 / {new_length}*",
                 footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
                 url = player.current.uri
             )
@@ -120,21 +122,6 @@ async def GenerateQueue(button_ctx, page_number, player):
             ]
         )
 
-async def track_hook(event):
-    if isinstance(event, lavalink.events.TrackStartEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ReconnectPlayer()
-        await ShowPlayer(ctx, event.player, False)
-    elif isinstance(event, lavalink.events.QueueEndEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ctx.channel.send("`End of queue! Add more music or audio using /music play.`")
-    elif isinstance(event, lavalink.events.TrackExceptionEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ctx.send("An error occurred when attempting to play the track. Try Skipping the track and replaying it later.")
-        await ctx.send(f"`{event.exception}`")
-    elif isinstance(event, lavalink.events.TrackStuckEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ctx.send("Whoops track is stuck that kind of sucks")
 
 async def ShowPlayer(ctx, player, show_timeline : bool):
     message = ""
@@ -146,11 +133,12 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
     old_uuid = uuid_
 
     msg = await ctx.send('Loading Player... <a:loading:1026539890382483576>')
+    niko = '<a:vibe:1027325436360929300>'
     
     if (player.is_playing):
         embed = await GenerateEmbed(player.current.identifier, player, show_timeline)
         buttons = await GetButtons(msg.id)
-        msg = await msg.edit('<:nikostand:1027325434905514085>', embeds=embed, components=buttons)
+        msg = await msg.edit(niko, embeds=embed, components=buttons)
     else:
         embed = interactions.Embed(
                 title = "Not Currently Playing Anything",
@@ -171,14 +159,13 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
     message = ''
 
     song_ = player.current
-
-    niko = '<a:vibe:1027325436360929300>'
         
     while True:
         print('waiting')
         button_ctx = msg
+        
         try:
-            button_ctx = await wait_for_component(bot, components=buttons, check=check, timeout = 2)
+            button_ctx = await wait_for_component(bot, components=buttons, check=check)
             
         
             data = button_ctx.data.custom_id
@@ -330,11 +317,3 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
 
             funny_embed.set_author(name = message)
             await button_ctx.edit(niko, embeds = funny_embed)
-
-async def ReconnectPlayer():
-    bot.lavalink_client.add_node(
-        host = '51.161.130.134',
-        port = 10333,
-        password = 'youshallnotpass',
-        region = "eu"
-    ) # Woah, neat! Free Lavalink!
