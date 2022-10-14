@@ -536,8 +536,8 @@ async def allow(ctx : interactions.CommandContext):
     
     await ctx.send('Funny (DEBUG)')
     
-    lllist = db.read
-    lllist = lllist.split('\n')
+    f = db.read
+    lllist = f.split('\n')
     
     if (ctx.author.id in lllist):
         lllist.remove(str(ctx.author.id))
@@ -552,7 +552,7 @@ async def allow(ctx : interactions.CommandContext):
 
         button_ctx = await wait_for_component(bot, components = button)
         
-        db.write(db.read() + f'\n{str(ctx.author.id)}')
+        db.write(f + f'\n{str(ctx.author.id)}')
         await button_ctx.send('You will now recieve letters. To opt out of this, run this command again.', ephemeral=True)
         
     db.close()
@@ -623,9 +623,10 @@ async def explosion(ctx):
     sun = 0
     
     with open('databases/explosions.count', 'r+') as db:
-        db.write(str(int(db.read()) + 1))
+        f = db.read()
+        db.write(str(int(f) + 1))
 
-        sun = db.read()
+        sun = f
 
     img = icons.lightbulbs[random.randint(0, len(icons.lightbulbs) - 1)]
     
@@ -847,8 +848,8 @@ async def view_stamp(ctx : interactions.CommandContext, user = 'none'):
 )
 async def blacklist__(ctx):
     with open('databases/message_blacklist.db', 'r+') as db:
-        blacklist = db.read()
-        blacklist = blacklist.split('\n')
+        f = db.read()
+        blacklist = f.split('\n')
         blacklist.append(str(ctx.guild_id))
 
         db.write('\n'.join(blacklist))
@@ -859,9 +860,9 @@ async def blacklist__(ctx):
 async def on_message_create(message: interactions.Message):
     blacklist = []
     
-    with open('databases/message_blacklist.db', 'r') as f:
-        blacklist = f.read()
-        blacklist = blacklist.split('\n')
+    with open('databases/message_blacklist.db', 'r') as db:
+        f = db.read()
+        blacklist = f.split('\n')
 
     if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing.
         return
