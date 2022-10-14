@@ -622,7 +622,7 @@ async def explosion(ctx):
         f = db.read()
         result = int(f) + 1
         print(result)
-        db.truncate()
+        db.truncate(0)
         db.write(str(result))
         sun = f
 
