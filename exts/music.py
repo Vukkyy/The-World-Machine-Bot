@@ -71,12 +71,11 @@ class Music(interactions.Extension):
     @interactions.extension_listener()
     async def on_start(self):
         print('Loading Music Module')
-        global current_node
-        current_node = self.client.lavalink_client.add_node(
-            host = '51.161.130.134',
-            port = 10333,
-            password = 'youshallnotpass',
-            region = "eu"
+        self.client.lavalink_client.add_node(
+            host = 'lavalink.oops.wtf',
+            port = 2000,
+            password = 'www.freelavalink.ga',
+            region = "us"
         ) # Woah, neat! Free Lavalink!
         
 
@@ -90,12 +89,6 @@ class Music(interactions.Extension):
             if len(voice_states) == 1 and voice_states[0].user_id == self.client.me.id:
                 await self.client.disconnect(before.guild_id)
 
-    @interactions.extension_command()
-    async def disconnect_node(self, ctx):
-        if (ctx.guild_id == 850069038804631572):
-            current_node.destroy()
-            await ctx.send('Destroyed Node.')
-            return
 
         await ctx.send('This command is not available in this guild.', ephemeral = True)
 
