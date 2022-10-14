@@ -533,7 +533,8 @@ async def allow(ctx : interactions.CommandContext):
 
     db = open('databases/loveletters.db', 'r+')
     
-    lllist = db.read.split('\n')
+    lllist = db.read
+    lllist = lllist.split('\n')
     
     if (ctx.author.id in lllist):
         lllist.remove(str(ctx.author.id))
