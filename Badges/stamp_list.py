@@ -61,7 +61,7 @@ async def OpenStampMenu(user_id : int):
 
     stamp_menu_list = []
         
-    with open('databases/user_database.json', 'r') as f:
+    with open('databases/user_database.db', 'r') as f:
         db = f.read()
     
     database = db.split('\n')
