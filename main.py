@@ -51,8 +51,8 @@ async def on_start():
             status=interactions.StatusType.ONLINE,
             activities=[
                 interactions.PresenceActivity(
-                    name="Testing, nearly finished!",
-                    type=interactions.PresenceActivityType.LISTENING)
+                    name="Over Niko",
+                    type=interactions.PresenceActivityType.WATCHING)
             ]))
 
     await change_picture()
@@ -534,9 +534,7 @@ async def allow(ctx : interactions.CommandContext):
 
     db = open('databases/loveletters.db', 'r+')
     
-    await ctx.send('Funny (DEBUG)')
-    
-    f = db.read
+    f = db.read()
     lllist = f.split('\n')
     
     if (ctx.author.id in lllist):
