@@ -494,7 +494,7 @@ async def letter(ctx : interactions.CommandContext, user : interactions.Member, 
     print(user.id)
     
     with open ('databases/loveletters.db', 'r') as db:
-        lllist = db.read
+        lllist = db.read()
         lllist = lllist.split('\n')
 
     embed = interactions.Embed(
