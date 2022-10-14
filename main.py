@@ -621,7 +621,6 @@ async def explosion(ctx):
     with open('databases/explosions.count', 'r+') as db:
         f = db.read()
         db.write(str(int(f) + 1))
-
         sun = f
 
     img = icons.lightbulbs[random.randint(0, len(icons.lightbulbs) - 1)]
@@ -634,7 +633,7 @@ async def explosion(ctx):
         )
     )
 
-    if (db['sun'] == '69'):
+    if (sun == '69'):
         embed = interactions.Embed(
             title = 'Nice.',
             image = interactions.EmbedImageStruct(url = img),
@@ -643,7 +642,7 @@ async def explosion(ctx):
             )
         )
 
-    if (db['sun'] == '100'):
+    if (sun == '100'):
         embed = interactions.Embed(
             title = 'A little too much.',
             image = interactions.EmbedImageStruct(url = img),
@@ -652,7 +651,7 @@ async def explosion(ctx):
             )
         )
 
-    if (db['sun'] == '420'):
+    if (sun == '420'):
         embed = interactions.Embed(
             title = 'Nice. x2',
             image = interactions.EmbedImageStruct(url = img),
@@ -661,7 +660,7 @@ async def explosion(ctx):
             )
         )
 
-    if (db['sun'] == '1000'):
+    if (sun == '1000'):
         embed = interactions.Embed(
             title = 'Definitely too much.',
             image = interactions.EmbedImageStruct(url = 'https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2018/07/broken-light-bulb.jpg'),
@@ -670,7 +669,7 @@ async def explosion(ctx):
             )
         )
 
-    if (db['sun'] == '69420'):
+    if (sun == '69420'):
         embed = interactions.Embed(
             title = 'Nice. x3',
             image = interactions.EmbedImageStruct(url = 'https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2018/07/broken-light-bulb.jpg'),
