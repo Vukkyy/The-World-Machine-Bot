@@ -1,7 +1,7 @@
 import openai
 import os
 
-openai.api_key = os.environ['OPENAI-KEY']
+openai.api_key = os.getenv('OPENAI-KEY')
 
 async def GenerateText(prompt : str, user : str):
     final_prompt = ''

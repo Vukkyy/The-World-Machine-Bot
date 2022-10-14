@@ -1,11 +1,11 @@
 import spotipy
 from pytube import Playlist
 from spotipy.oauth2 import SpotifyClientCredentials
-from os import environ
+from os import getenv
 
 credentials = SpotifyClientCredentials(
-    client_id=environ['CLIENTID'],
-    client_secret=environ['CLIENT-SECRET']
+    client_id=getenv('CLIENTID'),
+    client_secret=getenv('CLIENT-SECRET')
 )
 
 spotify = spotipy.Spotify(client_credentials_manager=credentials)

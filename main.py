@@ -7,6 +7,8 @@ import aiofiles
 from replit import db
 import json
 import datetime
+from dotenv import load_dotenv
+load_dotenv()
 
 # Other Scripts
 import custom_source
@@ -25,7 +27,7 @@ import interactions.ext.files
 from interactions.ext.enhanced import cooldown
 import exts.music
 
-TOKEN = os.environ['BOT-TOKEN']
+TOKEN = os.getenv('BOT-TOKEN')
 
 bot = VoiceClient(token=TOKEN, intents=interactions.Intents.DEFAULT)
     
