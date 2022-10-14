@@ -621,6 +621,7 @@ async def explosion(ctx):
     with open('databases/explosions.count', 'r+') as db:
         f = db.read()
         result = int(f) + 1
+        print(result)
         db.write(str(result))
         sun = f
 
