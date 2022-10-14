@@ -104,7 +104,7 @@ async def GetStamps(user_id, stamp_id):
 
     db = ''
         
-    with open('user_database.json', 'r') as f:
+    with open('databases/user_database.json', 'r') as f:
         db = f.read()
     
     database = db.split('\n')

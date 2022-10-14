@@ -26,7 +26,7 @@ async def EarnBadge(ctx : interactions.Message, badge_id : str, badge_name : str
 async def IncrementValue(message : interactions.Message, value : str, targeted : int):
     db = ''
         
-    with open('user_database.json', 'r') as f:
+    with open('databases/user_database.json', 'r') as f:
         db = f.read()
     
     database = db.split('\n')
@@ -61,7 +61,7 @@ async def IncrementValue(message : interactions.Message, value : str, targeted :
 
                 full = '\n'.join(database)
 
-                with open('user_database.json', 'r+') as f:
+                with open('databases/user_database.json', 'r+') as f:
                     f.truncate(0)
                     f.write(full)
                 return
@@ -212,7 +212,7 @@ def HasEarned(goal : int, id_, earned, value):
 async def GetCurrentBadge(user_id : int, set_badge : bool, badge_img : str, add_badge : bool = False, badge_id : int = -1):
     db = ''
         
-    with open('user_database.json', 'r') as f:
+    with open('databases/user_database.json', 'r') as f:
         db = f.read()
     
     database = db.split('\n')
@@ -247,7 +247,7 @@ async def GetCurrentBadge(user_id : int, set_badge : bool, badge_img : str, add_
     
                     full = '\n'.join(database)
     
-                    with open('user_database.json', 'r+') as f:
+                    with open('databases/user_database.json', 'r+') as f:
                         f.truncate(0)
                         f.write(full)
                     return

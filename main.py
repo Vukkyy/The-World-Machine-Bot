@@ -4,7 +4,6 @@ import random
 import uuid
 import aiohttp        
 import aiofiles
-from replit import db
 import json
 import datetime
 from dotenv import load_dotenv
@@ -26,6 +25,7 @@ from interactions.ext.lavalink import VoiceClient
 import interactions.ext.files
 from interactions.ext.enhanced import cooldown
 import exts.music
+
 
 TOKEN = os.getenv('BOT-TOKEN')
 
@@ -495,7 +495,8 @@ async def letter(ctx : interactions.CommandContext, user : interactions.Member, 
 
     print(user.id)
     
-    lllist = db['loveletters'].split('\n')
+    with open ('databases/loveletters.db', 'r') as db:
+        lllist = db.read.split('\n')
 
     embed = interactions.Embed(
         description = f'{message}',
@@ -530,23 +531,27 @@ async def allow(ctx : interactions.CommandContext):
         custom_id = str(uuid.uuid4())
     )
 
-    lllist = db['loveletters'].split('\n')
+    db = open('databases/loveletters.db', 'r+')
+    
+    lllist = db.read.split('\n')
     
     if (ctx.author.id in lllist):
         lllist.remove(str(ctx.author.id))
 
         result = '\n'.join(lllist)
-
-        db['loveletters']  = result
+        
+        db.write(result)
 
         await ctx.send('You have opted out from recieving (and sending!) letters. If you wish to recieve or send letters again, run this command again', ephemeral=True)
     else:
         await ctx.send('Are you sure you want to recieve (and send) letters?', components=button, ephemeral=True)
 
         button_ctx = await wait_for_component(bot, components = button)
-    
-        db['loveletters'] = db['loveletters'] + f'\n{str(ctx.author.id)}'
+        
+        db.write(db.read() + f'\n{str(ctx.author.id)}')
         await button_ctx.send('You will now recieve letters. To opt out of this, run this command again.', ephemeral=True)
+        
+    db.close()
 
 @bot.user_command(name="Send Letter")
 async def send_letter(ctx : interactions.CommandContext):
@@ -610,10 +615,13 @@ async def explosion(ctx):
 
         await ctx.send(embeds=embed)
         return
+    
+    sun = 0
+    
+    with open('explosions.count', 'r+') as db:
+        db.write(str(int(db.read()) + 1))
 
-    db['sun'] = str(int(db['sun']) + 1)
-
-    sun = db['sun']
+        sun = db.read()
 
     img = icons.lightbulbs[random.randint(0, len(icons.lightbulbs) - 1)]
     
@@ -834,132 +842,20 @@ async def view_stamp(ctx : interactions.CommandContext, user = 'none'):
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
 )
 async def blacklist__(ctx):
-    blacklist = db['achievementblacklist'].split('\n')
-    db['achievementblacklist'] = ''
-    blacklist.append(str(ctx.guild_id))
+    with open('message_blacklist.db', 'r+') as db:
+        blacklist = db.read().split('\n')
+        blacklist.append(str(ctx.guild_id))
 
-    db['achievementblacklist'] = '\n'.join(blacklist)
+        db.write('\n'.join(blacklist))
 
     await ctx.send('This server has been added to the blacklist.', ephemeral = True)
-
-@bot.command(
-    name = 'transmit',
-    description = 'Use The World Machine to transmit messages to other servers.',
-)
-async def transmission(ctx : interactions.CommandContext):
-
-    if (ctx.guild_id != 850069038804631572):
-        await ctx.send('This command is a work in progress. Sorry!', ephemeral = True)
-
-    def AssignCall():
-        current_connection.append({"guild_id" : int(ctx.guild_id), "in_call" : False, "latest_message" : "none"})
-
-        init_ = {"connections" : []}
-        
-        init_['connections'] = current_connection
-        
-        with open('userphone.json', 'w', encoding='utf-8') as f:
-            json.dump(init_, f, ensure_ascii=False, indent=4)
-
-        while True:
-            sleep(1)
-            
-            f = open('userphone.json')
-            connection_data = json.load(f)
-            f.close()
-
-            for cc in connection_data['connections']:
-                if (cc['guild_id'] == ctx.guild_id):
-                    if (cc['in_call'] == True):
-                        break
-
-    
-    uuid_ = uuid.uuid4
-
-    button = interactions.Button(label = 'Start Transmission', style = interactions.ButtonStyle.PRIMARY, custom_id = str(uuid_))
-
-    await ctx.send(f'Are you sure you want to start a transmission in <#{ctx.channel.id}>?', components = button, ephemeral = True)
-
-    async def check(ctx):
-        return True
-    
-    button_ctx = await wait_for_component(bot, check=check, components=button)
-
-    msg = await ctx.send("Starting Transmission... <a:loading:1026539890382483576>")
-
-    current_connection = []
-
-    with open('userphone.json', 'r+') as f:
-        current_connection = f.read().split('\n')
-
-    cnc_guild_id = 0
-
-    '''if (current_connection[0] == '')
-        current_connection = []'''
-
-    if (len(current_connection) > 0):
-        for cnc in current_connection:
-            if (cnc['in_call'] == False):
-                cnc_guild_id = cnc['guild_id']
-                cnc_['in_call'] = True
-                break
-    else:
-        await msg.edit("Waiting for someone to connect to you... <a:loading:1026539890382483576>")
-        AssignCall()
-
-    await msg.edit("You've established a connection! Say Hello!")
-
-    current_connection.append('{"guild_id" : ctx.guild_id, "in_call" : True, "latest_message" : "none"}')
-
-    init_ = {"connections" : []}
-        
-    for cc in current_connection:
-        init_ = init_['connections'] =+ cc
-    
-    with open('userphone.json', 'w', encoding='utf-8') as f:
-        json.dump(init_, f, ensure_ascii=False, indent=4)
-        
-    last_message = 'none'
-    while True:
-        sleep(1)
-
-        f = open('userphone.json')
-        connection_data = json.load(f)
-        f.close()
-
-        i = 0
-
-        for cc in connection_data['connections']:
-            if (cc['guild_id'] == message.cnc_guild_id):
-                if (cc['latest_message'] == last_message):
-                    pass
-                else:
-                    last_message = cc['latest_message']
-
-                    await button_ctx.send(last_message)
-            i += 1
-
-    
-            
-async def UpdateMessage(message, guild_id):
-        i = 0
-        
-        for cc in current_connection:
-            if cc['guild_id'] == guild_id:
-                current_connection[i]['latest_message'] = message
-            i += 1
-            
-        init_ = {"connections" : []}
-        
-        for cc in current_connection:
-            init_ = init_['connections'] =+ cc
-        
-        with open('userphone.json', 'w', encoding='utf-8') as f:
-            json.dump(init_, f, ensure_ascii=False, indent=4)
     
 @bot.event
 async def on_message_create(message: interactions.Message):
-    blacklist = db['achievementblacklist'].split('\n')
+    blacklist = []
+    
+    with open('message_blacklist', 'r') as f:
+        blacklist = f.read().split('\n')
 
     if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing.
         return

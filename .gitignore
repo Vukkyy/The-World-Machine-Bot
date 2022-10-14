@@ -1,3 +1,2 @@
-**/Images/niko.png
-**/Images/pil_text.png
-**/Images/picture.png
+/Images/*
+/databases/*
