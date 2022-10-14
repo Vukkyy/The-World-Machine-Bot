@@ -24,8 +24,6 @@ from interactions.ext.wait_for import wait_for_component, setup, wait_for
 from interactions.ext.lavalink import VoiceClient
 import interactions.ext.files
 from interactions.ext.enhanced import cooldown
-import exts.music
-
 
 TOKEN = os.getenv('BOT-TOKEN')
 
