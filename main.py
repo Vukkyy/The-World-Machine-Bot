@@ -617,14 +617,17 @@ async def explosion(ctx):
         return
     
     sun = 0
+    f = ''
     
-    with open('databases/explosions.count', 'r+') as db:
+    with open('databases/explosions.count', 'r') as db:
         f = db.read()
-        result = int(f) + 1
-        print(result)
-        db.truncate(0)
+    
+    result = int(f) + 1
+    
+    with open('databases/explosions.count', 'w') as db:
         db.write(str(result))
-        sun = f
+    
+    sun = f
 
     img = icons.lightbulbs[random.randint(0, len(icons.lightbulbs) - 1)]
     
