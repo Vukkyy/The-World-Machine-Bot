@@ -618,7 +618,7 @@ async def explosion(ctx):
     
     sun = 0
     
-    with open('explosions.count', 'r+') as db:
+    with open('databases/explosions.count', 'r+') as db:
         db.write(str(int(db.read()) + 1))
 
         sun = db.read()
@@ -842,7 +842,7 @@ async def view_stamp(ctx : interactions.CommandContext, user = 'none'):
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
 )
 async def blacklist__(ctx):
-    with open('message_blacklist.db', 'r+') as db:
+    with open('databases/message_blacklist.db', 'r+') as db:
         blacklist = db.read().split('\n')
         blacklist.append(str(ctx.guild_id))
 
@@ -854,7 +854,7 @@ async def blacklist__(ctx):
 async def on_message_create(message: interactions.Message):
     blacklist = []
     
-    with open('message_blacklist', 'r') as f:
+    with open('databases/message_blacklist.db', 'r') as f:
         blacklist = f.read().split('\n')
 
     if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing.
