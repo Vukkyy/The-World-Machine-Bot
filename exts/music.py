@@ -89,9 +89,6 @@ class Music(interactions.Extension):
             if len(voice_states) == 1 and voice_states[0].user_id == self.client.me.id:
                 await self.client.disconnect(before.guild_id)
 
-
-        await ctx.send('This command is not available in this guild.', ephemeral = True)
-
     @interactions.extension_command(
         name="music",
         options=[
