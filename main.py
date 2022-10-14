@@ -496,7 +496,8 @@ async def letter(ctx : interactions.CommandContext, user : interactions.Member, 
     print(user.id)
     
     with open ('databases/loveletters.db', 'r') as db:
-        lllist = db.read.split('\n')
+        lllist = db.read
+        lllist = lllist.split('\n')
 
     embed = interactions.Embed(
         description = f'{message}',
@@ -532,6 +533,8 @@ async def allow(ctx : interactions.CommandContext):
     )
 
     db = open('databases/loveletters.db', 'r+')
+    
+    await ctx.send('Funny (DEBUG)')
     
     lllist = db.read
     lllist = lllist.split('\n')
