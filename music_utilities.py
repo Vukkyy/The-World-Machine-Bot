@@ -163,14 +163,14 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
             
             done, pending = await asyncio.wait({task})
             if not done:
-                asyncio.sleep(2)
                 funny_embed = await GenerateEmbed(player.current.identifier, player, True)
                 funny_embed.set_author(name = message)
                 await button_ctx.edit(niko, embeds = funny_embed)
                 print('Updated Player')
+                asyncio.sleep(2)
                 continue  # very important!
                 
-            (button_ctx,) = done
+            button_ctx = done
             await ButtonManager(ctx, button_ctx, player)
             break
             
