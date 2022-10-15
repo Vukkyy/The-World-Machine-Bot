@@ -156,12 +156,12 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
         
     while True:
         
+        button_ctx = msg
         task = asyncio.create_task(wait_for_component(bot, components=buttons, check=check))
         
         while True:
-            button_ctx = msg
+            done, pending = await asyncio.wait(task)
             
-            done, pending = await asyncio.wait({task})
             if not done:
                 funny_embed = await GenerateEmbed(player.current.identifier, player, True)
                 funny_embed.set_author(name = message)
