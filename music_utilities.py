@@ -191,10 +191,10 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                     continue  # very important!
                 
             button_ctx = task.result()
-            message = await ButtonManager(msg, ctx, button_ctx, player)
+            message = await ButtonManager(niko, msg, ctx, button_ctx, player)
             break
             
-async def ButtonManager(msg, ctx, button_ctx, player):
+async def ButtonManager(niko, msg, ctx, button_ctx, player):
     data = button_ctx.data.custom_id
             
     if (data == f"play {msg.id}"):
