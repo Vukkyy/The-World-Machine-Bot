@@ -158,7 +158,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
         else:
             return True
 
-    message = ''
+    message = {'niko' : niko, 'message' : ''}
 
     song_ = player.current
         
