@@ -4,6 +4,7 @@ import datetime
 from interactions.ext.wait_for import wait_for_component
 import uuid
 import random
+import asyncio
 
 def setup_(self):
     global bot
@@ -85,7 +86,7 @@ async def GenerateEmbed(id : str, player, show_timeline):
             return interactions.Embed(
                 title = f"**Now Playing:** [{player.current.title}]",
                 thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
-                description = f"Interact with the player to see the timeline. \n\n *00:00 / {new_length}*",
+                description = f"Loading Player... <a:loading:1026539890382483576> \n\n *00:00 / {new_length}*",
                 footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
                 url = player.current.uri
             )
@@ -125,12 +126,6 @@ async def GenerateQueue(button_ctx, page_number, player):
 async def ShowPlayer(ctx, player, show_timeline : bool):
     message = ""
 
-    global uuid_
-
-    uuid_ = uuid.uuid4()
-
-    old_uuid = uuid_
-
     msg = await ctx.send('Loading Player... <a:loading:1026539890382483576>')
     niko = '<a:vibe:1027325436360929300>'
     
@@ -158,18 +153,25 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
     message = ''
 
     song_ = player.current
+    
+    task = asyncio.create_task(wait_for_component(bot, components=buttons, check=check))
         
     while True:
         print('waiting')
         button_ctx = msg
         
         try:
-            button_ctx = await wait_for_component(bot, components=buttons, check=check)
+            done, pending = await asyncio.wait({task}, timeout=50000)
+            if not done:
+                asyncio.sleep(2)
+                funny_embed = await GenerateEmbed(player.current.identifier, player, True)
+                funny_embed.set_author(name = message)
+                await button_ctx.edit(niko, embeds = funny_embed)
+                continue  # very important!
             
+            (button_ctx,) = done
         
             data = button_ctx.data.custom_id
-    
-            print(data)
         
             if (data == f"play {msg.id}"):
                 is_paused = player.fetch("is_paused")
@@ -250,7 +252,7 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
                     row1 = interactions.ActionRow(components=button_)
                     row2 = interactions.ActionRow(components=control_buttons)
         
-                    msg = await button_ctx.send(embeds = queue, components=[row1, row2])
+                    msg = await button_ctx.edit(embeds = queue, components=[row1, row2])
     
                     async def checkers(ctx):
                         return True
@@ -303,16 +305,4 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
             funny_embed.set_author(name = message)
             await button_ctx.edit(niko, embeds = funny_embed)
         except:
-            if (not player.current == song_):
-                print('song ended')
-                await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Ended.`', embeds=[], components =[])
-                return
-
-            if (old_uuid != uuid_):
-                await button_ctx.edit('<:twmhappy:1023573455456698368> `Player Moved`', embeds=[], components = [])
-                return
-            
-            funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-
-            funny_embed.set_author(name = message)
-            await button_ctx.edit(niko, embeds = funny_embed)
+            pass
