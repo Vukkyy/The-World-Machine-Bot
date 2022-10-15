@@ -72,10 +72,10 @@ class Music(interactions.Extension):
     async def on_start(self):
         print('Loading Music Module')
         self.client.lavalink_client.add_node(
-            host = 'lavalink.oops.wtf',
-            port = 2000,
-            password = 'www.freelavalink.ga',
-            region = "us"
+            host = '51.161.130.134',
+            port = 10333,
+            password = 'youshallnotpass',
+            region = "eu"
         ) # Woah, neat! Free Lavalink!
         
 

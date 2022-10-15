@@ -5,6 +5,8 @@ from interactions.ext.wait_for import wait_for_component
 import uuid
 import random
 import asyncio
+import lavalink
+import database_manager as db_manager
 
 def setup_(self):
     global bot
@@ -123,8 +125,14 @@ async def GenerateQueue(button_ctx, page_number, player):
         )
 
 
-async def ShowPlayer(ctx, player, show_timeline : bool):
+async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.DefaultPlayer, show_timeline : bool):
     message = ""
+    
+    player_id = uuid.uuid4()
+    
+    default_data = {'guild_id' : int(ctx.guild_id), 'player_id' : str(player_id)}
+    await db_manager.GetDatabase(int(ctx.guild_id), 'current_players', default_data)   
+    db = await db_manager.SetDatabase(int(ctx.guild_id), 'current_players', 'player_id', str(player_id))
 
     msg = await ctx.send('Loading Player... <a:loading:1026539890382483576>')
     niko = '<a:vibe:1027325436360929300>'
@@ -160,21 +168,33 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
         task = asyncio.create_task(wait_for_component(bot, components=buttons, check=check))
         
         while True:
-            done, pending = await asyncio.wait(task)
+            done, pending = await asyncio.wait({task}, timeout=2)
             
             if not done:
-                funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-                funny_embed.set_author(name = message)
-                await button_ctx.edit(niko, embeds = funny_embed)
-                print('Updated Player')
-                asyncio.sleep(2)
-                continue  # very important!
                 
-            button_ctx = done
-            await ButtonManager(ctx, button_ctx, player)
+                db = await db_manager.GetDatabase(int(ctx.guild_id), 'current_players', default_data)   
+                
+                if player.current != song_:
+                    await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Ended.`', embeds = [], components = [])
+                    return
+                
+                if db['player_id'] != str(player_id):
+                    await button_ctx.edit('<:nikosleepy:1027492467337080872> `Player Moved.`', embeds = [], components = [])
+                    return
+                
+                asyncio.wait(2)
+                
+                if not player.paused and player.is_playing:
+                    funny_embed = await GenerateEmbed(player.current.identifier, player, True)
+                    funny_embed.set_author(name = message)
+                    await button_ctx.edit(niko, embeds = funny_embed, components = buttons)
+                    continue  # very important!
+                
+            button_ctx = task.result()
+            message = await ButtonManager(msg, ctx, button_ctx, player)
             break
             
-async def ButtonManager(ctx, button_ctx, player):
+async def ButtonManager(msg, ctx, button_ctx, player):
     data = button_ctx.data.custom_id
             
     if (data == f"play {msg.id}"):
@@ -308,3 +328,4 @@ async def ButtonManager(ctx, button_ctx, player):
     funny_embed = await GenerateEmbed(player.current.identifier, player, True)
     funny_embed.set_author(name = message)
     await button_ctx.edit(niko, embeds = funny_embed)
+    return message
