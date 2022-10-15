@@ -160,15 +160,15 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
         print('waiting')
         button_ctx = msg
         
-        try:
-            done, pending = await asyncio.wait({task}, timeout=50000)
-            if not done:
-                asyncio.sleep(2)
-                funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-                funny_embed.set_author(name = message)
-                await button_ctx.edit(niko, embeds = funny_embed)
-                continue  # very important!
-            
+        done, pending = await asyncio.wait({task}, timeout=50000)
+        if not done:
+            asyncio.sleep(2)
+            funny_embed = await GenerateEmbed(player.current.identifier, player, True)
+            funny_embed.set_author(name = message)
+            await button_ctx.edit(niko, embeds = funny_embed)
+            continue  # very important!
+        
+        try:    
             (button_ctx,) = done
         
             data = button_ctx.data.custom_id
