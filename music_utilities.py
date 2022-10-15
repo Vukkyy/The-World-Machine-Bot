@@ -153,157 +153,158 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
     message = ''
 
     song_ = player.current
-    
-    task = asyncio.create_task(wait_for_component(bot, components=buttons, check=check))
         
     while True:
+        
+        task = asyncio.create_task(wait_for_component(bot, components=buttons, check=check))
+        
         while True:
             button_ctx = msg
             
-            done, pending = await asyncio.wait({task}, timeout=50000)
+            done, pending = await asyncio.wait({task})
             if not done:
                 asyncio.sleep(2)
                 funny_embed = await GenerateEmbed(player.current.identifier, player, True)
                 funny_embed.set_author(name = message)
                 await button_ctx.edit(niko, embeds = funny_embed)
+                print('Updated Player')
                 continue  # very important!
                 
             (button_ctx,) = done
+            await ButtonManager(ctx, button_ctx, player)
+            break
             
-            try:
-                data = button_ctx.data.custom_id
+async def ButtonManager(ctx, button_ctx, player):
+    data = button_ctx.data.custom_id
             
-                if (data == f"play {msg.id}"):
-                    is_paused = player.fetch("is_paused")
-                    
-                    if not (is_paused):
-                        await player.set_pause(True)
-                        player.store("is_paused", True)
-                        message = "Paused the current track playing."
-                        niko = '<:nikosleepy:1027492467337080872>'
-                    elif (is_paused):
-                        await player.set_pause(False)
-                        player.store("is_paused", False)
-                        message = "Resumed the current track playing."
-                        niko = '<a:vibe:1027325436360929300>'
-                elif (data == f"skip {msg.id}"):
-                    await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Skipped.`', embeds=[], components =[])
-                    await player.skip()
-                elif (data == f"queue {msg.id}"):
-                    if (len(player.queue) > 0):
-                        await button_ctx.edit(components=[])
-                        id = uuid.uuid4()
-                        
-                        options = []
-                        i = 0
+    if (data == f"play {msg.id}"):
+        is_paused = player.fetch("is_paused")
         
-                        for song in player.queue:
-                            if (i < 10):
-                                options.append(
-                                    interactions.SelectOption(
-                                        label = f'{i + 1}. {song.title}',
-                                        value = i
-                                    )
-                                )
-        
-                            i += 1
-        
-                        select = interactions.SelectMenu(
-                            options=options,
-                            placeholder= 'What Song?',
-                            custom_id="woo",
+        if not (is_paused):
+            await player.set_pause(True)
+            player.store("is_paused", True)
+            message = "Paused the current track playing."
+            niko = '<:nikosleepy:1027492467337080872>'
+        elif (is_paused):
+            await player.set_pause(False)
+            player.store("is_paused", False)
+            message = "Resumed the current track playing."
+            niko = '<a:vibe:1027325436360929300>'
+    elif (data == f"skip {msg.id}"):
+        await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Skipped.`', embeds=[], components =[])
+        await player.skip()
+    elif (data == f"queue {msg.id}"):
+        if (len(player.queue) > 0):
+            await button_ctx.edit(components=[])
+            id = uuid.uuid4()
+            
+            options = []
+            i = 0
+
+            for song in player.queue:
+                if (i < 10):
+                    options.append(
+                        interactions.SelectOption(
+                            label = f'{i + 1}. {song.title}',
+                            value = i
                         )
-                        
-                        queue = await GenerateQueue(button_ctx, 0, player)
-        
-                        control_buttons = [
-                            interactions.Button(
-                                label= "Prev. Page",
-                                style = interactions.ButtonStyle.PRIMARY,
-                                custom_id = f"b {str(id)}",
-                                disabled = True,
-                            ),
-                            interactions.Button(
-                                label="Next Page",
-                                style = interactions.ButtonStyle.PRIMARY,
-                                custom_id = f"n {str(id)}",
-                                disabled = True,
-                            ),
-                        ]
-        
-                        button_ = [
-                            interactions.Button(
-                                label="Shuffle",
-                                style = interactions.ButtonStyle.PRIMARY,
-                                custom_id = f"shuffle {str(id)}"
-                            ),
-                            interactions.Button(
-                                label="Remove Song",
-                                style = interactions.ButtonStyle.DANGER,
-                                custom_id = f"remove {str(id)}"
-                            ),
-                            interactions.Button(
-                                label="Jump To...",
-                                style = interactions.ButtonStyle.SUCCESS,
-                                custom_id = f'jump {str(id)}'
-                            ),
-                        ]
-        
-                        row1 = interactions.ActionRow(components=button_)
-                        row2 = interactions.ActionRow(components=control_buttons)
+                    )
+
+                i += 1
+
+            select = interactions.SelectMenu(
+                options=options,
+                placeholder= 'What Song?',
+                custom_id="woo",
+            )
             
-                        msg = await button_ctx.edit(embeds = queue, components=[row1, row2])
-        
-                        async def checkers(ctx):
-                            return True
-            
-                        while True:
-                            shuffle_ctx = await wait_for_component(bot, components = [row1, row2], check=checkers)
-        
-                            if (shuffle_ctx.data.custom_id == f'shuffle {str(id)}'):
-                                random.shuffle(player.queue)
-                            
-                                queue = await GenerateQueue(button_ctx, 0, player)
-                                await shuffle_ctx.edit('`Shuffled Queue.`', embeds = queue, components=button_)
-                            if (shuffle_ctx.data.custom_id == f'remove {str(id)}'):
-                                await shuffle_ctx.send(components=select, ephemeral = True)
-        
-                                contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
-        
-                                song_ = player.queue.pop(int(contexto.data.values[0]))
-                                
-                                await contexto.channel.send(f'<@{contexto.author.id}> Removed {song_.title} from the queue.')
-        
-                                queue = await GenerateQueue(button_ctx, 0, player)
-                                await shuffle_ctx.edit('`Deleted Song.`', embeds = queue, components=button_)
-                            if (shuffle_ctx.data.custom_id == f'jump {str(id)}'):
-                                await shuffle_ctx.send(components=select, ephemeral = True)
-        
-                                contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
-        
-                                song_ = player.queue[int(contexto.data.values[0])]
-        
-                                await contexto.channel.send(f'<@{contexto.author.id}> Jumped to {song_.title}.')
-        
-                                del player.queue[0 : int(contexto.data.values[0])]
-                                
-                                await player.play(song_)
-                    else:
-                        message = "Queue is currently empty :("
-                elif (data == f"stop {msg.id}"):
-                    await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
-                    await bot.disconnect(ctx.guild_id)
-                elif (data == f"loop {msg.id}"):
-                    if not (player.repeat):
-                        player.set_repeat(True)
-                        message = "Looping Queue!"
-                    else:
-                        player.set_repeat(False)
-                        message = "Loop Stopped!"
+            queue = await GenerateQueue(button_ctx, 0, player)
+
+            control_buttons = [
+                interactions.Button(
+                    label= "Prev. Page",
+                    style = interactions.ButtonStyle.PRIMARY,
+                    custom_id = f"b {str(id)}",
+                    disabled = True,
+                ),
+                interactions.Button(
+                    label="Next Page",
+                    style = interactions.ButtonStyle.PRIMARY,
+                    custom_id = f"n {str(id)}",
+                    disabled = True,
+                ),
+            ]
+
+            button_ = [
+                interactions.Button(
+                    label="Shuffle",
+                    style = interactions.ButtonStyle.PRIMARY,
+                    custom_id = f"shuffle {str(id)}"
+                ),
+                interactions.Button(
+                    label="Remove Song",
+                    style = interactions.ButtonStyle.DANGER,
+                    custom_id = f"remove {str(id)}"
+                ),
+                interactions.Button(
+                    label="Jump To...",
+                    style = interactions.ButtonStyle.SUCCESS,
+                    custom_id = f'jump {str(id)}'
+                ),
+            ]
+
+            row1 = interactions.ActionRow(components=button_)
+            row2 = interactions.ActionRow(components=control_buttons)
+
+            msg = await button_ctx.edit(embeds = queue, components=[row1, row2])
+
+            async def checkers(ctx):
+                return True
+
+            while True:
+                shuffle_ctx = await wait_for_component(bot, components = [row1, row2], check=checkers)
+
+                if (shuffle_ctx.data.custom_id == f'shuffle {str(id)}'):
+                    random.shuffle(player.queue)
+                
+                    queue = await GenerateQueue(button_ctx, 0, player)
+                    await shuffle_ctx.edit('`Shuffled Queue.`', embeds = queue, components=button_)
+                if (shuffle_ctx.data.custom_id == f'remove {str(id)}'):
+                    await shuffle_ctx.send(components=select, ephemeral = True)
+
+                    contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
+
+                    song_ = player.queue.pop(int(contexto.data.values[0]))
                     
-                funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-                funny_embed.set_author(name = message)
-                await button_ctx.edit(niko, embeds = funny_embed)
-                break
-            except:
-                pass
+                    await contexto.channel.send(f'<@{contexto.author.id}> Removed {song_.title} from the queue.')
+
+                    queue = await GenerateQueue(button_ctx, 0, player)
+                    await shuffle_ctx.edit('`Deleted Song.`', embeds = queue, components=button_)
+                if (shuffle_ctx.data.custom_id == f'jump {str(id)}'):
+                    await shuffle_ctx.send(components=select, ephemeral = True)
+
+                    contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
+
+                    song_ = player.queue[int(contexto.data.values[0])]
+
+                    await contexto.channel.send(f'<@{contexto.author.id}> Jumped to {song_.title}.')
+
+                    del player.queue[0 : int(contexto.data.values[0])]
+                    
+                    await player.play(song_)
+        else:
+            message = "Queue is currently empty :("
+    elif (data == f"stop {msg.id}"):
+        await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
+        await bot.disconnect(ctx.guild_id)
+    elif (data == f"loop {msg.id}"):
+        if not (player.repeat):
+            player.set_repeat(True)
+            message = "Looping Queue!"
+        else:
+            player.set_repeat(False)
+            message = "Loop Stopped!"
+        
+    funny_embed = await GenerateEmbed(player.current.identifier, player, True)
+    funny_embed.set_author(name = message)
+    await button_ctx.edit(niko, embeds = funny_embed)
