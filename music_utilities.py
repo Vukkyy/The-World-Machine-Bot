@@ -186,8 +186,8 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                 
                 if not player.paused and player.is_playing:
                     funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-                    funny_embed.set_author(name = message)
-                    await button_ctx.edit(niko, embeds = funny_embed, components = buttons)
+                    funny_embed.set_author(name = message['message'])
+                    await button_ctx.edit(message['niko'], embeds = funny_embed, components = buttons)
                     continue  # very important!
                 
             button_ctx = task.result()
@@ -276,7 +276,8 @@ async def ButtonManager(msg, ctx, button_ctx, player):
             row1 = interactions.ActionRow(components=button_)
             row2 = interactions.ActionRow(components=control_buttons)
 
-            msg = await button_ctx.edit(embeds = queue, components=[row1, row2])
+            await button_ctx.edit('Queue was opened, to get the player back, do </music get_player:1030977228885987419>.', components = [])
+            await button_ctx.send(embeds = queue, components=[row1, row2])
 
             async def checkers(ctx):
                 return True
@@ -295,11 +296,9 @@ async def ButtonManager(msg, ctx, button_ctx, player):
                     contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
 
                     song_ = player.queue.pop(int(contexto.data.values[0]))
-                    
-                    await contexto.channel.send(f'<@{contexto.author.id}> Removed {song_.title} from the queue.')
 
                     queue = await GenerateQueue(button_ctx, 0, player)
-                    await shuffle_ctx.edit('`Deleted Song.`', embeds = queue, components=button_)
+                    await shuffle_ctx.edit(f'`<@{contexto.author.id}> Removed {song_.title} from the queue.`', embeds = queue, components=button_)
                 if (shuffle_ctx.data.custom_id == f'jump {str(id)}'):
                     await shuffle_ctx.send(components=select, ephemeral = True)
 
@@ -328,4 +327,5 @@ async def ButtonManager(msg, ctx, button_ctx, player):
     funny_embed = await GenerateEmbed(player.current.identifier, player, True)
     funny_embed.set_author(name = message)
     await button_ctx.edit(niko, embeds = funny_embed)
-    return message
+    
+    return {'niko' : niko, 'message' : message}
