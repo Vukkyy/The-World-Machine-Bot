@@ -188,7 +188,7 @@ async def GenerateModalKip():
 
 async def GenerateModalNiko():
     normal = interactions.Emoji(id=1019605517695463484)
-    talk = interactions.Emoji(id=1019605516210667521)
+    talk = interactions.Emoji(id=1030967639633301506)
     left = interactions.Emoji(id=1019605499685113909)
     right = interactions.Emoji(id=1019605501228630107)
     shock = interactions.Emoji(id=1019605514843336764)
