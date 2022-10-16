@@ -93,7 +93,7 @@ async def GenerateEmbed(id : str, player, show_timeline):
                 url = player.current.uri
             )
 
-async def GenerateQueue(button_ctx, page_number, player):
+async def GenerateQueue(page_number, player):
     full_queue = player.queue
     list_ = ""
 
@@ -119,6 +119,19 @@ async def GenerateQueue(button_ctx, page_number, player):
             interactions.EmbedField(
                 name = "Song List",
                 value = list_,
+                inline = True
+                )
+            ]
+        )
+    else:
+        return interactions.Embed(
+        title = "Music Queue",
+        description = f"\n**Currently Playing:** `{player.current.title}`\n\n",
+        thumbnail = interactions.EmbedImageStruct( url = "https://shortcut-test2.s3.amazonaws.com/uploads/role/attachment/346765/default_Enlarged_sunicon.png" ),
+        fields = [
+            interactions.EmbedField(
+                name = "Song List",
+                value = 'Queue is empty!',
                 inline = True
                 )
             ]
@@ -182,8 +195,6 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                     await button_ctx.edit('<:nikosleepy:1027492467337080872> `Player Moved.`', embeds = [], components = [])
                     return
                 
-                asyncio.wait(2)
-                
                 if not player.paused and player.is_playing:
                     funny_embed = await GenerateEmbed(player.current.identifier, player, True)
                     funny_embed.set_author(name = message['message'])
@@ -215,7 +226,7 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
         await player.skip()
     elif (data == f"queue {msg.id}"):
         if (len(player.queue) > 0):
-            await button_ctx.edit(components=[])
+            await button_ctx.edit('Queue was opened, to get the player back, do </music get_player:1030977228885987419>.', components=[])
             id = uuid.uuid4()
             
             options = []
@@ -238,7 +249,7 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
                 custom_id="woo",
             )
             
-            queue = await GenerateQueue(button_ctx, 0, player)
+            queue = await GenerateQueue(0, player)
 
             control_buttons = [
                 interactions.Button(
@@ -275,9 +286,8 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
 
             row1 = interactions.ActionRow(components=button_)
             row2 = interactions.ActionRow(components=control_buttons)
-
-            await button_ctx.edit('Queue was opened, to get the player back, do </music get_player:1030977228885987419>.', components = [])
-            await button_ctx.send(embeds = queue, components=[row1, row2])
+            
+            funny_message = await button_ctx.send(embeds = queue, components=[row1, row2])
 
             async def checkers(ctx):
                 return True
@@ -288,7 +298,7 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
                 if (shuffle_ctx.data.custom_id == f'shuffle {str(id)}'):
                     random.shuffle(player.queue)
                 
-                    queue = await GenerateQueue(button_ctx, 0, player)
+                    queue = await GenerateQueue(0, player)
                     await shuffle_ctx.edit('`Shuffled Queue.`', embeds = queue, components=button_)
                 if (shuffle_ctx.data.custom_id == f'remove {str(id)}'):
                     await shuffle_ctx.send(components=select, ephemeral = True)
@@ -297,16 +307,19 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
 
                     song_ = player.queue.pop(int(contexto.data.values[0]))
 
-                    queue = await GenerateQueue(button_ctx, 0, player)
-                    await shuffle_ctx.edit(f'`<@{contexto.author.id}> Removed {song_.title} from the queue.`', embeds = queue, components=button_)
+                    queue_ = await GenerateQueue(0, player)
+                    await funny_message.edit(f'<@{contexto.author.id}> removed {song_.title} from the queue.', embeds = queue_, components=button_)
+                    await contexto.send(f'Successfully removed {song_.title} from the queue.', ephemeral = True)
                 if (shuffle_ctx.data.custom_id == f'jump {str(id)}'):
                     await shuffle_ctx.send(components=select, ephemeral = True)
 
                     contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
 
                     song_ = player.queue[int(contexto.data.values[0])]
-
-                    await contexto.channel.send(f'<@{contexto.author.id}> Jumped to {song_.title}.')
+                    
+                    queue_ = await GenerateQueue(0, player)
+                    await funny_message.edit(f'<@{contexto.author.id}> jumped to {song_.title}.', embeds = queue_, components=button_)
+                    await contexto.send(f'Successfully jumped to {song_.title}.', ephemeral = True)
 
                     del player.queue[0 : int(contexto.data.values[0])]
                     
