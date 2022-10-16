@@ -28,8 +28,6 @@ import exts.music
 
 TOKEN = os.getenv('BOT-TOKEN')
 
-print(TOKEN)
-
 bot = VoiceClient(token=TOKEN, intents=interactions.Intents.DEFAULT)
     
 bot.load('interactions.ext.files')
