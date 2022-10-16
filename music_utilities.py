@@ -199,13 +199,16 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                     funny_embed = await GenerateEmbed(player.current.identifier, player, True)
                     funny_embed.set_author(name = message['message'])
                     await button_ctx.edit(message['niko'], embeds = funny_embed, components = buttons)
-                    continue  # very important!
+                continue  # very important!
                 
             button_ctx = task.result()
             message = await ButtonManager(niko, msg, ctx, button_ctx, player)
             break
             
 async def ButtonManager(niko, msg, ctx, button_ctx, player):
+    
+    message = ''
+    
     data = button_ctx.data.custom_id
             
     if (data == f"play {msg.id}"):
