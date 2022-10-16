@@ -7,6 +7,7 @@ import random
 import asyncio
 import lavalink
 import database_manager as db_manager
+import music_update
 
 def setup_(self):
     global bot
@@ -138,7 +139,10 @@ async def GenerateQueue(page_number, player):
         )
 
 
-async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.DefaultPlayer, show_timeline : bool):
+async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.DefaultPlayer, show_timeline : bool, updating : bool = False):
+    if updating:
+        return
+    
     message = ""
     
     player_id = uuid.uuid4()
@@ -172,6 +176,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
             return True
 
     song_ = player.current
+    update_player = player.current
     
     message = {'niko' : niko, 'message' : ''}
     
@@ -184,6 +189,8 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
             done, pending = await asyncio.wait({task}, timeout=2)
             
             if not done:
+                
+                await music_update.update(ctx, player)
                 
                 db = await db_manager.GetDatabase(int(ctx.guild_id), 'current_players', default_data)   
                 
@@ -339,9 +346,10 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
         else:
             player.set_repeat(False)
             message = "Loop Stopped!"
-        
-    funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-    funny_embed.set_author(name = message)
-    await button_ctx.edit(niko, embeds = funny_embed)
-    
+    try:    
+        funny_embed = await GenerateEmbed(player.current.identifier, player, True)
+        funny_embed.set_author(name = message)
+        await button_ctx.edit(niko, embeds = funny_embed)
+    except:
+        pass # This is kind of stupid but I don't know how to handle this exception when it occasionally happens
     return {'niko' : niko, 'message' : message}

@@ -28,6 +28,8 @@ import exts.music
 
 TOKEN = os.getenv('BOT-TOKEN')
 
+print(TOKEN)
+
 bot = VoiceClient(token=TOKEN, intents=interactions.Intents.DEFAULT)
     
 bot.load('interactions.ext.files')
@@ -78,7 +80,7 @@ async def change_picture():
     image = interactions.Image("Images/picture.png")
 
     try:
-        await bot.modify(avatar=image, username="The World Machine")
+        await bot.modify(avatar=image, username=bot.me.name)
     except:
         print("Couldn't change avatar. Whoops, either way...")
 

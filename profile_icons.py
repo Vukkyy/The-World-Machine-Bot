@@ -1,7 +1,7 @@
 import interactions
 
-icons = [
-    "https://static.wikia.nocookie.net/oneshot/images/3/3b/En.png/revision/latest?cb=20170813153310",
+'''
+"https://static.wikia.nocookie.net/oneshot/images/3/3b/En.png/revision/latest?cb=20170813153310",
     "https://static.wikia.nocookie.net/oneshot/images/1/1b/En_83c.png/revision/latest?cb=20171006214827",
     "https://static.wikia.nocookie.net/oneshot/images/c/ce/En_cry.png/revision/latest?cb=20171006221035",
     "https://static.wikia.nocookie.net/oneshot/images/2/2e/En_distressed2.png/revision/latest?cb=20171006222215",
@@ -9,7 +9,12 @@ icons = [
     "https://static.wikia.nocookie.net/oneshot/images/8/82/En_pancakes.png/revision/latest?cb=20171006223511",
     "https://static.wikia.nocookie.net/oneshot/images/0/06/En_wtf2.png/revision/latest?cb=20171006224026",
     "https://static.wikia.nocookie.net/oneshot/images/6/63/En_yawn.png/revision/latest?cb=20171006224037"
-]
+'''
+
+icons = []
+
+with open('profile_pictures.pfp', 'r') as f:
+    icons = f.readlines()
 
 lightbulbs = [
     'https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2018/07/broken-light-bulb.jpg',

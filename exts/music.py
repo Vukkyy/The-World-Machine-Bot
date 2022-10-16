@@ -55,7 +55,7 @@ class Music(interactions.Extension):
     @listener()
     async def disconnected(self, event : lavalink.NodeDisconnectedEvent):
         self.client.lavalink_client.add_node(
-            host = '51.161.130.134',
+            host = '162.248.100.61',
             port = 10333,
             password = 'youshallnotpass',
             region = "eu"
@@ -72,7 +72,7 @@ class Music(interactions.Extension):
     async def on_start(self):
         print('Loading Music Module')
         self.client.lavalink_client.add_node(
-            host = '51.161.130.134',
+            host = '162.248.100.61',
             port = 10333,
             password = 'youshallnotpass',
             region = "eu"
@@ -203,6 +203,9 @@ class Music(interactions.Extension):
             
         elif (sub_command == "stop"):
             await self.client.disconnect(ctx.guild_id)
+            
+async def update_player(ctx, player):
+    await music_.ShowPlayer(ctx, player, True, True)
 
 def setup(client):
     Music(client)

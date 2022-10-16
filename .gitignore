@@ -1,3 +1,5 @@
 /databases/*
 /Images/*
 *.code-workspace
+*.env
+profile_pictures.pfp
