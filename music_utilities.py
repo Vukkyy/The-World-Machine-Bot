@@ -94,7 +94,7 @@ async def GenerateEmbed(id : str, player, show_timeline):
                 url = player.current.uri
             )
 
-async def GenerateQueue(page_number, player):
+async def GenerateQueue(page_number, player, controls = False, forward = False):
     full_queue = player.queue
     list_ = ""
 
@@ -103,26 +103,38 @@ async def GenerateQueue(page_number, player):
     starting_index = (items_pi * (page_number + 1)) - items_pi
     queue = full_queue[starting_index : starting_index + items_pi] # From 0 to 20
 
-
+    if controls:
+        if len(queue) == 0:
+            if forward:
+                page_number -= 1
+                q = await GenerateQueue(page_number, player)
+                return q
+            else:
+                page_number += 1
+                q = await GenerateQueue(page_number, player)
+                return q
+    
     try:
         for song in queue:
             time = datetime.datetime.fromtimestamp(song.duration / 1000).strftime('%M:%S')
-            list_ = f"{list_}**{queue.index(song) + 1}.** `{song.title}` *({time})*\n"
+            list_ = f"{list_}**{full_queue.index(song) + 1}.** `{song.title}` *({time})*\n"
     except:
         pass
     
     if (len(list_) > 0):
         return interactions.Embed(
-        title = "Music Queue",
-        description = f"\n**Currently Playing:** `{player.current.title}`\n\n",
-        thumbnail = interactions.EmbedImageStruct( url = "https://shortcut-test2.s3.amazonaws.com/uploads/role/attachment/346765/default_Enlarged_sunicon.png" ),
-        fields = [
-            interactions.EmbedField(
-                name = "Song List",
-                value = list_,
-                inline = True
-                )
-            ]
+            title = "Music Queue",
+            description = f"\n**Currently Playing:** `{player.current.title}`\n\n",
+            thumbnail = interactions.EmbedImageStruct( url = "https://shortcut-test2.s3.amazonaws.com/uploads/role/attachment/346765/default_Enlarged_sunicon.png" ),
+            fields = [
+                interactions.EmbedField(
+                    name = "Song List",
+                    value = list_,
+                    inline = True
+                    )
+                ],
+            
+            author = interactions.EmbedAuthor(text=f'Page ({page_number + 1} / {round(len(full_queue) / 10)})')
         )
     else:
         return interactions.Embed(
@@ -231,69 +243,64 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
             player.store("is_paused", False)
             message = "Resumed the current track playing."
             niko = '<a:vibe:1027325436360929300>'
+            
     elif (data == f"skip {msg.id}"):
         await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Skipped.`', embeds=[], components =[])
         await player.skip()
+        
     elif (data == f"queue {msg.id}"):
         if (len(player.queue) > 0):
+            
             await button_ctx.edit('Queue was opened, to get the player back, do </music get_player:1030977228885987419>.', components=[])
             id = uuid.uuid4()
             
-            options = []
-            i = 0
-
-            for song in player.queue:
-                if (i < 10):
-                    options.append(
-                        interactions.SelectOption(
-                            label = f'{i + 1}. {song.title}',
-                            value = i
-                        )
-                    )
-
-                i += 1
-
-            select = interactions.SelectMenu(
-                options=options,
-                placeholder= 'What Song?',
-                custom_id="woo",
-            )
+            shuffle_emoji = interactions.Emoji(id=1031309497706225814)
+            delete_emoji = interactions.Emoji(id=1031309493457399829)
+            jump_emoji = interactions.Emoji(id=1031309498557681717)
+            left_emoji = interactions.Emoji(id=1031309494946385920)
+            right_emoji = interactions.Emoji(id=1031309496401793064)
+            
             
             queue = await GenerateQueue(0, player)
 
             control_buttons = [
                 interactions.Button(
-                    label= "Prev. Page",
                     style = interactions.ButtonStyle.PRIMARY,
                     custom_id = f"b {str(id)}",
-                    disabled = True,
+                    emoji = left_emoji
                 ),
                 interactions.Button(
-                    label="Next Page",
                     style = interactions.ButtonStyle.PRIMARY,
                     custom_id = f"n {str(id)}",
-                    disabled = True,
+                    emoji = right_emoji
                 ),
             ]
 
             button_ = [
                 interactions.Button(
-                    label="Shuffle",
                     style = interactions.ButtonStyle.PRIMARY,
-                    custom_id = f"shuffle {str(id)}"
+                    custom_id = f"shuffle {str(id)}",
+                    emoji = shuffle_emoji,
                 ),
                 interactions.Button(
-                    label="Remove Song",
                     style = interactions.ButtonStyle.DANGER,
-                    custom_id = f"remove {str(id)}"
+                    custom_id = f"remove {str(id)}",
+                    emoji = delete_emoji
                 ),
                 interactions.Button(
-                    label="Jump To...",
                     style = interactions.ButtonStyle.SUCCESS,
-                    custom_id = f'jump {str(id)}'
+                    custom_id = f'jump {str(id)}',
+                    emoji = jump_emoji
                 ),
             ]
-
+            
+            control_buttons[0].disabled = True
+            
+            if len(player.queue) > 10:
+                control_buttons[1].disabled = False
+            else:
+                control_buttons[1].disabled = True
+                
             row1 = interactions.ActionRow(components=button_)
             row2 = interactions.ActionRow(components=control_buttons)
             
@@ -301,39 +308,126 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
 
             async def checkers(ctx):
                 return True
+            
+            page = 0
 
             while True:
+                
+                
                 shuffle_ctx = await wait_for_component(bot, components = [row1, row2], check=checkers)
 
                 if (shuffle_ctx.data.custom_id == f'shuffle {str(id)}'):
                     random.shuffle(player.queue)
                 
-                    queue = await GenerateQueue(0, player)
-                    await shuffle_ctx.edit('`Shuffled Queue.`', embeds = queue, components=button_)
+                    queue = await GenerateQueue(page, player)
+                    await shuffle_ctx.edit('`Shuffled Queue.`', embeds = queue, components=[row1, row2])
                 if (shuffle_ctx.data.custom_id == f'remove {str(id)}'):
-                    await shuffle_ctx.send(components=select, ephemeral = True)
+                    
+                    options = []
+                    i = 0
 
+                    for song in player.queue:
+                        if (i < 20):
+                            options.append(
+                                interactions.SelectOption(
+                                    label = f'{i + 1}. {song.title}',
+                                    value = i
+                                )
+                            )
+
+                        i += 1
+                    
+                    select = interactions.SelectMenu(
+                        options=options,
+                        placeholder= 'What Song?',
+                        custom_id="woo",
+                    )
+                    
+                    await shuffle_ctx.send(components=select, ephemeral = True)
+                    
                     contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
 
                     song_ = player.queue.pop(int(contexto.data.values[0]))
 
-                    queue_ = await GenerateQueue(0, player)
-                    await funny_message.edit(f'<@{contexto.author.id}> removed {song_.title} from the queue.', embeds = queue_, components=button_)
+                    queue_ = await GenerateQueue(page, player)
+                    await funny_message.edit(f'<@{contexto.author.id}> removed {song_.title} from the queue.', embeds = queue_, components=[row1, row2])
                     await contexto.send(f'Successfully removed {song_.title} from the queue.', ephemeral = True)
                 if (shuffle_ctx.data.custom_id == f'jump {str(id)}'):
+                    
+                    options = []
+                    i = 0
+
+                    for song in player.queue:
+                        if (i + (10 * page) - 1 < 10 * page + 1):
+                            options.append(
+                                interactions.SelectOption(
+                                    label = f'{i + 1}. {song.title}',
+                                    value = i
+                                )
+                            )
+
+                        i += 1
+                        
+                    select = interactions.SelectMenu(
+                        options=options,
+                        placeholder= 'What Song?',
+                        custom_id="woo",
+                    )
+                    
                     await shuffle_ctx.send(components=select, ephemeral = True)
 
                     contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
 
                     song_ = player.queue[int(contexto.data.values[0])]
                     
-                    queue_ = await GenerateQueue(0, player)
-                    await funny_message.edit(f'<@{contexto.author.id}> jumped to {song_.title}.', embeds = queue_, components=button_)
+                    queue_ = await GenerateQueue(page, player)
+                    await funny_message.edit(f'<@{contexto.author.id}> jumped to {song_.title}.', embeds = queue_, components=[row1, row2])
                     await contexto.send(f'Successfully jumped to {song_.title}.', ephemeral = True)
 
                     del player.queue[0 : int(contexto.data.values[0])]
                     
                     await player.play(song_)
+                    
+                    
+                if (shuffle_ctx.data.custom_id == f'b {str(id)}'):
+                    page -= 1
+                    
+                    if len(player.queue) > 10:
+                        control_buttons[1].disabled = False
+                    else:
+                        control_buttons[1].disabled = True
+                        
+                    if page > 0:
+                        print('Awesome')
+                        control_buttons[0].disabled = False
+                    else:
+                        control_buttons[0].disabled = True
+                        
+                    row1 = interactions.ActionRow(components=button_)
+                    row2 = interactions.ActionRow(components=control_buttons)
+                    
+                    queue = await GenerateQueue(page, player, True, False)
+                    await shuffle_ctx.edit('`Previous Page.`', embeds = queue, components=[row1, row2])
+                    
+                if (shuffle_ctx.data.custom_id == f'n {str(id)}'):
+                    page += 1
+                    
+                    if len(player.queue) > 10:
+                        control_buttons[1].disabled = False
+                    else:
+                        control_buttons[1].disabled = True
+                        
+                    if page > 0:
+                        print('Awesome')
+                        control_buttons[0].disabled = False
+                    else:
+                        control_buttons[0].disabled = True
+                        
+                    row1 = interactions.ActionRow(components=button_)
+                    row2 = interactions.ActionRow(components=control_buttons)
+                    
+                    queue = await GenerateQueue(page, player, True, True)
+                    await shuffle_ctx.edit('`Next Page.`', embeds = queue, components=[row1, row2])
         else:
             message = "Queue is currently empty :("
     elif (data == f"stop {msg.id}"):
