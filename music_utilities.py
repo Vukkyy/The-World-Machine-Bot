@@ -358,7 +358,7 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
                     i = 0
 
                     for song in player.queue:
-                        if (i + (10 * page) - 1 < 10 * page + 1):
+                        if (i < 20):
                             options.append(
                                 interactions.SelectOption(
                                     label = f'{i + 1}. {song.title}',

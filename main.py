@@ -8,6 +8,7 @@ import json
 import datetime
 from dotenv import load_dotenv
 load_dotenv()
+import cleantext
 
 # Other Scripts
 import custom_source
@@ -25,13 +26,15 @@ from interactions.ext.lavalink import VoiceClient
 import interactions.ext.files
 from interactions.ext.enhanced import cooldown
 import exts.music
+import exts.transmit
 
 TOKEN = os.getenv('BOT-TOKEN')
 
-bot = VoiceClient(token=TOKEN, intents=interactions.Intents.DEFAULT)
+bot = VoiceClient(token=TOKEN, intents=interactions.Intents.DEFAULT | interactions.Intents.GUILD_MESSAGE_CONTENT)
     
 bot.load('interactions.ext.files')
-bot.load('exts.music') # AttributeError: module 'exts.music' has no attribute 'setup'
+bot.load('exts.music')
+bot.load('exts.transmit')
 
 setup(bot)
 
@@ -868,15 +871,35 @@ async def on_message_create(message: interactions.Message):
 
     if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing.
         return
-        
-    await stamps.IncrementValue(message, "times_messaged", int(message.author.id)) # Increment the times messaged by 1.
-
-    '''f = open('userphone.json')
-    connection_data = json.load(f)
-    f.close()
     
-    for cc in connection_data['connections']:
-        if (cc['guild_id'] == message.guild_id):
-            await UpdateMessage(message, message.guild_id)'''
+    content = message.content
+    
+    content = cleantext.replace_urls(content, '[[ HYPERLINK BLOCKED ]]')
+    
+    
+    embed = interactions.Embed(
+        author= interactions.EmbedAuthor(name=message.author.username, icon_url=message.author.avatar_url),
+        title = '',
+        description= content
+    )
+    
+    if message.author != bot.me:   
+        await stamps.IncrementValue(message, "times_messaged", int(message.author.id)) # Increment the times messaged by 1.
+
+        with open('Transmissions/connected.userphone', 'r') as f:
+            channel_ids = f.readlines()
+            
+            for channel_id in channel_ids:
+                channel_id = json.loads(channel_id)
+                if (int(channel_id['connection_one']) == int(message.channel_id)):
+                    channel = await interactions.get(bot, interactions.Channel, object_id=int(channel_id['connection_two']))
+                    await channel.send(embeds=embed)
+                    break
+                elif (int(channel_id['connection_two']) == int(message.channel_id)):                  
+                    channel = await interactions.get(bot, interactions.Channel, object_id=int(channel_id['connection_one']))
+                    await channel.send(embeds=embed)
+                    break
+                
+        
 
 bot.start()
