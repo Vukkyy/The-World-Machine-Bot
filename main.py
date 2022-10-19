@@ -874,7 +874,7 @@ async def on_message_create(message: interactions.Message):
     
     content = message.content
     
-    content = cleantext.replace_urls(content, '[[ HYPERLINK BLOCKED ]]')
+    content = cleantext.replace_urls(content, '`< URL >`')
     
     
     embed = interactions.Embed(
