@@ -806,7 +806,7 @@ async def assign_stamp(ctx : interactions.CommandContext, user : interactions.Me
                 id_ = f'https://cdn.discordapp.com/emojis/{str(badge["stamp_url"])}.png'
         
         await ctx.send('Assigned Stamp to ' + user.user.username)
-        await stamps.EarnBadge(ctx, stamp_id, name, id_, 'You recieved this stamp from the owner of the bot, congrats!', int(ctx.user.id))
+        await stamps.EarnBadge(ctx, stamp_id, name, id_, 'You recieved this stamp from the owner of the bot, congrats!', int(user.id))
     else:
         await ctx.send('Sorry, you cannot use this command!', ephemeral=True)
 
