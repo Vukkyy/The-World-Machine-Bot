@@ -261,8 +261,8 @@ async def disconnect(self, ctx : interactions.CommandContext, connection : str, 
         
         with open('Transmissions/update.userphone', 'r') as f:
             can_send = f.read().split('>')
-    
-        can_send.remove(str(ctx.guild.id))
+
+        can_send = list(filter((str(ctx.guild.id)).__ne__, can_send))
         
         with open('Transmissions/update.userphone', 'w') as f:
             f.write('>'.join(can_send))

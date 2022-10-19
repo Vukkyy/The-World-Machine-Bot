@@ -1,3 +1,4 @@
+import asyncio
 import interactions
 import os
 import random
@@ -892,14 +893,17 @@ async def on_message_create(message: interactions.Message):
             for channel_id in channel_ids:
                 channel_id = json.loads(channel_id)
                 if (int(channel_id['connection_one']) == int(message.channel_id)):
+                    
                     channel = await interactions.get(bot, interactions.Channel, object_id=int(channel_id['connection_two']))
+                    await bot._http.trigger_typing(channel_id=int(channel_id['connection_two']))
+                    await asyncio.sleep(1)
                     await channel.send(embeds=embed)
                     break
                 elif (int(channel_id['connection_two']) == int(message.channel_id)):                  
                     channel = await interactions.get(bot, interactions.Channel, object_id=int(channel_id['connection_one']))
+                    await bot._http.trigger_typing(channel_id=int(channel_id['connection_one']))
+                    await asyncio.sleep(1)
                     await channel.send(embeds=embed)
                     break
-                
-        
 
 bot.start()
