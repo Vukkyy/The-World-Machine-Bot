@@ -54,8 +54,8 @@ async def on_start():
             status=interactions.StatusType.ONLINE,
             activities=[
                 interactions.PresenceActivity(
-                    name="Over Niko",
-                    type=interactions.PresenceActivityType.WATCHING)
+                    name="on little cat feet",
+                    type=interactions.PresenceActivityType.LISTENING)
             ]))
 
     await change_picture()
@@ -873,18 +873,11 @@ async def on_message_create(message: interactions.Message):
     if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing.
         return
     
-    content = message.content
+    if message.author != bot.me:
+        content = message.content
     
-    content = cleantext.replace_urls(content, '`< URL >`')
-    
-    
-    embed = interactions.Embed(
-        author= interactions.EmbedAuthor(name=message.author.username, icon_url=message.author.avatar_url),
-        title = '',
-        description= content
-    )
-    
-    if message.author != bot.me:   
+        content = cleantext.replace_urls(content, '`< URL >`')
+        
         await stamps.IncrementValue(message, "times_messaged", int(message.author.id)) # Increment the times messaged by 1.
 
         with open('Transmissions/connected.userphone', 'r') as f:
@@ -893,17 +886,37 @@ async def on_message_create(message: interactions.Message):
             for channel_id in channel_ids:
                 channel_id = json.loads(channel_id)
                 if (int(channel_id['connection_one']) == int(message.channel_id)):
-                    
                     channel = await interactions.get(bot, interactions.Channel, object_id=int(channel_id['connection_two']))
+                    embed = await generate_userphone_embed(channel_id['hidden'], message.author, content)
                     await bot._http.trigger_typing(channel_id=int(channel_id['connection_two']))
                     await asyncio.sleep(1)
                     await channel.send(embeds=embed)
                     break
                 elif (int(channel_id['connection_two']) == int(message.channel_id)):                  
                     channel = await interactions.get(bot, interactions.Channel, object_id=int(channel_id['connection_one']))
+                    embed = await generate_userphone_embed(channel_id['hidden'], message.author, content)
                     await bot._http.trigger_typing(channel_id=int(channel_id['connection_one']))
                     await asyncio.sleep(1)
                     await channel.send(embeds=embed)
                     break
+
+async def generate_userphone_embed(hidden : bool, user : interactions.User, content : str):
+    if hidden:
+        user_ = await interactions.get(bot, interactions.User, object_id = 744248932263133234)
+        
+        username = user_.username + f'#{str(user.id)[2 : 6]}'
+        
+        return interactions.Embed(
+            author= interactions.EmbedAuthor(name=username, icon_url=user_.avatar_url),
+            title = '',
+            description= content
+        )
+    else:
+        return interactions.Embed(
+            author= interactions.EmbedAuthor(name=user.username, icon_url=user.avatar_url),
+            title = '',
+            description= content
+        )
+        
 
 bot.start()

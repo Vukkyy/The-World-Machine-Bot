@@ -12,7 +12,7 @@ class Transmissions(interactions.Extension):
         self.client: VoiceClient = client
         print("Loaded Transmissions")
         with open('Transmissions/connected.userphone', 'w') as f:
-            f.write(json.dumps({"connection_one" : 0, "connection_two" : 0}))
+            f.write(json.dumps({"connection_one" : 0, "connection_two" : 0, "hidden" : False}))
         with open('Transmissions/transmissions.userphone', 'w') as f:
             f.write('')
         with open('Transmissions/update.userphone', 'w') as f:
@@ -21,8 +21,16 @@ class Transmissions(interactions.Extension):
     @interactions.extension_command(
         name = 'transmit',
         description = 'Transmit (talk to) other servers using The World Machine!',
+        options = [
+            interactions.Option(
+                type = interactions.OptionType.BOOLEAN,
+                name = 'hide',
+                description = 'Enabling this allows you to hide your name and profile picture from the other server.',
+                required=True
+            )
+        ]
     )
-    async def transmit(self, ctx : interactions.CommandContext):
+    async def transmit(self, ctx : interactions.CommandContext, hide : bool = False):
         channel_ids = []
         
         can_send = []
@@ -49,12 +57,23 @@ class Transmissions(interactions.Extension):
         
         if (len(channel_ids) == 0):
             
-            channel_ids.append(str(ctx.channel.id))
+            channel_ids.append(str(ctx.channel.id) + f'>{str(hide)}')
             
             with open('Transmissions/transmissions.userphone', 'w') as f:
                 f.write('\n'.join(channel_ids))
                 
             msg = await ctx.send('Waiting for someone to connect... <a:loading:1026539890382483576>')
+            
+            await self.client.change_presence(
+                interactions.ClientPresence(
+                        status=interactions.StatusType.ONLINE,
+                        activities=[
+                            interactions.PresenceActivity(
+                                name="a server transmitting!",
+                                type=interactions.PresenceActivityType.WATCHING)
+                        ]
+                    )
+                )
             
             tries = 0
             limit = 20
@@ -74,6 +93,16 @@ class Transmissions(interactions.Extension):
                         f.write('>'.join(can_send))
                     
                     await msg.edit('Looks like no one wants to talk... <:twmcrying:1023573454307463338>')
+                    
+                    await self.client.change_presence(
+                    interactions.ClientPresence(
+                        status=interactions.StatusType.ONLINE,
+                        activities=[
+                            interactions.PresenceActivity(
+                                name="on little cat feet",
+                                type=interactions.PresenceActivityType.LISTENING)
+                        ]))
+                    
                     del channel_ids[0]
                     with open('Transmissions/transmissions.userphone', 'w') as f:
                         f.write('\n'.join(channel_ids))
@@ -83,12 +112,12 @@ class Transmissions(interactions.Extension):
                     channel_ids = f.readlines()
                     
                 update = False
-                
-                print('Transmitting')
+                hidden = False
                 
                 for channel_id in channel_ids:
                     channel_id = json.loads(channel_id)
                     if (int(channel_id['connection_one']) == int(ctx.channel_id)):
+                        hidden = channel_id['hidden']
                         update = True
                         break
                         
@@ -97,20 +126,35 @@ class Transmissions(interactions.Extension):
                     
                 await asyncio.sleep(1)
                 tries += 1
-
-            await msg.delete()
-            await get_call(self, ctx)
-            return
+                
+            await self.client.change_presence(
+                    interactions.ClientPresence(
+                        status=interactions.StatusType.ONLINE,
+                        activities=[
+                            interactions.PresenceActivity(
+                                name="on little cat feet",
+                                type=interactions.PresenceActivityType.LISTENING)
+                        ]))
+            
+            if hidden and not hide:
+                await get_call(self, ctx, msg, True)
+            else:
+                await get_call(self, ctx, msg)
 
         json_list = []
         
         with open('Transmissions/connected.userphone', 'r') as f:
             json_list = f.readlines()
         
-        connection_one = int(channel_ids[0])
+        connection_ = channel_ids[0].split('>')
+        
+        connection_one = int(connection_[0]) # Converts user id to an integer
+        
+        hidden = eval(connection_[1])  # Converts string boolean to a python bool
+        
         del channel_ids[0]
         
-        json_list.append(json.dumps({'connection_one': connection_one, 'connection_two' : int(ctx.channel.id)}))
+        json_list.append(json.dumps({'connection_one': connection_one, 'connection_two' : int(ctx.channel.id), "hidden" : hidden}))
         
         with open('Transmissions/transmissions.userphone', 'w') as f:
             f.write('\n'.join(channel_ids))
@@ -119,13 +163,16 @@ class Transmissions(interactions.Extension):
         with open('Transmissions/connected.userphone', 'w') as f:
             f.write('\n'.join(json_list))
             
-        await get_call(self, ctx)
-
-            
+        msg = await ctx.send('Connecting... <a:loading:1026539890382483576>')
+        
+        
+        if hidden:
+            await get_call(self, ctx, msg, True)
+        else:
+            await get_call(self, ctx, msg)
         
 
-
-async def get_call(self, ctx : interactions.CommandContext):
+async def get_call(self, ctx : interactions.CommandContext, message : interactions.Message, hidden : bool = False):
     
     button = interactions.Button(
                 label = 'Disconnect',
@@ -134,7 +181,10 @@ async def get_call(self, ctx : interactions.CommandContext):
             )
     print('connected')
     
-    msg = await ctx.send('Connection established! Say hello! <:twmpancakes:1023573458296246333>', components = button)
+    msg = await message.edit('Connection established! Say hello! <:twmpancakes:1023573458296246333>', components = button)
+    
+    if (hidden):
+        await msg.reply('Other server has opted to stay hidden, both servers will not have their name or profile picture shown.')
 
     current_connection = []
     json_list = []
@@ -179,7 +229,7 @@ async def get_call(self, ctx : interactions.CommandContext):
             if not done:
                 timer -= 1
                 if (timer % 5 == 0):
-                    await msg.edit(f'Connection established! Say hello! *({format_timespan(timer)} left before disconnect!)* <:twmpancakes:1023573458296246333>', components = button)
+                    await message.edit(f'Connection established! Say hello! *({format_timespan(timer)} left before disconnect!)* <:twmpancakes:1023573458296246333>', components = button)
                 
                 if (timer == 30):
                     await ctx.send('Only 30 seconds left for this transmission! <:twmclosedeyes:1023573452944322560>')
