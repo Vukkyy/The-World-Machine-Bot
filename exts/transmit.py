@@ -99,7 +99,7 @@ class Transmissions(interactions.Extension):
                         status=interactions.StatusType.ONLINE,
                         activities=[
                             interactions.PresenceActivity(
-                                name="on little cat feet",
+                                name="On Little Cat Feet",
                                 type=interactions.PresenceActivityType.LISTENING)
                         ]))
                     
@@ -132,7 +132,7 @@ class Transmissions(interactions.Extension):
                         status=interactions.StatusType.ONLINE,
                         activities=[
                             interactions.PresenceActivity(
-                                name="on little cat feet",
+                                name="On Little Cat Feet",
                                 type=interactions.PresenceActivityType.LISTENING)
                         ]))
             

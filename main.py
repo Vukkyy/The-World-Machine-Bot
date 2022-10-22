@@ -54,7 +54,7 @@ async def on_start():
             status=interactions.StatusType.ONLINE,
             activities=[
                 interactions.PresenceActivity(
-                    name="on little cat feet",
+                    name="On Little Cat Feet",
                     type=interactions.PresenceActivityType.LISTENING)
             ]))
 
