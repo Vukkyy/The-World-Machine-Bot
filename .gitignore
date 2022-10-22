@@ -2,6 +2,7 @@
 /Images/*
 *.code-workspace
 profile_pictures.pfp
+/Transmissions/*
 
 *.pyc
 

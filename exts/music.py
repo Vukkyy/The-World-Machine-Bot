@@ -3,6 +3,10 @@ import lavalink
 from interactions.ext.lavalink import VoiceClient, VoiceState, listener, Player
 import music_utilities as music_
 import custom_source
+import lyricsgenius
+import os
+
+genius = lyricsgenius.Genius(os.getenv('GENIUS'))
 
 class Music(interactions.Extension):
     def __init__(self, client):
@@ -66,7 +70,13 @@ class Music(interactions.Extension):
         await ctx.send("An Unexpected error occurred. Skipping to the next track.")
         await event.player.play()
 
+    @interactions.extension_command()
+    async def lyrics(self, ctx):
+        await ctx.send('Getting lyrics')
         
+        song = genius.search_song("My Time", "bo en")
+        
+        await ctx.send(song.lyrics)
 
     @interactions.extension_listener()
     async def on_start(self):

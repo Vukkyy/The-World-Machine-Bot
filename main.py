@@ -28,6 +28,7 @@ import interactions.ext.files
 from interactions.ext.enhanced import cooldown
 import exts.music
 import exts.transmit
+import exts.embed_creator
 
 TOKEN = os.getenv('BOT-TOKEN')
 
@@ -36,6 +37,7 @@ bot = VoiceClient(token=TOKEN, intents=interactions.Intents.DEFAULT | interactio
 bot.load('interactions.ext.files')
 bot.load('exts.music')
 bot.load('exts.transmit')
+bot.load('exts.embed_creator')
 
 setup(bot)
 
@@ -54,7 +56,7 @@ async def on_start():
             status=interactions.StatusType.ONLINE,
             activities=[
                 interactions.PresenceActivity(
-                    name="on little cat feet",
+                    name="On Little Cat Feet",
                     type=interactions.PresenceActivityType.LISTENING)
             ]))
 
@@ -881,7 +883,7 @@ async def on_message_create(message: interactions.Message):
         await stamps.IncrementValue(message, "times_messaged", int(message.author.id)) # Increment the times messaged by 1.
 
         with open('Transmissions/connected.userphone', 'r') as f:
-            channel_ids = f.readlines()
+            channel_ids = f.read().split('>')
             
             for channel_id in channel_ids:
                 channel_id = json.loads(channel_id)

@@ -23,14 +23,30 @@ class Transmissions(interactions.Extension):
         description = 'Transmit (talk to) other servers using The World Machine!',
         options = [
             interactions.Option(
-                type = interactions.OptionType.BOOLEAN,
+                type = interactions.OptionType.STRING,
                 name = 'hide',
                 description = 'Enabling this allows you to hide your name and profile picture from the other server.',
-                required=True
+                required=True,
+                choices = [
+                    interactions.Choice(
+                        name = 'Do not Hide',
+                        value = 'f'
+                    ),
+                    interactions.Choice(
+                        name = 'Hide',
+                        value= 'there are imposters among us 🗿'
+                    )
+                ]
             )
         ]
     )
-    async def transmit(self, ctx : interactions.CommandContext, hide : bool = False):
+    async def transmit(self, ctx : interactions.CommandContext, hide : str = 'f'):
+        
+        if hide == 'f':
+            hide = False
+        else:
+            hide = True
+        
         channel_ids = []
         
         can_send = []
@@ -99,7 +115,7 @@ class Transmissions(interactions.Extension):
                         status=interactions.StatusType.ONLINE,
                         activities=[
                             interactions.PresenceActivity(
-                                name="on little cat feet",
+                                name="On Little Cat Feet",
                                 type=interactions.PresenceActivityType.LISTENING)
                         ]))
                     
@@ -109,7 +125,7 @@ class Transmissions(interactions.Extension):
                     return
                 
                 with open('Transmissions/connected.userphone', 'r') as f:
-                    channel_ids = f.readlines()
+                    channel_ids = f.read().split('>')
                     
                 update = False
                 hidden = False
@@ -132,7 +148,7 @@ class Transmissions(interactions.Extension):
                         status=interactions.StatusType.ONLINE,
                         activities=[
                             interactions.PresenceActivity(
-                                name="on little cat feet",
+                                name="On Little Cat Feet",
                                 type=interactions.PresenceActivityType.LISTENING)
                         ]))
             
@@ -140,11 +156,13 @@ class Transmissions(interactions.Extension):
                 await get_call(self, ctx, msg, True)
             else:
                 await get_call(self, ctx, msg)
+                
+            return
 
         json_list = []
         
         with open('Transmissions/connected.userphone', 'r') as f:
-            json_list = f.readlines()
+            json_list = f.read().split('>')
         
         connection_ = channel_ids[0].split('>')
         
@@ -161,7 +179,7 @@ class Transmissions(interactions.Extension):
             
             
         with open('Transmissions/connected.userphone', 'w') as f:
-            f.write('\n'.join(json_list))
+            f.write('>'.join(json_list))
             
         msg = await ctx.send('Connecting... <a:loading:1026539890382483576>')
         
@@ -190,7 +208,7 @@ async def get_call(self, ctx : interactions.CommandContext, message : interactio
     json_list = []
         
     with open('Transmissions/connected.userphone', 'r') as f:
-        current_connection = f.readlines()
+        current_connection = f.read().split('>')
         
     for connection in current_connection:
         json_list.append(json.loads(connection))
@@ -235,8 +253,7 @@ async def get_call(self, ctx : interactions.CommandContext, message : interactio
                     await ctx.send('Only 30 seconds left for this transmission! <:twmclosedeyes:1023573452944322560>')
                 
                 with open('Transmissions/connected.userphone', 'r') as f:
-                    channel_ids = f.readlines()
-                
+                    channel_ids = f.read().split('>')
                 is_connected = False
                 
                 for channel_id in channel_ids:
@@ -283,7 +300,7 @@ async def disconnect(self, ctx : interactions.CommandContext, connection : str, 
     
     try:
         with open('Transmissions/connected.userphone', 'r') as f:
-            current_connection = f.readlines()
+            current_connection = f.read().split('>')
             
         json_ = json.loads(current_connection[index])
         
@@ -296,11 +313,8 @@ async def disconnect(self, ctx : interactions.CommandContext, connection : str, 
             
         del current_connection[index]
         
-        remove_chars = len(os.linesep)
-        
         with open('Transmissions/connected.userphone', 'w') as f:
-            f.write('\n'.join(current_connection))
-            f.truncate(f.tell() - remove_chars)
+            f.write('>'.join(current_connection))
         
         channel = await interactions.get(self.client, interactions.Channel, object_id = other_connection)
         
