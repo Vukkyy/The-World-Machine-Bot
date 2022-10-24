@@ -10,7 +10,7 @@ async def test(l1):
     d = ImageDraw.Draw(img) # Textbox background
     # The X and Y starting positions
     text_x = 20
-    text_y = 21
+    text_y = 17
     for line in textwrap.wrap(l1, width=46): # Text Wrap Length
         d.text((text_x, text_y), line, font=fnt, fill=(255,255,255)) # Text and Text Wrapping
         text_y += 25 # Width of line breaks, by y value
