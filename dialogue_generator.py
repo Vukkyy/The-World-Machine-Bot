@@ -9,12 +9,12 @@ async def test(l1):
     
     d = ImageDraw.Draw(img) # Textbox background
     # The X and Y starting positions
-    text_x = 21
-    text_y = 19
+    text_x = 20
+    text_y = 21
     for line in textwrap.wrap(l1, width=46): # Text Wrap Length
         d.text((text_x, text_y), line, font=fnt, fill=(255,255,255)) # Text and Text Wrapping
         text_y += 25 # Width of line breaks, by y value
       
-    img.paste(icon, (496, 14), icon.convert('RGBA')) # The face sprite to use on the textbox
+    img.paste(icon, (496, 16), icon.convert('RGBA')) # The face sprite to use on the textbox
     
     img.save('Images/pil_text.png')
