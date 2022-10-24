@@ -1,12 +1,17 @@
 # This file is used to clean up some of the functions in the main file.
 import interactions
 import datetime
-import lavalink
 from interactions.ext.wait_for import wait_for_component
 import uuid
 import random
+import asyncio
+import lavalink
+import database_manager as db_manager
+import music_update
 
-bot = None # Set bot on bot startup from the main file.
+def setup_(self):
+    global bot
+    bot = self
 
 async def GetButtons(guild_id):
     play_emoji = interactions.Emoji(name="playorpause", id=1019286927888883802)
@@ -28,14 +33,14 @@ async def GetButtons(guild_id):
         interactions.Button(
             style=interactions.ButtonStyle.DANGER,
             custom_id = f"loop {guild_id}",
-            emoji = loop_song_emoji
+            emoji = loop_song_emoji,
         ),
 
         # Play Button
         interactions.Button(
             style=interactions.ButtonStyle.DANGER,
             custom_id = f"play {guild_id}",
-            emoji = play_emoji
+            emoji = play_emoji,
         ),
         # Skip Button
         interactions.Button(
@@ -76,7 +81,7 @@ async def GenerateEmbed(id : str, player, show_timeline):
             return interactions.Embed(
                 title = f"**Now Playing:** [{player.current.title}]",
                 thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
-                description = f"{length} <a:nikoarcfromavolicis:1026091049782882304> \n\n *{new_c_length} / {new_length}*",
+                description = f"{length} \n\n *{new_c_length} / {new_length}*",
                 footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
                 url = player.current.uri
             )
@@ -84,12 +89,12 @@ async def GenerateEmbed(id : str, player, show_timeline):
             return interactions.Embed(
                 title = f"**Now Playing:** [{player.current.title}]",
                 thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
-                description = f"█░░░░░░░░░░░░░░░░░░░░ <a:nikoarcfromavolicis:1026091049782882304> \n\n *00:00 / {new_length}*",
+                description = f"Loading Player... <a:loading:1026539890382483576> \n\n *00:00 / {new_length}*",
                 footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
                 url = player.current.uri
             )
 
-async def GenerateQueue(button_ctx, page_number, player):
+async def GenerateQueue(page_number, player, controls = False, forward = False):
     full_queue = player.queue
     list_ = ""
 
@@ -98,15 +103,40 @@ async def GenerateQueue(button_ctx, page_number, player):
     starting_index = (items_pi * (page_number + 1)) - items_pi
     queue = full_queue[starting_index : starting_index + items_pi] # From 0 to 20
 
-
+    if controls:
+        if len(queue) == 0:
+            if forward:
+                page_number -= 1
+                q = await GenerateQueue(page_number, player)
+                return q
+            else:
+                page_number += 1
+                q = await GenerateQueue(page_number, player)
+                return q
+    
     try:
         for song in queue:
             time = datetime.datetime.fromtimestamp(song.duration / 1000).strftime('%M:%S')
-            list_ = f"{list_}**{queue.index(song) + 1}.** `{song.title}` *({time})*\n"
+            list_ = f"{list_}**{full_queue.index(song) + 1}.** `{song.title}` *({time})*\n"
     except:
         pass
     
     if (len(list_) > 0):
+        return interactions.Embed(
+            title = "Music Queue",
+            description = f"\n**Currently Playing:** `{player.current.title}`\n\n",
+            thumbnail = interactions.EmbedImageStruct( url = "https://shortcut-test2.s3.amazonaws.com/uploads/role/attachment/346765/default_Enlarged_sunicon.png" ),
+            fields = [
+                interactions.EmbedField(
+                    name = "Song List",
+                    value = list_,
+                    inline = True
+                    )
+                ],
+            
+            author = interactions.EmbedAuthor(text=f'Page ({page_number + 1} / {round(len(full_queue) / 10)})')
+        )
+    else:
         return interactions.Embed(
         title = "Music Queue",
         description = f"\n**Currently Playing:** `{player.current.title}`\n\n",
@@ -114,37 +144,32 @@ async def GenerateQueue(button_ctx, page_number, player):
         fields = [
             interactions.EmbedField(
                 name = "Song List",
-                value = list_,
+                value = 'Queue is empty!',
                 inline = True
                 )
             ]
         )
 
-async def track_hook(event):
-    if isinstance(event, lavalink.events.TrackStartEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ReconnectPlayer()
-        await ShowPlayer(ctx, event.player, False)
-    elif isinstance(event, lavalink.events.QueueEndEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ctx.channel.send("`End of queue! Add more music or audio using /music play.`")
-    elif isinstance(event, lavalink.events.TrackExceptionEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ctx.send("An error occurred when attempting to play the track. Try Skipping the track and replaying it later.")
-        await ctx.send(f"`{event.exception}`")
-    elif isinstance(event, lavalink.events.TrackStuckEvent):
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        await ctx.send("Whoops track is stuck that kind of sucks")
 
-async def ShowPlayer(ctx, player, show_timeline : bool):
+async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.DefaultPlayer, show_timeline : bool, updating : bool = False):
+    if updating:
+        return
+    
     message = ""
+    
+    player_id = uuid.uuid4()
+    
+    default_data = {'guild_id' : int(ctx.guild_id), 'player_id' : str(player_id)}
+    await db_manager.GetDatabase(int(ctx.guild_id), 'current_players', default_data)   
+    db = await db_manager.SetDatabase(int(ctx.guild_id), 'current_players', 'player_id', str(player_id))
 
-    msg = await ctx.send('Loading Player... <a:nikooneshot:1024961281628848169>')
+    msg = await ctx.send('Loading Player... <a:loading:1026539890382483576>')
+    niko = '<a:vibe:1027325436360929300>'
     
     if (player.is_playing):
         embed = await GenerateEmbed(player.current.identifier, player, show_timeline)
         buttons = await GetButtons(msg.id)
-        msg = await msg.edit('', embeds=embed, components=buttons)
+        msg = await msg.edit(niko, embeds=embed, components=buttons)
     else:
         embed = interactions.Embed(
                 title = "Not Currently Playing Anything",
@@ -162,162 +187,263 @@ async def ShowPlayer(ctx, player, show_timeline : bool):
         else:
             return True
 
-    message = ''
-
     song_ = player.current
-        
-    while True:
-        print('waiting')
-        button_ctx = msg
-        try:
-            button_ctx = await wait_for_component(bot, components=buttons, check=check, timeout = 2)
-            
-        
-            data = button_ctx.data.custom_id
+    update_player = player.current
     
-            print(data)
+    message = {'niko' : niko, 'message' : ''}
+    
+    while True:
         
-            if (data == f"play {msg.id}"):
-                is_paused = player.fetch("is_paused")
+        button_ctx = msg
+        task = asyncio.create_task(wait_for_component(bot, components=buttons, check=check))
+        
+        while True:
+            done, pending = await asyncio.wait({task}, timeout=2)
+            
+            if not done:
                 
-                if not (is_paused):
-                    await player.set_pause(True)
-                    player.store("is_paused", True)
-                    message = "`Paused the current track playing.`"
-                elif (is_paused):
-                    await player.set_pause(False)
-                    player.store("is_paused", False)
-                    message = "`Resumed the current track playing.`"
-            elif (data == f"skip {msg.id}"):
-                await button_ctx.send("`Skipped this track!`")
-                await player.skip()
-            elif (data == f"queue {msg.id}"):
-                if (len(player.queue) > 0):
-                    await button_ctx.edit(components=[])
-                    id = uuid.uuid4()
+                await music_update.update(ctx, player)
+                
+                db = await db_manager.GetDatabase(int(ctx.guild_id), 'current_players', default_data)   
+                
+                if player.current != song_:
+                    await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Ended.`', embeds = [], components = [])
+                    return
+                
+                if db['player_id'] != str(player_id):
+                    await button_ctx.edit('<:nikosleepy:1027492467337080872> `Player Moved.`', embeds = [], components = [])
+                    return
+                
+                if not player.paused and player.is_playing:
+                    funny_embed = await GenerateEmbed(player.current.identifier, player, True)
+                    funny_embed.set_author(name = message['message'])
+                    await button_ctx.edit(message['niko'], embeds = funny_embed, components = buttons)
+                continue  # very important!
+                
+            button_ctx = task.result()
+            message = await ButtonManager(niko, msg, ctx, button_ctx, player)
+            break
+            
+async def ButtonManager(niko, msg, ctx, button_ctx, player):
+    
+    message = ''
+    
+    data = button_ctx.data.custom_id
+            
+    if (data == f"play {msg.id}"):
+        is_paused = player.fetch("is_paused")
+        
+        if not (is_paused):
+            await player.set_pause(True)
+            player.store("is_paused", True)
+            message = "Paused the current track playing."
+            niko = '<:nikosleepy:1027492467337080872>'
+        elif (is_paused):
+            await player.set_pause(False)
+            player.store("is_paused", False)
+            message = "Resumed the current track playing."
+            niko = '<a:vibe:1027325436360929300>'
+            
+    elif (data == f"skip {msg.id}"):
+        await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Skipped.`', embeds=[], components =[])
+        await player.skip()
+        
+    elif (data == f"queue {msg.id}"):
+        if (len(player.queue) > 0):
+            
+            await button_ctx.edit('Queue was opened, to get the player back, do </music get_player:1030977228885987419>.', components=[])
+            id = uuid.uuid4()
+            
+            shuffle_emoji = interactions.Emoji(id=1031309497706225814)
+            delete_emoji = interactions.Emoji(id=1031309493457399829)
+            jump_emoji = interactions.Emoji(id=1031309498557681717)
+            left_emoji = interactions.Emoji(id=1031309494946385920)
+            right_emoji = interactions.Emoji(id=1031309496401793064)
+            
+            
+            queue = await GenerateQueue(0, player)
+
+            control_buttons = [
+                interactions.Button(
+                    style = interactions.ButtonStyle.PRIMARY,
+                    custom_id = f"b {str(id)}",
+                    emoji = left_emoji
+                ),
+                interactions.Button(
+                    style = interactions.ButtonStyle.PRIMARY,
+                    custom_id = f"n {str(id)}",
+                    emoji = right_emoji
+                ),
+            ]
+
+            button_ = [
+                interactions.Button(
+                    style = interactions.ButtonStyle.PRIMARY,
+                    custom_id = f"shuffle {str(id)}",
+                    emoji = shuffle_emoji,
+                ),
+                interactions.Button(
+                    style = interactions.ButtonStyle.DANGER,
+                    custom_id = f"remove {str(id)}",
+                    emoji = delete_emoji
+                ),
+                interactions.Button(
+                    style = interactions.ButtonStyle.SUCCESS,
+                    custom_id = f'jump {str(id)}',
+                    emoji = jump_emoji
+                ),
+            ]
+            
+            control_buttons[0].disabled = True
+            
+            if len(player.queue) > 10:
+                control_buttons[1].disabled = False
+            else:
+                control_buttons[1].disabled = True
+                
+            row1 = interactions.ActionRow(components=button_)
+            row2 = interactions.ActionRow(components=control_buttons)
+            
+            funny_message = await button_ctx.send(embeds = queue, components=[row1, row2])
+
+            async def checkers(ctx):
+                return True
+            
+            page = 0
+
+            while True:
+                
+                
+                shuffle_ctx = await wait_for_component(bot, components = [row1, row2], check=checkers)
+
+                if (shuffle_ctx.data.custom_id == f'shuffle {str(id)}'):
+                    random.shuffle(player.queue)
+                
+                    queue = await GenerateQueue(page, player)
+                    await shuffle_ctx.edit('`Shuffled Queue.`', embeds = queue, components=[row1, row2])
+                if (shuffle_ctx.data.custom_id == f'remove {str(id)}'):
                     
                     options = []
                     i = 0
-    
+
                     for song in player.queue:
-                        if (i < 10):
+                        if (i < 20):
                             options.append(
                                 interactions.SelectOption(
                                     label = f'{i + 1}. {song.title}',
                                     value = i
                                 )
                             )
-    
+
                         i += 1
-    
+                    
                     select = interactions.SelectMenu(
                         options=options,
                         placeholder= 'What Song?',
                         custom_id="woo",
                     )
                     
-                    queue = await GenerateQueue(button_ctx, 0, player)
-    
-                    control_buttons = [
-                        interactions.Button(
-                            label= "Prev. Page",
-                            style = interactions.ButtonStyle.PRIMARY,
-                            custom_id = f"b {str(id)}",
-                            disabled = True,
-                        ),
-                        interactions.Button(
-                            label="Next Page",
-                            style = interactions.ButtonStyle.PRIMARY,
-                            custom_id = f"n {str(id)}",
-                            disabled = True,
-                        ),
-                    ]
-    
-                    button_ = [
-                        interactions.Button(
-                            label="Shuffle",
-                            style = interactions.ButtonStyle.PRIMARY,
-                            custom_id = f"shuffle {str(id)}"
-                        ),
-                        interactions.Button(
-                            label="Remove Song",
-                            style = interactions.ButtonStyle.DANGER,
-                            custom_id = f"remove {str(id)}"
-                        ),
-                        interactions.Button(
-                            label="Jump To...",
-                            style = interactions.ButtonStyle.SUCCESS,
-                            custom_id = f'jump {str(id)}'
-                        ),
-                    ]
-    
+                    await shuffle_ctx.send(components=select, ephemeral = True)
+                    
+                    contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
+
+                    song_ = player.queue.pop(int(contexto.data.values[0]))
+
+                    queue_ = await GenerateQueue(page, player)
+                    await funny_message.edit(f'<@{contexto.author.id}> removed {song_.title} from the queue.', embeds = queue_, components=[row1, row2])
+                    await contexto.send(f'Successfully removed {song_.title} from the queue.', ephemeral = True)
+                if (shuffle_ctx.data.custom_id == f'jump {str(id)}'):
+                    
+                    options = []
+                    i = 0
+
+                    for song in player.queue:
+                        if (i < 20):
+                            options.append(
+                                interactions.SelectOption(
+                                    label = f'{i + 1}. {song.title}',
+                                    value = i
+                                )
+                            )
+
+                        i += 1
+                        
+                    select = interactions.SelectMenu(
+                        options=options,
+                        placeholder= 'What Song?',
+                        custom_id="woo",
+                    )
+                    
+                    await shuffle_ctx.send(components=select, ephemeral = True)
+
+                    contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
+
+                    song_ = player.queue[int(contexto.data.values[0])]
+                    
+                    queue_ = await GenerateQueue(page, player)
+                    await funny_message.edit(f'<@{contexto.author.id}> jumped to {song_.title}.', embeds = queue_, components=[row1, row2])
+                    await contexto.send(f'Successfully jumped to {song_.title}.', ephemeral = True)
+
+                    del player.queue[0 : int(contexto.data.values[0])]
+                    
+                    await player.play(song_)
+                    
+                    
+                if (shuffle_ctx.data.custom_id == f'b {str(id)}'):
+                    page -= 1
+                    
+                    if len(player.queue) > 10:
+                        control_buttons[1].disabled = False
+                    else:
+                        control_buttons[1].disabled = True
+                        
+                    if page > 0:
+                        print('Awesome')
+                        control_buttons[0].disabled = False
+                    else:
+                        control_buttons[0].disabled = True
+                        
                     row1 = interactions.ActionRow(components=button_)
                     row2 = interactions.ActionRow(components=control_buttons)
-        
-                    msg = await button_ctx.send(embeds = queue, components=[row1, row2])
-    
-                    async def checkers(ctx):
-                        return True
-        
-                    while True:
-                        shuffle_ctx = await wait_for_component(bot, components = [row1, row2], check=checkers)
-    
-                        if (shuffle_ctx.data.custom_id == f'shuffle {str(id)}'):
-                            random.shuffle(player.queue)
-                        
-                            queue = await GenerateQueue(button_ctx, 0, player)
-                            await shuffle_ctx.edit('`Shuffled Queue.`', embeds = queue, components=button_)
-                        if (shuffle_ctx.data.custom_id == f'remove {str(id)}'):
-                            await shuffle_ctx.send(components=select, ephemeral = True)
-    
-                            contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
-    
-                            song_ = player.queue.pop(int(contexto.data.values[0]))
-                            
-                            await contexto.channel.send(f'<@{contexto.author.id}> Removed {song_.title} from the queue.')
-    
-                            queue = await GenerateQueue(button_ctx, 0, player)
-                            await shuffle_ctx.edit('`Deleted Song.`', embeds = queue, components=button_)
-                        if (shuffle_ctx.data.custom_id == f'jump {str(id)}'):
-                            await shuffle_ctx.send(components=select, ephemeral = True)
-    
-                            contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
-    
-                            song_ = player.queue[int(contexto.data.values[0])]
-    
-                            await contexto.channel.send(f'<@{contexto.author.id}> Jumped to {song_.title}.')
-    
-                            del player.queue[0 : int(contexto.data.values[0])]
-                            
-                            await player.play(song_)
-                else:
-                    message = "`Queue is currently empty :(`"
-            elif (data == f"stop {msg.id}"):
-                await bot.disconnect(ctx.guild_id)
-                await button_ctx.send("Stopped playback :(")
-            elif (data == f"loop {msg.id}"):
-                if not (player.repeat):
-                    player.set_repeat(True)
-                    message = "`Looping Queue!`"
-                else:
-                    player.set_repeat(False)
-                    message = "`Loop Stopped!`"
                     
-            funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-            await button_ctx.edit(message, embeds = funny_embed)
-        except:
-            if (not player.current == song_):
-                print('song ended')
-                await button_ctx.edit('`Song Ended.`', embeds=[], components =[])
-                return
-            
-            funny_embed = await GenerateEmbed(player.current.identifier, player, True)
-            await button_ctx.edit(message, embeds = funny_embed)
-
-async def ReconnectPlayer():
-    bot.lavalink_client.add_node(
-        host = '51.161.130.134',
-        port = 10333,
-        password = 'youshallnotpass',
-        region = "eu"
-    ) # Woah, neat! Free Lavalink!
+                    queue = await GenerateQueue(page, player, True, False)
+                    await shuffle_ctx.edit('`Previous Page.`', embeds = queue, components=[row1, row2])
+                    
+                if (shuffle_ctx.data.custom_id == f'n {str(id)}'):
+                    page += 1
+                    
+                    if len(player.queue) > 10:
+                        control_buttons[1].disabled = False
+                    else:
+                        control_buttons[1].disabled = True
+                        
+                    if page > 0:
+                        print('Awesome')
+                        control_buttons[0].disabled = False
+                    else:
+                        control_buttons[0].disabled = True
+                        
+                    row1 = interactions.ActionRow(components=button_)
+                    row2 = interactions.ActionRow(components=control_buttons)
+                    
+                    queue = await GenerateQueue(page, player, True, True)
+                    await shuffle_ctx.edit('`Next Page.`', embeds = queue, components=[row1, row2])
+        else:
+            message = "Queue is currently empty :("
+    elif (data == f"stop {msg.id}"):
+        await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
+        await bot.disconnect(ctx.guild_id)
+    elif (data == f"loop {msg.id}"):
+        if not (player.repeat):
+            player.set_repeat(True)
+            message = "Looping Queue!"
+        else:
+            player.set_repeat(False)
+            message = "Loop Stopped!"
+    try:    
+        funny_embed = await GenerateEmbed(player.current.identifier, player, True)
+        funny_embed.set_author(name = message)
+        await button_ctx.edit(niko, embeds = funny_embed)
+    except:
+        pass # This is kind of stupid but I don't know how to handle this exception when it occasionally happens
+    return {'niko' : niko, 'message' : message}
