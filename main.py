@@ -5,6 +5,7 @@ import random
 import uuid
 import aiohttp        
 import aiofiles
+import requests
 import json
 import datetime
 from dotenv import load_dotenv
@@ -98,16 +99,18 @@ async def change_picture():
                                      type=interactions.OptionType.STRING)
              ])
 async def say_command(ctx: interactions.CommandContext, text: str):
-  #stops the bot from mass pinging users
-    if '@everyone' in text:
-        text = text.replace('@everyone', '@‎everyone')
+    await ctx.send('Sorry! This command is temporarily disabled.', ephemeral=True)
+    
+    '''#stops the bot from mass pinging users
+        if '@everyone' in text:
+            text = text.replace('@everyone', '@‎everyone')
 
-    if '@here' in text:
-        text = text.replace('@here', '@‎here')
-    channel = ctx.channel
-    await channel.send(text)
-    msg = await ctx.send("** **") # Makes sure it returns something 
-    await msg.delete()
+        if '@here' in text:
+            text = text.replace('@here', '@‎here')
+        channel = ctx.channel
+        await channel.send(text)
+        msg = await ctx.send("** **") # Makes sure it returns something 
+        await msg.delete()'''
 
 
 @bot.command(name="text-generator",
@@ -919,6 +922,19 @@ async def generate_userphone_embed(hidden : bool, user : interactions.User, cont
             title = '',
             description= content
         )
+
+@bot.command()
+async def restart_bot(ctx):
+    if (ctx.author.id == 302883948424462346 or ctx.author.id == 400054986530357268):
+        await ctx.send('Restarting Now!')
         
+        API_KEY = 'Bearer ' + os.getenv('SPARKED')
+        
+        header = {"Authorization" : API_KEY}
+        r = requests.post('https://control.sparkedhost.us/api/client/servers/92aeea52/power', json={"signal": "restart"}, headers=header)
+        print(r.status_code)
+        return
+    
+    await ctx.send('You cannot use this command.', ephemeral = True)
 
 bot.start()
