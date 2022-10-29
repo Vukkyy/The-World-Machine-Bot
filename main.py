@@ -99,16 +99,18 @@ async def change_picture():
                                      type=interactions.OptionType.STRING)
              ])
 async def say_command(ctx: interactions.CommandContext, text: str):
-  #stops the bot from mass pinging users
-    if '@everyone' in text:
-        text = text.replace('@everyone', '@‎everyone')
+    await ctx.send('Sorry! This command is temporarily disabled.', ephemeral=True)
+    
+    '''#stops the bot from mass pinging users
+        if '@everyone' in text:
+            text = text.replace('@everyone', '@‎everyone')
 
-    if '@here' in text:
-        text = text.replace('@here', '@‎here')
-    channel = ctx.channel
-    await channel.send(text)
-    msg = await ctx.send("** **") # Makes sure it returns something 
-    await msg.delete()
+        if '@here' in text:
+            text = text.replace('@here', '@‎here')
+        channel = ctx.channel
+        await channel.send(text)
+        msg = await ctx.send("** **") # Makes sure it returns something 
+        await msg.delete()'''
 
 
 @bot.command(name="text-generator",
