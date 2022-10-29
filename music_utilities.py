@@ -449,11 +449,13 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes):
             if((votes_needed - music_votes) == 0):
                 await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
                 await bot.disconnect(ctx.guild_id)
+                player.is_playing = False
             else:
                 await button_ctx.send(f'Not enough votes! Need {votes_needed - music_votes} more.')
         else:
                 await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
                 await bot.disconnect(ctx.guild_id)
+                player.is_playing = False
         
     elif (data == f"loop {msg.id}"):
         if not (player.repeat):
