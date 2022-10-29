@@ -310,10 +310,10 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
                 return True
             
             page = 0
-
+            
+            music_votes = 0
+            
             while True:
-                
-                
                 shuffle_ctx = await wait_for_component(bot, components = [row1, row2], check=checkers)
 
                 if (shuffle_ctx.data.custom_id == f'shuffle {str(id)}'):
@@ -325,33 +325,42 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
                     
                     options = []
                     i = 0
-
-                    for song in player.queue:
-                        if (i < 20):
-                            options.append(
-                                interactions.SelectOption(
-                                    label = f'{i + 1}. {song.title}',
-                                    value = i
+                    
+                    voice_states = self.client.get_channel_voice_states(player.channel_id)
+                    channel_members = len(voice_states)
+                    
+                    music_votes += 1
+                    if(music_votes == (channel_members / 2)):
+                        for song in player.queue:
+                            if (i < 20):
+                                options.append(
+                                    interactions.SelectOption(
+                                        label = f'{i + 1}. {song.title}',
+                                        value = i
+                                    )
                                 )
-                            )
 
-                        i += 1
-                    
-                    select = interactions.SelectMenu(
-                        options=options,
-                        placeholder= 'What Song?',
-                        custom_id="woo",
-                    )
-                    
-                    await shuffle_ctx.send(components=select, ephemeral = True)
-                    
-                    contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
+                            i += 1
+                        
+                        select = interactions.SelectMenu(
+                            options=options,
+                            placeholder= 'What Song?',
+                            custom_id="woo",
+                        )
+                        
+                        await shuffle_ctx.send(components=select, ephemeral = True)
+                        
+                        contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
 
-                    song_ = player.queue.pop(int(contexto.data.values[0]))
+                        song_ = player.queue.pop(int(contexto.data.values[0]))
 
-                    queue_ = await GenerateQueue(page, player)
-                    await funny_message.edit(f'<@{contexto.author.id}> removed {song_.title} from the queue.', embeds = queue_, components=[row1, row2])
-                    await contexto.send(f'Successfully removed {song_.title} from the queue.', ephemeral = True)
+                        queue_ = await GenerateQueue(page, player)
+                        await funny_message.edit(f'<@{contexto.author.id}> removed {song_.title} from the queue.', embeds = queue_, components=[row1, row2])
+                        await contexto.send(f'Successfully removed {song_.title} from the queue.', ephemeral = True)
+                        music_votes = 0
+                    else:
+                        await contexto.send(f'Not enough votes! Need {(channel_members / 2) - music_votes} more.', ephemeral = True)
+                        
                 if (shuffle_ctx.data.custom_id == f'jump {str(id)}'):
                     
                     options = []
