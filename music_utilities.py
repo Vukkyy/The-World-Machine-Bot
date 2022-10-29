@@ -435,7 +435,7 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes):
         voice_states = bot.get_channel_voice_states(player.channel_id)
         channel_members = len(voice_states) - 1
         
-        if(channel_members > 1):
+        if(channel_members > 2):
             music_votes += 1
             
             votes_needed = round((channel_members / 2))
@@ -446,7 +446,7 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes):
             
             await button_ctx.send(f'Current votes left to stop the music currently playing: {votes_needed - music_votes}')
             
-            if(music_votes == votes_needed):
+            if((votes_needed - music_votes) == 0):
                 await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
                 await bot.disconnect(ctx.guild_id)
             else:
