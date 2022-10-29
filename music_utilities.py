@@ -326,7 +326,7 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
                     options = []
                     i = 0
                     
-                    voice_states = self.client.get_channel_voice_states(player.channel_id)
+                    voice_states = bot.get_channel_voice_states(player.channel_id)
                     channel_members = len(voice_states)
                     
                     music_votes += 1
