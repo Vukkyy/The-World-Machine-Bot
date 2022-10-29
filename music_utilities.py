@@ -190,7 +190,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
     song_ = player.current
     update_player = player.current
     
-    message = {'niko' : niko, 'message' : ''}
+    message = {'niko' : niko, 'message' : '', 'stop_votes' : 0}
     
     while True:
         
@@ -221,10 +221,10 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                 continue  # very important!
                 
             button_ctx = task.result()
-            message = await ButtonManager(niko, msg, ctx, button_ctx, player)
+            message = await ButtonManager(niko, msg, ctx, button_ctx, player, message['stop_votes'])
             break
             
-async def ButtonManager(niko, msg, ctx, button_ctx, player):
+async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes):
     
     message = ''
     
@@ -311,8 +311,6 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
             
             page = 0
             
-            music_votes = 0
-            
             while True:
                 shuffle_ctx = await wait_for_component(bot, components = [row1, row2], check=checkers)
 
@@ -325,41 +323,34 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
                     
                     options = []
                     i = 0
+                
                     
-                    voice_states = bot.get_channel_voice_states(player.channel_id)
-                    channel_members = len(voice_states)
-                    
-                    music_votes += 1
-                    if(music_votes == (channel_members / 2)):
-                        for song in player.queue:
-                            if (i < 20):
-                                options.append(
-                                    interactions.SelectOption(
-                                        label = f'{i + 1}. {song.title}',
-                                        value = i
-                                    )
+                    for song in player.queue:
+                        if (i < 20):
+                            options.append(
+                                interactions.SelectOption(
+                                    label = f'{i + 1}. {song.title}',
+                                    value = i
                                 )
+                            )
 
-                            i += 1
+                        i += 1
                         
-                        select = interactions.SelectMenu(
-                            options=options,
-                            placeholder= 'What Song?',
-                            custom_id="woo",
-                        )
-                        
-                        await shuffle_ctx.send(components=select, ephemeral = True)
-                        
-                        contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
+                    select = interactions.SelectMenu(
+                        options=options,
+                        placeholder= 'What Song?',
+                        custom_id="woo",
+                    )
+                    
+                    await shuffle_ctx.send(components=select, ephemeral = True)
+                    
+                    contexto : interactions.ComponentContext = await wait_for_component(bot, components = select, check=checkers)
 
-                        song_ = player.queue.pop(int(contexto.data.values[0]))
+                    song_ = player.queue.pop(int(contexto.data.values[0]))
 
-                        queue_ = await GenerateQueue(page, player)
-                        await funny_message.edit(f'<@{contexto.author.id}> removed {song_.title} from the queue.', embeds = queue_, components=[row1, row2])
-                        await contexto.send(f'Successfully removed {song_.title} from the queue.', ephemeral = True)
-                        music_votes = 0
-                    else:
-                        await contexto.send(f'Not enough votes! Need {(channel_members / 2) - music_votes} more.', ephemeral = True)
+                    queue_ = await GenerateQueue(page, player)
+                    await funny_message.edit(f'<@{contexto.author.id}> removed {song_.title} from the queue.', embeds = queue_, components=[row1, row2])
+                    await contexto.send(f'Successfully removed {song_.title} from the queue.', ephemeral = True)
                         
                 if (shuffle_ctx.data.custom_id == f'jump {str(id)}'):
                     
@@ -440,8 +431,22 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
         else:
             message = "Queue is currently empty :("
     elif (data == f"stop {msg.id}"):
-        await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
-        await bot.disconnect(ctx.guild_id)
+        
+        voice_states = bot.get_channel_voice_states(player.channel_id)
+        channel_members = len(voice_states) - 1
+        
+        music_votes += 1
+        
+        votes_needed = round((channel_members / 2)) + 1
+        
+        await button_ctx.send(f'current number of people in the call {channel_members}')
+        
+        await button_ctx.send(f'Current votes left to stop the music currently playing: {votes_needed - music_votes}')
+        
+        if(music_votes == votes_needed):
+            await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
+            await bot.disconnect(ctx.guild_id)
+        
     elif (data == f"loop {msg.id}"):
         if not (player.repeat):
             player.set_repeat(True)
@@ -455,4 +460,4 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player):
         await button_ctx.edit(niko, embeds = funny_embed)
     except:
         pass # This is kind of stupid but I don't know how to handle this exception when it occasionally happens
-    return {'niko' : niko, 'message' : message}
+    return {'niko' : niko, 'message' : message, 'stop_votes' : music_votes}
