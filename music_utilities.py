@@ -435,19 +435,25 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes):
         voice_states = bot.get_channel_voice_states(player.channel_id)
         channel_members = len(voice_states) - 1
         
-        music_votes += 1
-        
-        votes_needed = round((channel_members / 2))
-        
-        await button_ctx.send(f'Current number of people in the call: {channel_members}')
-        
-        await button_ctx.send(f'Current votes left to stop the music currently playing: {votes_needed - music_votes}')
-        
-        if(music_votes == votes_needed):
-            await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
-            await bot.disconnect(ctx.guild_id)
+        if(channel_members > 1):
+            music_votes += 1
+            
+            votes_needed = round((channel_members / 2))
+            
+            await button_ctx.send(f'Current number of people in the call: {channel_members}')
+            await button_ctx.send(f'Votes needed: {votes_needed}')
+            await button_ctx.send(f'Channel members: {channel_members}')
+            
+            await button_ctx.send(f'Current votes left to stop the music currently playing: {votes_needed - music_votes}')
+            
+            if(music_votes == votes_needed):
+                await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
+                await bot.disconnect(ctx.guild_id)
+            else:
+                await button_ctx.send(f'Not enough votes! Need {votes_needed - music_votes} more.')
         else:
-            await button_ctx.send(f'Not enough votes! Need {votes_needed - music_votes} more.')
+                await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
+                await bot.disconnect(ctx.guild_id)
         
     elif (data == f"loop {msg.id}"):
         if not (player.repeat):
