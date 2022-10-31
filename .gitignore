@@ -4,6 +4,9 @@
 profile_pictures.pfp
 /Transmissions/*
 
+slur_detection.py
+ban_list.txt
+
 *.pyc
 
 # Byte-compiled / optimized / DLL files

@@ -1,4 +1,5 @@
 import asyncio
+import re
 import interactions
 import os
 import random
@@ -21,6 +22,7 @@ import music_utilities as music
 import Badges.stamp_system as stamps
 import Badges.stamp_list as stamp_list
 import Badges.stamp_viewer as view
+from slur_detection import slurs
 
 # Extension Libraries
 from interactions.ext.wait_for import wait_for_component, setup, wait_for
@@ -99,18 +101,40 @@ async def change_picture():
                                      type=interactions.OptionType.STRING)
              ])
 async def say_command(ctx: interactions.CommandContext, text: str):
-    await ctx.send('Sorry! This command is temporarily disabled.', ephemeral=True)
-    
-    '''#stops the bot from mass pinging users
-        if '@everyone' in text:
-            text = text.replace('@everyone', '@‎everyone')
+    #stops the bot from mass pinging users
 
-        if '@here' in text:
-            text = text.replace('@here', '@‎here')
+        ban_list = []
+        
+        with open('ban_list.txt', 'r') as f:
+            ban_list = f.readlines()
+            
+        if (str(ctx.author.id) in ban_list):
+            await ctx.send('Sorry! But you are banned from using this command.', ephemeral = True)
+            return
+        
+        print('among us')
+    
+        if '@' in text:
+            await ctx.send('Please don\'t ping users with the say command! Contains: `@`', ephemeral = True)
+            return
+        
+        slurs_ = []
+        
+        print('slur detection time')
+        
+        for slur in slurs:
+            if slur in text.lower():
+                await ctx.send(f'Please do not use slurs with the say command! Contains: `{slur}`', ephemeral = True)
+                
+                report_channel = await interactions.get(bot, interactions.Channel, object_id=1025158352549982299)
+                
+                await report_channel.send(f'User `{ctx.author.name}` with id `{ctx.author.id}` sent `{text}` with the say command.')
+                return
+            
         channel = ctx.channel
         await channel.send(text)
         msg = await ctx.send("** **") # Makes sure it returns something 
-        await msg.delete()'''
+        await msg.delete()
 
 
 @bot.command(name="text-generator",
@@ -501,7 +525,14 @@ async def wow_beautiful(ctx : interactions.CommandContext, user : interactions.M
 )
 async def letter(ctx : interactions.CommandContext, user : interactions.Member, message : str):
 
-    print(user.id)
+    ban_list = []
+        
+    with open('ban_list.txt', 'r') as f:
+        ban_list = f.readlines()
+        
+    if (str(ctx.author.id) in ban_list):
+        await ctx.send('Sorry! But you are banned from using this command.', ephemeral = True)
+        return
     
     with open ('databases/loveletters.db', 'r') as db:
         lllist = db.read()
@@ -565,6 +596,16 @@ async def allow(ctx : interactions.CommandContext):
 
 @bot.user_command(name="Send Letter")
 async def send_letter(ctx : interactions.CommandContext):
+    
+    ban_list = []
+        
+    with open('ban_list.txt', 'r') as f:
+        ban_list = f.readlines()
+        
+    if (str(ctx.author.id) in ban_list):
+        await ctx.send('Sorry! But you are banned from using this command.', ephemeral = True)
+        return
+    
     modal_ = interactions.Modal(
         custom_id = 'Mooodal',
         title = 'Send a letter!',

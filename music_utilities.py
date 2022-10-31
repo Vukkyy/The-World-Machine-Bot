@@ -1,4 +1,5 @@
 # This file is used to clean up some of the functions in the main file.
+from re import A
 import interactions
 import datetime
 from interactions.ext.wait_for import wait_for_component
@@ -159,6 +160,8 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
     
     player_id = uuid.uuid4()
     
+    button_id = uuid.uuid4()
+    
     default_data = {'guild_id' : int(ctx.guild_id), 'player_id' : str(player_id)}
     await db_manager.GetDatabase(int(ctx.guild_id), 'current_players', default_data)   
     db = await db_manager.SetDatabase(int(ctx.guild_id), 'current_players', 'player_id', str(player_id))
@@ -168,7 +171,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
     
     if (player.is_playing):
         embed = await GenerateEmbed(player.current.identifier, player, show_timeline)
-        buttons = await GetButtons(msg.id)
+        buttons = await GetButtons(button_id)
         msg = await msg.edit(niko, embeds=embed, components=buttons)
     else:
         embed = interactions.Embed(
@@ -190,7 +193,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
     song_ = player.current
     update_player = player.current
     
-    message = {'niko' : niko, 'message' : '', 'stop_votes' : 0}
+    message = {'niko' : niko, 'message' : '', 'stop_votes' : 0, 'voted' : []}
     
     while True:
         
@@ -221,16 +224,24 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                 continue  # very important!
                 
             button_ctx = task.result()
-            message = await ButtonManager(niko, msg, ctx, button_ctx, player, message['stop_votes'])
+            message = await ButtonManager(niko, msg, ctx, button_ctx, player, message['stop_votes'], message['voted'], button_id)
+            
+            print(message)
+            
+            if (message == 'ended'):
+                print('stopping')
+                return
             break
             
-async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes):
+async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes, voted, button_id):
     
     message = ''
     
+    stop_music = False
+    
     data = button_ctx.data.custom_id
             
-    if (data == f"play {msg.id}"):
+    if (data == f"play {button_id}"):
         is_paused = player.fetch("is_paused")
         
         if not (is_paused):
@@ -244,11 +255,11 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes):
             message = "Resumed the current track playing."
             niko = '<a:vibe:1027325436360929300>'
             
-    elif (data == f"skip {msg.id}"):
+    elif (data == f"skip {button_id}"):
         await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Skipped.`', embeds=[], components =[])
         await player.skip()
         
-    elif (data == f"queue {msg.id}"):
+    elif (data == f"queue {button_id}"):
         if (len(player.queue) > 0):
             
             await button_ctx.edit('Queue was opened, to get the player back, do </music get_player:1030977228885987419>.', components=[])
@@ -430,34 +441,37 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes):
                     await shuffle_ctx.edit('`Next Page.`', embeds = queue, components=[row1, row2])
         else:
             message = "Queue is currently empty :("
-    elif (data == f"stop {msg.id}"):
+            
+    elif (data == f"stop {button_id}"):
+        
+        async def StopSong():
+            await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
+            await bot.disconnect(ctx.guild_id)
         
         voice_states = bot.get_channel_voice_states(player.channel_id)
-        channel_members = len(voice_states) - 1
+        channel_members = len(voice_states)
         
-        if(channel_members > 2):
-            music_votes += 1
-            
-            votes_needed = round((channel_members / 2))
-            
-            await button_ctx.send(f'Current number of people in the call: {channel_members}')
-            await button_ctx.send(f'Votes needed: {votes_needed}')
-            await button_ctx.send(f'Channel members: {channel_members}')
-            
-            await button_ctx.send(f'Current votes left to stop the music currently playing: {votes_needed - music_votes}')
-            
-            if((votes_needed - music_votes) == 0):
-                await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
-                await bot.disconnect(ctx.guild_id)
-                player.is_playing = False
+        votes_needed = round((channel_members / 2))
+        
+        if(channel_members > 1):
+            if not int(button_ctx.author.id) in voted:
+                music_votes += 1
+                
+                voted.append(int(button_ctx.author.id))
+                
+                if((votes_needed - music_votes) == 0):
+                    await StopSong()
+                    stop_music = True
+                else:
+                    message = f'Not enough votes to stop music! Need {votes_needed - music_votes} more.'
             else:
-                await button_ctx.send(f'Not enough votes! Need {votes_needed - music_votes} more.')
+                message = f'Not enough votes to stop music! Need {votes_needed - music_votes} more.'
+                await ctx.send('You have already voted!', ephemeral = True)
         else:
-                await button_ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds=[], components =[])
-                await bot.disconnect(ctx.guild_id)
-                player.is_playing = False
+            await StopSong()
+            stop_music = True
         
-    elif (data == f"loop {msg.id}"):
+    elif (data == f"loop {button_id}"):
         if not (player.repeat):
             player.set_repeat(True)
             message = "Looping Queue!"
@@ -470,4 +484,9 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes):
         await button_ctx.edit(niko, embeds = funny_embed)
     except:
         pass # This is kind of stupid but I don't know how to handle this exception when it occasionally happens
-    return {'niko' : niko, 'message' : message, 'stop_votes' : music_votes}
+    
+    if stop_music:
+        print('wahoo')
+        return 'ended'
+    else:
+        return {'niko' : niko, 'message' : message, 'stop_votes' : music_votes, 'voted' : voted}
