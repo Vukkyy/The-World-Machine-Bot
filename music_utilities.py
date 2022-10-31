@@ -449,7 +449,7 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes, voted, 
             await bot.disconnect(ctx.guild_id)
         
         voice_states = bot.get_channel_voice_states(player.channel_id)
-        channel_members = len(voice_states)
+        channel_members = len(voice_states) - 1
         
         votes_needed = round((channel_members / 2))
         
