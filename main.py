@@ -12,6 +12,7 @@ import datetime
 from dotenv import load_dotenv
 load_dotenv()
 import cleantext
+import io
 
 # Other Scripts
 import custom_source
@@ -942,7 +943,13 @@ async def on_message_create(message: interactions.Message):
                     webhook : interactions.Webhook = await interactions.Webhook.create(bot._http, channel.id, data[0], data[1])
                     
                     if len(message.attachments) > 0:
-                        await webhook.execute(message.content, attachments=message.attachments)
+                        
+                        files = []
+                        for a in message.attachments:
+                            a._client = bot._http
+                            files.append(interactions.File(a.filename, await a.download()))
+                        
+                        await webhook.execute(message.content, files=files)
                     else:
                         await webhook.execute(message.content)
                     await webhook.delete()
@@ -958,7 +965,12 @@ async def on_message_create(message: interactions.Message):
                     webhook : interactions.Webhook = await interactions.Webhook.create(bot._http, channel.id, data[0], data[1])
                     
                     if len(message.attachments) > 0:
-                        await webhook.execute(message.content, attachments=message.attachments)
+                        files = []
+                        for a in message.attachments:
+                            a._client = bot._http
+                            files.append(interactions.File(a.filename, await a.download()))
+                        
+                        await webhook.execute(message.content, files=files)
                     else:
                         await webhook.execute(message.content)
                     await webhook.delete()
