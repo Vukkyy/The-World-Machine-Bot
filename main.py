@@ -858,9 +858,9 @@ async def assign_stamp(ctx : interactions.CommandContext, user : interactions.Me
     else:
         await ctx.send('Sorry, you cannot use this command!', ephemeral=True)
 
-@bot.event
+'''@bot.event
 async def on_command_error(ctx, error):
-    await ctx.send(f'Whoops. An error occurred. Please report to Axiinyaa#3813```diff\n- {error} -```')
+    await ctx.send(f'Whoops. An error occurred. Please report to Axiinyaa#3813```diff\n- {error} -```')'''
 
 @bot.command(
     name = 'view_stamps',
