@@ -68,11 +68,16 @@ class Transmissions(interactions.Extension):
         with open('Transmissions/update.userphone', 'w') as f:
             f.write('>'.join(can_send))
         
-        with open('Transmissions/transmissions.userphone', 'r') as f:
-            channel_ids = f.readlines()
+        try:
+            with open('Transmissions/transmissions.userphone', 'r') as f:
+                channel_ids = f.readlines()
+        except:
+            with open('Transmissions/transmissions.userphone', 'w') as f:
+                f.write('')
+            await ctx.send('Whoops. An error occurred when trying to transmit! Try running the command again.', ephemeral = True)
+            return
         
         if (len(channel_ids) == 0):
-            
             channel_ids.append(str(ctx.channel.id) + f'>{str(hide)}')
             
             with open('Transmissions/transmissions.userphone', 'w') as f:
