@@ -987,8 +987,10 @@ async def generate_userphone_embed(hidden : bool, message):
                     f = await aiofiles.open('Images/transmitpfp.png', mode='wb')
                     await f.write(await resp.read())
                     await f.close()
+                    
+        fpicture = interactions.Image('Images/transmitpfp.png')
         
-        return [message.author.username, picture]
+        return [message.author.username, fpicture]
 
 @bot.command()
 async def restart_bot(ctx):
