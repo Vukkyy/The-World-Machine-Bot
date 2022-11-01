@@ -919,7 +919,7 @@ async def on_message_create(message: interactions.Message):
     if (message.guild_id in blacklist): # If a server owner has blocked message achievements then do nothing.
         return
     
-    if message.author != bot.me:
+    if not message.author.bot:
         content = message.content
     
         content = cleantext.replace_urls(content, '`< URL >`')
@@ -932,37 +932,63 @@ async def on_message_create(message: interactions.Message):
             for channel_id in channel_ids:
                 channel_id = json.loads(channel_id)
                 if (int(channel_id['connection_one']) == int(message.channel_id)):
+                    webhook = None
+                    data = await generate_userphone_embed(channel_id['hidden'], message)
+                        
                     channel = await interactions.get(bot, interactions.Channel, object_id=int(channel_id['connection_two']))
-                    embed = await generate_userphone_embed(channel_id['hidden'], message.author, content)
+                    
                     await bot._http.trigger_typing(channel_id=int(channel_id['connection_two']))
-                    await asyncio.sleep(1)
-                    await channel.send(embeds=embed)
+                    
+                    webhook : interactions.Webhook = await interactions.Webhook.create(bot._http, channel.id, data[0], data[1])
+                    
+                    await webhook.execute(message.content)
+                    await webhook.delete()
                     break
                 elif (int(channel_id['connection_two']) == int(message.channel_id)):                  
+                    webhook = None
+                    data = await generate_userphone_embed(channel_id['hidden'], message)
+                        
                     channel = await interactions.get(bot, interactions.Channel, object_id=int(channel_id['connection_one']))
-                    embed = await generate_userphone_embed(channel_id['hidden'], message.author, content)
+                    
                     await bot._http.trigger_typing(channel_id=int(channel_id['connection_one']))
-                    await asyncio.sleep(1)
-                    await channel.send(embeds=embed)
+                    
+                    webhook : interactions.Webhook = await interactions.Webhook.create(bot._http, channel.id, data[0], data[1])
+                    
+                    await webhook.execute(message.content)
+                    await webhook.delete()
                     break
 
-async def generate_userphone_embed(hidden : bool, user : interactions.User, content : str):
+async def generate_userphone_embed(hidden : bool, message):
     if hidden:
         user_ = await interactions.get(bot, interactions.User, object_id = 744248932263133234)
         
-        username = user_.username + f'#{str(user.id)[2 : 6]}'
+        picture = user_.avatar_url
         
-        return interactions.Embed(
-            author= interactions.EmbedAuthor(name=username, icon_url=user_.avatar_url),
-            title = '',
-            description= content
-        )
+        username = user_.username + f'#{str(message.author.id)[2 : 6]}'
+                    
+        async with aiohttp.ClientSession() as session:
+            url = picture
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    f = await aiofiles.open('Images/transmitpfp.png', mode='wb')
+                    await f.write(await resp.read())
+                    await f.close()
+                    
+        picture = interactions.Image('Images/transmitpfp.png')
+                    
+        return [username, picture]
     else:
-        return interactions.Embed(
-            author= interactions.EmbedAuthor(name=user.username, icon_url=user.avatar_url),
-            title = '',
-            description= content
-        )
+        picture = message.author.avatar_url
+                    
+        async with aiohttp.ClientSession() as session:
+            url = picture
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    f = await aiofiles.open('Images/transmitpfp.png', mode='wb')
+                    await f.write(await resp.read())
+                    await f.close()
+        
+        return [message.author.username, picture]
 
 @bot.command()
 async def restart_bot(ctx):
