@@ -941,7 +941,10 @@ async def on_message_create(message: interactions.Message):
                     
                     webhook : interactions.Webhook = await interactions.Webhook.create(bot._http, channel.id, data[0], data[1])
                     
-                    await webhook.execute(message.content)
+                    if len(message.attachments) > 0:
+                        await webhook.execute(message.content, attachments=message.attachments)
+                    else:
+                        await webhook.execute(message.content)
                     await webhook.delete()
                     break
                 elif (int(channel_id['connection_two']) == int(message.channel_id)):                  
@@ -954,7 +957,10 @@ async def on_message_create(message: interactions.Message):
                     
                     webhook : interactions.Webhook = await interactions.Webhook.create(bot._http, channel.id, data[0], data[1])
                     
-                    await webhook.execute(message.content)
+                    if len(message.attachments) > 0:
+                        await webhook.execute(message.content, attachments=message.attachments)
+                    else:
+                        await webhook.execute(message.content)
                     await webhook.delete()
                     break
 
