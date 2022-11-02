@@ -9,7 +9,7 @@ def setup(client):
     bot = client
     pass
 
-async def EarnBadge(ctx : interactions.Message, badge_id : str, badge_name : str, badge_emoji : str, badge_description : str, user_id : int):
+async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : str, badge_description : str, user_id : int):
     print('unlocked badge!')
     try:
         dm = interactions.Channel(**await bot._http.create_dm(user_id))

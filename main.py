@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import cleantext
 import io
+import validators
 
 # Other Scripts
 import custom_source
@@ -739,62 +740,125 @@ async def explosion(ctx):
     await ctx.send(embeds=embed)
 
 @bot.command(
-    name = 'generate-battle',
-    description = 'Generate a battle using GPT-3 from OpenAI.',
+    name = 'generate-battles',
+    description = 'Generate battles using GPT-3 from OpenAI.',
     options = [
         interactions.Option(
-            name = 'fighter_one',
-            description = 'The first Fighter.',
-            type = interactions.OptionType.STRING,
-            required = True
-        ),
-
-        interactions.Option(
-            name = 'wielding_an',
-            description = 'The first Fighter\'s weapon or tool.',
-            type = interactions.OptionType.STRING,
-            required = True
-        ),
-
-        interactions.Option(
-            name = 'fighter_two',
-            description = 'The second Fighter.',
-            type = interactions.OptionType.STRING,
-            required = True
-        ),
-
-        interactions.Option(
-            name = 'wielding_a',
-            description = 'The second Fighter\'s weapon or tool.',
+            name = 'bcl',
+            description = 'Battle Contestant List',
             type = interactions.OptionType.STRING,
             required = True
         )
-    ]
+    ],
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+    scope=1017531963000754247
 )
-async def fight(ctx : interactions.CommandContext, fighter_one, wielding_an, fighter_two, wielding_a):
-    msg = await ctx.send('Generating text... <a:loading:1026539890382483576>')
+async def fight(ctx : interactions.CommandContext, bcl):    
+    await ctx.send('BCL Loaded!', ephemeral=True)
     
-    battle = await generate_text.GenerateBattle(fighter_one, wielding_an, fighter_two, wielding_a)
-
-    print(len(battle))
-
-    if (len(battle) < 2):
-        embed = interactions.Embed(
-            title = 'Result',
-            description = battle[0]
-        )
-
-        await msg.edit('',embeds=embed)
-    else:
-        for btl in battle:
-            embed = interactions.Embed(
-                title = 'Result',
-                description = btl
-            )
-
-        await msg.send('',embeds=embed)
-
+    contestants = bcl.split('^')
+    
+    battles = []
+    
+    i = 1
+    for contestant in contestants:
+        if i % 2 == 0:
+            battles.append([contestants[i - 2], contestants[i - 1]])
             
+        i += 1
+        
+    for battle in battles:
+        
+        c_one = battle[0].split('>')
+        c_two = battle[1].split('>')
+
+        btl = await ctx.channel.send(f"**A battle begins! {c_one[0]} versus {c_two[0]}!**")
+        
+        btl1 = await btl.reply('Generating battle... <a:loading:1026539890382483576>')
+        
+        num = random.randint(0, 1)
+        
+        winner = None
+        
+        if num == 0:
+            winner = c_one
+        else:
+            winner = c_two
+        
+        text = await generate_text.GenerateBattle(c_one[1], c_one[0], c_one[2], c_one[3], c_two[1], c_two[0], c_two[2], c_two[3], winner[0])
+        
+        embed = interactions.Embed(
+            title = f'{c_one[0]} versus {c_two[0]}',
+            description = text[0]
+        )
+        
+        result = await btl1.edit(embeds=embed)
+        
+        result_embed = interactions.Embed(
+            title = f'{winner[0]} is the winner!',
+            thumbnail=interactions.EmbedImageStruct(url=winner[4]),
+            description='The next battle will begin in 10 seconds!'
+        )
+        
+        await result.reply(embeds=result_embed)
+        
+        await asyncio.sleep(10)
+        
+@bot.command(scope=1017531963000754247)
+async def generate_bcl(ctx):
+    modal = interactions.Modal(
+            custom_id='battle',
+            title = 'Generate a Battle Contestant',
+            components=[
+                interactions.TextInput(
+                    style = interactions.TextStyleType.SHORT,
+                    custom_id='name',
+                    label='Name',
+                    placeholder='What is their name?',
+                    required=True
+                ),
+                interactions.TextInput(
+                    style = interactions.TextStyleType.SHORT,
+                    custom_id='gender',
+                    label='Gender',
+                    placeholder='Examples include Male / Female or any other gender.',
+                    required=True
+                ),
+                interactions.TextInput(
+                    style = interactions.TextStyleType.SHORT,
+                    custom_id='weapon',
+                    label='Weapon',
+                    placeholder='What weapon do they wield?',
+                    required=True
+                ),
+                interactions.TextInput(
+                    style = interactions.TextStyleType.PARAGRAPH,
+                    custom_id='description',
+                    label='Personality',
+                    placeholder='Write a short description of your fighter\'s personality.',
+                    required=True
+                ),
+                interactions.TextInput(
+                    style = interactions.TextStyleType.SHORT,
+                    custom_id='url',
+                    label='Image URL',
+                    placeholder='https://image/my_image.png',
+                    required=True
+                )
+            ]
+        )
+        
+    await ctx.popup(modal)    
+@bot.modal('battle')
+async def on_modal(ctx, name, gender, weapon, personality, image_url):
+    
+    if validators.url(image_url):
+        await ctx.send(f'{name}>{gender}>{weapon}>{personality}>{image_url}^')
+        return
+    
+    await ctx.send('You need to put in a valid image url!', ephemeral = True)
+    
+      
 
 @bot.command(
     name = 'select_stamp',
@@ -854,13 +918,9 @@ async def assign_stamp(ctx : interactions.CommandContext, user : interactions.Me
                 id_ = f'https://cdn.discordapp.com/emojis/{str(badge["stamp_url"])}.png'
         
         await ctx.send('Assigned Stamp to ' + user.user.username)
-        await stamps.EarnBadge(ctx, stamp_id, name, id_, 'You recieved this stamp from the owner of the bot, congrats!', int(user.id))
+        await stamps.EarnBadge(ctx, name, id_, 'You recieved this stamp from the owner of the bot, congrats!', int(user.id))
     else:
         await ctx.send('Sorry, you cannot use this command!', ephemeral=True)
-
-'''@bot.event
-async def on_command_error(ctx, error):
-    await ctx.send(f'Whoops. An error occurred. Please report to Axiinyaa#3813```diff\n- {error} -```')'''
 
 @bot.command(
     name = 'view_stamps',
@@ -1023,5 +1083,6 @@ async def restart_bot(ctx):
         return
     
     await ctx.send('You cannot use this command.', ephemeral = True)
+
 
 bot.start()
