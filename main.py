@@ -744,16 +744,21 @@ async def explosion(ctx):
     description = 'Generate battles using GPT-3 from OpenAI.',
     options = [
         interactions.Option(
-            name = 'bcl',
+            name = 'bcl_',
             description = 'Battle Contestant List',
-            type = interactions.OptionType.STRING,
+            type = interactions.OptionType.ATTACHMENT,
             required = True
         )
     ],
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
     scope=1017531963000754247
 )
-async def fight(ctx : interactions.CommandContext, bcl):    
+async def fight(ctx : interactions.CommandContext, bcl_ : interactions.Attachment):
+    
+    text_file : io.BytesIO = await bcl_.download()
+    
+    bcl = text_file.read().decode('utf-8')
+    
     await ctx.send('BCL Loaded!', ephemeral=True)
     
     contestants = bcl.split('^')
