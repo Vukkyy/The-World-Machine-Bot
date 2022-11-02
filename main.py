@@ -853,7 +853,7 @@ async def generate_bcl(ctx):
 async def on_modal(ctx, name, gender, weapon, personality, image_url):
     
     if validators.url(image_url):
-        await ctx.send(f'{name}>{gender}>{weapon}>{personality}>{image_url}^')
+        await ctx.send(f'{name}>{gender}>{weapon}>{personality}>{image_url}')
         return
     
     await ctx.send('You need to put in a valid image url!', ephemeral = True)
