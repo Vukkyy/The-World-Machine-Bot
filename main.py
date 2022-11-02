@@ -792,7 +792,7 @@ async def fight(ctx : interactions.CommandContext, bcl):
             description = text[0]
         )
         
-        result = await btl1.edit(embeds=embed)
+        result = await btl1.edit(content = '', embeds=embed)
         
         result_embed = interactions.Embed(
             title = f'{winner[0]} is the winner!',
