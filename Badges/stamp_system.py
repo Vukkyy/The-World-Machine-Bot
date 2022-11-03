@@ -11,7 +11,7 @@ def setup(client):
 
 async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : str, badge_description : str, user_id : int):
     embed=interactions.Embed(title=f"\"{badge_name}\"", description=f"{badge_description}")
-    embed.set_author(name=f"✨{ctx.author.username}, You earned a badge!")
+    embed.set_author(name=f"✨<@{user_id}>, You earned a badge!")
     embed.set_thumbnail(url=badge_emoji)
     embed.set_footer(text="Use /select_stamps to equip it.")
     if (ctx.type == interactions.CommandContext):
