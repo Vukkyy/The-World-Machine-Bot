@@ -12,13 +12,11 @@ def setup(client):
 async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : str, badge_description : str, user_id : int):
     print('unlocked badge!')
     try:
-        dm = interactions.Channel(**await bot._http.create_dm(user_id))
-        dm._client = bot._http
         embed=interactions.Embed(title=f"\"{badge_name}\"", description=f"{badge_description}")
-        embed.set_author(name="✨ You earned a badge!")
+        embed.set_author(name=f"✨{ctx.author.username}, You earned a badge!")
         embed.set_thumbnail(url=badge_emoji)
         embed.set_footer(text="Use /select_stamps to equip it.")
-        await dm.send(embeds=embed)
+        await ctx.reply(embeds=embed)
 
     except:
         pass
@@ -84,7 +82,6 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
         if (HasEarned(0, 69, badges_earned, 0)):
             await EarnBadge(
                 ctx = ctx,
-                badge_id = 69,
                 badge_name = "Nice!",
                 badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026135536190111755'),
                 badge_description = 'Have the owner of The World Machine send you a letter.',
@@ -97,7 +94,6 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
         if (HasEarned(25, 0, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
-                badge_id = 0,
                 badge_name = "You only have One Shot.",
                 badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207773559619644'),
                 badge_description = 'Send 25 messages with The World Machine in the server!',
@@ -109,7 +105,6 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
         if (HasEarned(100, 0.1, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
-                badge_id = 0.1,
                 badge_name = "Novelty T-Shirt.",
                 badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207765661761596'),
                 badge_description = 'Send 100 messages with The World Machine in the server!',
@@ -121,7 +116,6 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
         if (HasEarned(500, 0.2, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
-                badge_id = 0.2,
                 badge_name = "Good luck on your journey, small child!",
                 badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026181557230256128'),
                 badge_description = 'Send 500 messages with The World Machine in the server!',
@@ -133,7 +127,6 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
         if (HasEarned(1000, 0.3, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
-                badge_id = 0.3,
                 badge_name = "The Ultimate Photo.",
                 badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026181559482585138'),
                 badge_description = 'Send 1000 messages with The World Machine in the server!',
@@ -146,7 +139,6 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
         if (HasEarned(25, 2, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
-                badge_id = 2,
                 badge_name = "Letter Lover",
                 badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026181556051648634'),
                 badge_description = 'Send 25 letters.',
@@ -158,7 +150,6 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
         if (HasEarned(25, 1, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
-                badge_id = 1,
                 badge_name = "Chaotic Evil",
                 badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207767142342838'),
                 badge_description = 'Shatter 25 Suns.',
@@ -169,7 +160,6 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
         if (HasEarned(100, 1.1, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
-                badge_id = 1.1,
                 badge_name = "That can't be good for the multiverse.",
                 badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207768643907705'),
                 badge_description = 'Shatter 100 Suns.',
@@ -180,8 +170,7 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
         if (HasEarned(250, 1.2, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
-                badge_id = 1.2,
-                badge_name = "Mass Genocide of the cosmos!",
+                badge_name = "Mass Genocide of the cosmos.",
                 badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207771198226462'),
                 badge_description = 'Shatter 250 Suns.',
                 user_id = user_id
@@ -191,8 +180,7 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
         if (HasEarned(500, 1.3, badges_earned, value)):
             await EarnBadge(
                 ctx = ctx,
-                badge_id = 1.3,
-                badge_name = "No Nikos were harmed in the process of destroying multiverses.",
+                badge_name = "No Nikos were harmed. I think.",
                 badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1026207769969307698'),
                 badge_description = 'Shatter 500 Suns.',
                 user_id = user_id
