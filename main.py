@@ -784,51 +784,66 @@ async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactio
         
     random.shuffle(battles)
     
-    index = 0
+    b_index = 0
     
-    for battle in battles:
+    while len(contestants) > 1:
         
-        c_one = battle[0].split('>')
-        c_two = battle[1].split('>')
-        btl = await ctx.channel.send(f"**A battle begins! {c_one[0]} versus {c_two[0]}!**")
+        await ctx.channel.send('**Starting Next Round!**')
         
-        btl1 = await btl.reply('Generating battle... <a:loading:1026539890382483576>')
+        if not b_index == 0:
+            i = 1
+            for contestant in contestants:
+                if i % 2 == 0:
+                    battles.append([contestants[i - 2], contestants[i - 1]])
+                    i += 1
+            
+        index = 0
         
-        num = random.randint(0, 1)
-        
-        winner = None
-        
-        if num == 0:
-            winner = c_one
-        else:
-            winner = c_two
-        
-        text = await generate_text.GenerateBattle(c_one[1], c_one[0], c_one[2], c_one[3], c_two[1], c_two[0], c_two[2], c_two[3], winner[0])
-        
-        embed = interactions.Embed(
-            title = f'{c_one[0]} versus {c_two[0]}',
-            description = text[0]
-        )
-        
-        result = await btl1.edit(content = '', embeds=embed)
-        
-        result_embed = interactions.Embed(
-                title = f'{winner[0]} is the winner!',
-                thumbnail=interactions.EmbedImageStruct(url=winner[4]),
+        for battle in battles:
+            
+            c_one = battle[0].split('>')
+            c_two = battle[1].split('>')
+            btl = await ctx.channel.send(f"**A battle begins! {c_one[0]} versus {c_two[0]}!**")
+            
+            btl1 = await btl.reply('Generating battle... <a:loading:1026539890382483576>')
+            
+            num = random.randint(0, 1)
+            
+            winner = None
+            
+            if num == 0:
+                winner = c_one
+                contestants.remove(c_two)
+            else:
+                winner = c_two
+                contestants.remove(c_one)
+            
+            text = await generate_text.GenerateBattle(c_one[1], c_one[0], c_one[2], c_one[3], c_two[1], c_two[0], c_two[2], c_two[3], winner[0])
+            
+            embed = interactions.Embed(
+                title = f'{c_one[0]} versus {c_two[0]}',
+                description = text[0]
             )
-        
-        if not index == len(battles):
+            
+            result = await btl1.edit(content = '', embeds=embed)
+            
             result_embed = interactions.Embed(
-                title = f'{winner[0]} is the winner!',
-                thumbnail=interactions.EmbedImageStruct(url=winner[4]),
-                description='The next battle will begin in 10 seconds!'
-            )
-        
-        await result.reply(embeds=result_embed)
-        
-        index += 1
-        
-        await asyncio.sleep(10)
+                    title = f'{winner[0]} is the winner of the tournament!',
+                    thumbnail=interactions.EmbedImageStruct(url=winner[4]),
+                )
+            
+            if not index == len(battles):
+                result_embed = interactions.Embed(
+                    title = f'{winner[0]} is the winner!',
+                    thumbnail=interactions.EmbedImageStruct(url=winner[4]),
+                    description='The next battle will begin in 10 seconds!'
+                )
+            
+            await result.reply(embeds=result_embed)
+            
+            index += 1
+            
+            await asyncio.sleep(10)
         
 @bot.command(scope=1017531963000754247)
 async def generate_bcl(ctx):
