@@ -771,9 +771,10 @@ async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactio
     
     random.shuffle(contestants)
     
-    if not ctx.author.id == 302883948424462346 and len(contestants) > 1:
-        await ctx.send('To prevent spamming, please do not include more than two fighters!', ephemeral = True)
-        return
+    if not ctx.author.id == 302883948424462346:
+        if len(contestants) > 2:
+            await ctx.send('To prevent spamming, please do not include more than two fighters!', ephemeral = True)
+            return
     
     battles = []
     
