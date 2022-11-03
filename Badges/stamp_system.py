@@ -146,6 +146,39 @@ async def CompareValues(value : int, type : str, ctx, badges_earned : list, user
                 user_id = user_id
             )
             return 2
+        
+    if (type == 'letters_sent'):
+        if (HasEarned(100, 2.1, badges_earned, value)):
+            await EarnBadge(
+                ctx = ctx,
+                badge_name = "Letter Linguist",
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1037781835113046056'),
+                badge_description = 'Send 100 letters.',
+                user_id = user_id
+            )
+            return 2.1
+        
+    if (type == 'letters_sent'):
+        if (HasEarned(500, 2.2, badges_earned, value)):
+            await EarnBadge(
+                ctx = ctx,
+                badge_name = "Professional Letter Sender",
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1037781837763858442'),
+                badge_description = 'Send 500 letters.',
+                user_id = user_id
+            )
+            return 2.2
+        
+    if (type == 'letters_sent'):
+        if (HasEarned(1000, 2.3, badges_earned, value)):
+            await EarnBadge(
+                ctx = ctx,
+                badge_name = "Master of the Letters",
+                badge_emoji = 'https://cdn.discordapp.com/emojis/{}.webp?size=96&quality=lossless'.format('1037781836513935470'),
+                badge_description = 'Send 1000 letters.',
+                user_id = user_id
+            )
+            return 2.3
 
     if (type == 'suns_shattered'):
         if (HasEarned(25, 1, badges_earned, value)):

@@ -25,6 +25,18 @@ stamps = [
     {
         "stamp_id" : 2, "stamp_url" : 1026181556051648634, "name" : "Feather Pen"
     },
+    
+    {
+        "stamp_id" : 2.1, "stamp_url" : 1037781835113046056, "name" : " Bronze Feather Pen"
+    },
+    
+    {
+        "stamp_id" : 2.2, "stamp_url" : 1037781837763858442, "name" : "Silver Feather Pen"
+    },
+    
+    {
+        "stamp_id" : 2.3, "stamp_url" : 1037781836513935470, "name" : "Golden Feather Pen"
+    },
 
     {
         "stamp_id" : 1, "stamp_url" : 1026207767142342838, "name" : "Shattered Sun"
