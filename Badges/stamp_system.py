@@ -11,7 +11,7 @@ def setup(client):
 
 async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : str, badge_description : str, user_id : int):
     
-    user : interactions.User = interactions.get(bot, interactions.User, object_id = user_id)
+    user : interactions.User = await interactions.get(bot, interactions.User, object_id = user_id)
     
     embed=interactions.Embed(title=f"\"{badge_name}\"", description=f"{badge_description}")
     embed.set_author(name=f"✨{user.username}, you earned a badge!")
