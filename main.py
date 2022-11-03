@@ -832,7 +832,7 @@ async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactio
                     thumbnail=interactions.EmbedImageStruct(url=winner[4]),
                 )
             
-            if not len(contestants) == 0:
+            if not len(contestants) < 1:
                 result_embed = interactions.Embed(
                     title = f'{winner[0]} is the winner!',
                     thumbnail=interactions.EmbedImageStruct(url=winner[4]),
