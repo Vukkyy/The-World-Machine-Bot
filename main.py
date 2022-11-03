@@ -769,6 +769,8 @@ async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactio
     
     contestants = bcl.split('^')
     
+    random.shuffle(contestants)
+    
     if not ctx.author.id == 302883948424462346 and len(contestants) > 1:
         await ctx.send('To prevent spamming, please do not include more than two fighters!', ephemeral = True)
         return
@@ -781,21 +783,19 @@ async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactio
             battles.append([contestants[i - 2], contestants[i - 1]])
             
         i += 1
-        
-    random.shuffle(battles)
     
     b_index = 0
     
     while len(contestants) > 1:
-        
-        await ctx.channel.send('**Starting Next Round!**')
-        
         if not b_index == 0:
+            await ctx.channel.send('**Starting Next Round!**')
+            battles = []
+            
             i = 1
             for contestant in contestants:
                 if i % 2 == 0:
                     battles.append([contestants[i - 2], contestants[i - 1]])
-                    i += 1
+                i += 1
             
         index = 0
         
@@ -813,10 +813,10 @@ async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactio
             
             if num == 0:
                 winner = c_one
-                contestants.remove(c_two)
+                contestants.remove(battle[1])
             else:
                 winner = c_two
-                contestants.remove(c_one)
+                contestants.remove(battle[0])
             
             text = await generate_text.GenerateBattle(c_one[1], c_one[0], c_one[2], c_one[3], c_two[1], c_two[0], c_two[2], c_two[3], winner[0])
             
@@ -832,20 +832,22 @@ async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactio
                     thumbnail=interactions.EmbedImageStruct(url=winner[4]),
                 )
             
-            if not index == len(battles):
+            if not len(contestants) == 0:
                 result_embed = interactions.Embed(
                     title = f'{winner[0]} is the winner!',
                     thumbnail=interactions.EmbedImageStruct(url=winner[4]),
-                    description='The next battle will begin in 10 seconds!'
+                    description='The next battle will begin in 20 seconds!'
                 )
             
             await result.reply(embeds=result_embed)
             
             index += 1
             
-            await asyncio.sleep(10)
+            await asyncio.sleep(20)
+            
+        b_index += 1
         
-@bot.command(scope=1017531963000754247)
+@bot.command()
 async def generate_bcl(ctx):
     modal = interactions.Modal(
             custom_id='battle',
