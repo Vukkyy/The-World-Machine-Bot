@@ -827,12 +827,15 @@ async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactio
             
             result = await btl1.edit(content = '', embeds=embed)
             
-            result_embed = interactions.Embed(
-                    title = f'{winner[0]} is the winner of the tournament!',
-                    thumbnail=interactions.EmbedImageStruct(url=winner[4]),
-                )
+            index += 1
             
-            if not len(contestants) < 1:
+            if index == len(battles):
+                result_embed = interactions.Embed(
+                        title = f'{winner[0]} is the winner of this round!',
+                        thumbnail=interactions.EmbedImageStruct(url=winner[4]),
+                    )
+            
+            else:
                 result_embed = interactions.Embed(
                     title = f'{winner[0]} is the winner!',
                     thumbnail=interactions.EmbedImageStruct(url=winner[4]),
@@ -840,8 +843,6 @@ async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactio
                 )
             
             await result.reply(embeds=result_embed)
-            
-            index += 1
             
             await asyncio.sleep(20)
             
