@@ -901,7 +901,12 @@ async def on_modal(ctx, name, gender, weapon, personality, image_url):
     
     await ctx.send('You need to put in a valid image url!', ephemeral = True)
     
-      
+@bot.command()
+@interactions.option()
+async def amount_of_battlers(ctx, bcl : str = ''):
+    l = bcl.split('^')
+    
+    await ctx.send(f'{len(l)} fighters.')
 
 @bot.command(
     name = 'select_stamp',
