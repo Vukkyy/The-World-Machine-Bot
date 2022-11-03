@@ -744,24 +744,34 @@ async def explosion(ctx):
     description = 'Generate battles using GPT-3 from OpenAI.',
     options = [
         interactions.Option(
+            name = 'bcl',
+            description = 'Battle Contestant List',
+            type = interactions.OptionType.STRING,
+            required = False
+        ),
+        
+        interactions.Option(
             name = 'bcl_',
             description = 'Battle Contestant List',
             type = interactions.OptionType.ATTACHMENT,
-            required = True
+            required = False
         )
-    ],
-    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
-    scope=1017531963000754247
+    ]
 )
-async def fight(ctx : interactions.CommandContext, bcl_ : interactions.Attachment):
+async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactions.Attachment = None):
     
-    text_file : io.BytesIO = await bcl_.download()
-    
-    bcl = text_file.read().decode('utf-8')
+    if (bcl == None):
+        text_file : io.BytesIO = await bcl_.download()
+        
+        bcl = text_file.read().decode('utf-8')
     
     await ctx.send('BCL Loaded!', ephemeral=True)
     
     contestants = bcl.split('^')
+    
+    if not ctx.author.id == 302883948424462346 and len(contestants) > 1:
+        await ctx.send('To prevent spamming, please do not include more than two fighters!', ephemeral = True)
+        return
     
     battles = []
     
@@ -772,11 +782,14 @@ async def fight(ctx : interactions.CommandContext, bcl_ : interactions.Attachmen
             
         i += 1
         
+    random.shuffle(battles)
+    
+    index = 0
+    
     for battle in battles:
         
         c_one = battle[0].split('>')
         c_two = battle[1].split('>')
-
         btl = await ctx.channel.send(f"**A battle begins! {c_one[0]} versus {c_two[0]}!**")
         
         btl1 = await btl.reply('Generating battle... <a:loading:1026539890382483576>')
@@ -800,12 +813,20 @@ async def fight(ctx : interactions.CommandContext, bcl_ : interactions.Attachmen
         result = await btl1.edit(content = '', embeds=embed)
         
         result_embed = interactions.Embed(
-            title = f'{winner[0]} is the winner!',
-            thumbnail=interactions.EmbedImageStruct(url=winner[4]),
-            description='The next battle will begin in 10 seconds!'
-        )
+                title = f'{winner[0]} is the winner!',
+                thumbnail=interactions.EmbedImageStruct(url=winner[4]),
+            )
+        
+        if not index == len(battles):
+            result_embed = interactions.Embed(
+                title = f'{winner[0]} is the winner!',
+                thumbnail=interactions.EmbedImageStruct(url=winner[4]),
+                description='The next battle will begin in 10 seconds!'
+            )
         
         await result.reply(embeds=result_embed)
+        
+        index += 1
         
         await asyncio.sleep(10)
         
