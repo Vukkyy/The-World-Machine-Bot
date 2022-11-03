@@ -17,7 +17,7 @@ async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : 
     try:
         await ctx.send(embeds=embed)
     except:
-        await ctx.send(embeds=embed)
+        await ctx.reply(embeds=embed)
 
 async def IncrementValue(message : interactions.Message, value : str, targeted : int):
     db = ''
