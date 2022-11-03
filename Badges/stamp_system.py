@@ -14,9 +14,9 @@ async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : 
     embed.set_author(name=f"✨<@{user_id}>, You earned a badge!")
     embed.set_thumbnail(url=badge_emoji)
     embed.set_footer(text="Use /select_stamps to equip it.")
-    if (ctx.type == interactions.CommandContext):
+    try:
         await ctx.send(embeds=embed)
-    else:
+    except:
         await ctx.send(embeds=embed)
 
 async def IncrementValue(message : interactions.Message, value : str, targeted : int):
