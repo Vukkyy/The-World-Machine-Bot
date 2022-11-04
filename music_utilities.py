@@ -177,7 +177,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
         embed = interactions.Embed(
                 title = "Not Currently Playing Anything",
                 thumbnail = interactions.EmbedImageStruct( url = "https://shortcut-test2.s3.amazonaws.com/uploads/role/attachment/346765/default_Enlarged_sunicon.png"),
-                description = "Use /play music to add music."
+                description = "Use </music_play:69420> to add music."
             )
         
         await ctx.send(embeds=embed)
