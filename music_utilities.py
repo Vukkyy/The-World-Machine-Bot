@@ -180,7 +180,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                 description = "Use </music_play:69420> to add music."
             )
         
-        await ctx.send(embeds=embed)
+        await msg.edit(niko, embeds=embed, components=buttons)
         return
 
     async def check(ctx):

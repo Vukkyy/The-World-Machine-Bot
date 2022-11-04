@@ -213,6 +213,7 @@ class Music(interactions.Extension):
             
         elif (sub_command == "stop"):
             await self.client.disconnect(ctx.guild_id)
+            await ctx.send('<:nikosleepy:1027492467337080872> `Successfully stopped the player.`', embeds=[], components =[], ephemeral=True)
             
 async def update_player(ctx, player):
     await music_.ShowPlayer(ctx, player, True, True)
