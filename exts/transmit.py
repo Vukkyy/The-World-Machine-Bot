@@ -51,6 +51,9 @@ class Transmissions(interactions.Extension):
         
         can_send = []
         
+        with open('Transmissions/transmissions.userphone', 'r') as f:
+            channel_ids = f.readlines()
+        
         with open('Transmissions/update.userphone', 'r') as f:
             can_send = f.read().split('>')
         

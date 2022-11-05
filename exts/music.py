@@ -5,6 +5,17 @@ import music_utilities as music_
 import custom_source
 import lyricsgenius
 import os
+import random
+
+default_songs = [
+    "https://youtu.be/TqMo9HwiNOo",
+    'https://youtu.be/eCq2HMFC_lU',
+    "https://youtu.be/2M0mruW4WCs",
+    "https://youtu.be/qJtrbm57-n4",
+    "https://youtu.be/fSbYgB5tgkA",
+    "https://youtu.be/EdCHU5IMy7E",
+    "https://youtu.be/GXNhbkwUD9E"
+]
 
 genius = lyricsgenius.Genius(os.getenv('GENIUS'))
 
@@ -26,10 +37,12 @@ class Music(interactions.Extension):
 
             index = 0
             
-            for song in event.player.queue:
-                if song.title == 'OneShot OST - Library Nap Extended':
-                    del event.player.queue[index]
-                index += 1
+            await ctx.send(f'DEBUG: {len(event.player.queue)}')
+            
+            funny_track = await event.player.node.get_tracks(default_songs[0])
+            
+            if funny_track in event.player.queue:
+                event.player.queue = []
                           
             await music_.ShowPlayer(ctx, event.player, False)
 
@@ -43,17 +56,15 @@ class Music(interactions.Extension):
         )
         await ctx.channel.send("", embeds= embed)
 
-        results = await event.player.node.get_tracks(f"https://www.youtube.com/watch?v=TqMo9HwiNOo")
+        random.shuffle(default_songs)
+        
+        results = await event.player.node.get_tracks(default_songs[0])
         track = lavalink.AudioTrack(results["tracks"][0], int(ctx.author.id))
 
         event.player.set_repeat(True)
 
         event.player.store(f'isquiet {event.player.guild_id}', True)
         event.player.store(f'currently quiet {ctx.guild_id}', True)
-
-        print('Playing ambeiance (i cannot spell)')
-
-
         await event.player.play(track, volume = 8)
 
     @listener()
