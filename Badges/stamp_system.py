@@ -18,9 +18,12 @@ async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : 
     embed.set_thumbnail(url=badge_emoji)
     embed.set_footer(text="Use /select_stamps to equip it.")
     try:
-        await ctx.send(embeds=embed)
+        try:
+            await ctx.send(embeds=embed)
+        except:
+            await ctx.reply(embeds=embed)
     except:
-        await ctx.reply(embeds=embed)
+        pass #Fallback if can't send message.
 
 async def IncrementValue(message : interactions.Message, value : str, targeted : int):
     db = ''
