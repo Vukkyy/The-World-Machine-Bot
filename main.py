@@ -865,8 +865,8 @@ async def generate_bcl(ctx):
                 interactions.TextInput(
                     style = interactions.TextStyleType.SHORT,
                     custom_id='gender',
-                    label='Gender',
-                    placeholder='Examples include Male / Female or any other gender.',
+                    label='Pronoun',
+                    placeholder='He/She/They, for example.',
                     required=True
                 ),
                 interactions.TextInput(
