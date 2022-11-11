@@ -1086,23 +1086,23 @@ async def on_message_create(message: interactions.Message):
                     await webhook.delete()
                     break
 
+characters = [
+    ['Images/Transmit/Niko.png', 'Niko'],
+    ['Images/Transmit/Silver.png', 'Silver'],
+    ['Images/Transmit/Alula.png', 'Alula'],
+    ['Images/Transmit/Calamus.png', 'Calamus'],
+    ['Images/Transmit/Plight.png', 'LampLighter'],
+    ['Images/Transmit/Kip.png', 'Kip'],
+    ['Images/Transmit/George1.png', 'George'],
+]
+
 async def generate_userphone_embed(hidden : bool, message):
     if hidden:
-        user_ = await interactions.get(bot, interactions.User, object_id = 744248932263133234)
         
-        picture = user_.avatar_url
+        number = random.randint(0, 6)
         
-        username = user_.username + f'#{str(message.author.id)[2 : 6]}'
-                    
-        async with aiohttp.ClientSession() as session:
-            url = picture
-            async with session.get(url) as resp:
-                if resp.status == 200:
-                    f = await aiofiles.open('Images/transmitpfp.png', mode='wb')
-                    await f.write(await resp.read())
-                    await f.close()
-                    
-        picture = interactions.Image('Images/transmitpfp.png')
+        picture = interactions.Image(characters[number][0])
+        username = characters[number][1]
                     
         return [username, picture]
     else:
