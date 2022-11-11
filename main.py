@@ -549,14 +549,15 @@ async def letter(ctx : interactions.CommandContext, user : interactions.Member, 
     )
 
     if (user.id in lllist and ctx.author.id in lllist or ctx.author.id == 302883948424462346):
+        try:
+            await user.send(embeds=embed)
+        except:
+            await ctx.send('Cannot send letters to this user.', ephemeral=True)
+            return
+        print('sending letter')
         await stamps.IncrementValue(ctx, 'letters_sent', int(ctx.author.id))
-
         if (ctx.author.id == 302883948424462346):
             await stamps.IncrementValue(ctx, 'owner_letter', int(user.id))
-        
-        await user.send(embeds=embed)
-        print('sending letter')
-        await ctx.send('Letter sent successfully!', ephemeral=True)
     elif (not user.id in lllist):
         await ctx.send('This user has not opted in for recieving letters. Ask the other person to use /toggle_letters to recieve letters.', ephemeral=True)
     else:

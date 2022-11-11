@@ -19,9 +19,19 @@ async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : 
     embed.set_footer(text="Use /select_stamps to equip it.")
     try:
         try:
-            await ctx.send(embeds=embed)
+            msg = ''
+            
+            if (user_id != int(ctx.author.id)):
+                msg = f'<@{user_id}>'
+            
+            await ctx.send(msg, embeds=embed)
         except:
-            await ctx.reply(embeds=embed)
+            msg = ''
+            
+            if (user_id != int(ctx.author.id)):
+                msg = f'<@{user_id}>'
+            
+            await ctx.reply(msg, embeds=embed)
     except:
         pass #Fallback if can't send message.
 
