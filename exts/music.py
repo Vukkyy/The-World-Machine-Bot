@@ -37,8 +37,6 @@ class Music(interactions.Extension):
 
             index = 0
             
-            await ctx.send(f'DEBUG: {len(event.player.queue)}')
-            
             funny_track = await event.player.node.get_tracks(default_songs[0])
             
             if funny_track in event.player.queue:
