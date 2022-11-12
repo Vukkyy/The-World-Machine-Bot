@@ -1096,15 +1096,16 @@ characters = [
     ['Images/Transmit/Plight.png', 'LampLighter'],
     ['Images/Transmit/Kip.png', 'Kip'],
     ['Images/Transmit/George1.png', 'George'],
+    ['Images/Transmit/clover.png', 'Owner'],
 ]
 
-async def generate_userphone_embed(hidden : bool, message):
+async def generate_userphone_embed(hidden : bool, message : interactions.Message):
     if hidden:
         
-        number = random.randint(0, 6)
+        number = await database_manager.GetDatabase(int(message.author.id), 'transmit', {"uid" : int(message.author.id), "character" : 0})
         
-        picture = interactions.Image(characters[number][0])
-        username = characters[number][1]
+        picture = interactions.Image(characters[number['character']][0])
+        username = characters[number['character']][1]
                     
         return [username, picture]
     else:
@@ -1146,34 +1147,13 @@ async def restart_bot(ctx):
             type = interactions.OptionType.STRING,
             required = True,
             choices = [
-                interactions.Choice(
-                    name = 'English',
-                    value = 'english'
-                ),
-                interactions.Choice(
-                    name = 'German',
-                    value = 'german'
-                ),
-                interactions.Choice(
-                    name = 'French',
-                    value = 'french'
-                ),
-                interactions.Choice(
-                    name = 'Italian',
-                    value = 'italian'
-                ),
-                interactions.Choice(
-                    name = 'Finnish',
-                    value = 'finnish'
-                ),
-                interactions.Choice(
-                    name = 'Japanese',
-                    value = 'japanese'
-                ),
-                interactions.Choice(
-                    name = 'Latin',
-                    value = 'latin'
-                )
+                interactions.Choice(name = 'English', value = 'english'),
+                interactions.Choice(name = 'German', value = 'german'),
+                interactions.Choice(name = 'Italian', value = 'italian'),
+                interactions.Choice(name = 'Finnish', value = 'finnish'),
+                interactions.Choice(name = 'Japanese', value = 'japanese'),
+                interactions.Choice(name = 'Latin', value = 'latin'),
+                interactions.Choice(name = 'English', value = 'english'),
             ]
         )
     ]
