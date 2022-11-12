@@ -25,6 +25,7 @@ import Badges.stamp_system as stamps
 import Badges.stamp_list as stamp_list
 import Badges.stamp_viewer as view
 from slur_detection import slurs
+import database_manager
 
 # Extension Libraries
 from interactions.ext.wait_for import wait_for_component, setup, wait_for
@@ -1135,5 +1136,67 @@ async def restart_bot(ctx):
     
     await ctx.send('You cannot use this command.', ephemeral = True)
 
+@bot.command(
+    name = "set-translation-language",
+    description = "Set language to translate to.",
+    options = [
+        interactions.Option(
+            name = 'language',
+            description = 'the language.',
+            type = interactions.OptionType.STRING,
+            required = True,
+            choices = [
+                interactions.Choice(
+                    name = 'English',
+                    value = 'english'
+                ),
+                interactions.Choice(
+                    name = 'German',
+                    value = 'german'
+                ),
+                interactions.Choice(
+                    name = 'French',
+                    value = 'french'
+                ),
+                interactions.Choice(
+                    name = 'Italian',
+                    value = 'italian'
+                ),
+                interactions.Choice(
+                    name = 'Finnish',
+                    value = 'finnish'
+                ),
+                interactions.Choice(
+                    name = 'Japanese',
+                    value = 'japanese'
+                ),
+                interactions.Choice(
+                    name = 'Latin',
+                    value = 'latin'
+                )
+            ]
+        )
+    ]
+)
+async def language(ctx : interactions.CommandContext, language : str):
+    
+    lang_default = {'uid' : int(ctx.author.id), 'language' : 'english'}
+    
+    await database_manager.GetDatabase(int(ctx.author.id), 'languages', lang_default)   
+    await database_manager.SetDatabase(int(ctx.author.id), 'languages', 'language', language)
+    await ctx.send(f'Set Language to {language}', ephemeral = True)
 
+@bot.message_command(name = 'Translate')
+async def trans_gender_GET_IT(ctx : interactions.CommandContext):
+    
+    await ctx.defer(ephemeral=True)
+    
+    lang_default = {'uid' : int(ctx.author.id), 'language' : 'english'}
+    
+    db = await database_manager.GetDatabase(int(ctx.author.id), 'languages', lang_default)
+    
+    txt = generate_text.Response(f'Translate "{ctx.target.content}" to {db["language"]}')
+    
+    await ctx.send(txt[0], ephemeral = True)
+    
 bot.start()

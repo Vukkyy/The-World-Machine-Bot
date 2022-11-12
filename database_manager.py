@@ -11,7 +11,7 @@ async def GetDatabase(guild_id : int, database : str, default_data : dict):
         
     for slot in db:
         json_data = json.loads(slot)
-        guild_ids.append(json_data['guild_id'])
+        guild_ids.append(json_data['uid'])
     
     if not guild_id in guild_ids:
         str_data = json.dumps(default_data)
@@ -40,7 +40,7 @@ async def SetDatabase(guild_id : int, database : str, value : str, data,):
         
     for slot in db:
         json_data = json.loads(slot)
-        guild_ids.append(json_data['guild_id'])
+        guild_ids.append(json_data['uid'])
     
     index = 0
     

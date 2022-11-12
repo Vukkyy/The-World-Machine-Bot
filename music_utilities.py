@@ -162,7 +162,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
     
     button_id = uuid.uuid4()
     
-    default_data = {'guild_id' : int(ctx.guild_id), 'player_id' : str(player_id)}
+    default_data = {'uid' : int(ctx.guild_id), 'player_id' : str(player_id)}
     await db_manager.GetDatabase(int(ctx.guild_id), 'current_players', default_data)   
     db = await db_manager.SetDatabase(int(ctx.guild_id), 'current_players', 'player_id', str(player_id))
 
