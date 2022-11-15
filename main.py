@@ -26,6 +26,7 @@ import Badges.stamp_list as stamp_list
 import Badges.stamp_viewer as view
 from slur_detection import slurs
 import database_manager
+import exts.report as report
 
 # Extension Libraries
 from interactions.ext.wait_for import wait_for_component, setup, wait_for
@@ -544,21 +545,49 @@ async def letter(ctx : interactions.CommandContext, user : interactions.Member, 
     embed = interactions.Embed(
         description = f'{message}',
         footer = interactions.EmbedFooter(text= f'Sent by {ctx.author.user.username} in {ctx.guild.name}', icon_url = ctx.author.user.avatar_url),
-        timestamp = datetime.datetime.utcnow(),
         author = interactions.EmbedAuthor(name = '💌 You got a letter!'),
         thumbnail = interactions.EmbedImageStruct(url = await stamps.GetCurrentBadge(int(ctx.author.id), False, 0))
     )
+    
+    button_ids = uuid.uuid4()
+    
+    buttons = [
+        interactions.Button(
+            style=interactions.ButtonStyle.DANGER,
+            label='Report',
+            custom_id=f'report {button_ids}'
+        ),
+    ]
+    
+    awesome = None
 
     if (user.id in lllist and ctx.author.id in lllist or ctx.author.id == 302883948424462346):
         try:
-            await user.send(embeds=embed)
+            awesome = await user.send(embeds=embed, components=buttons)
+            
+            await ctx.send('Successfully sent letter.', ephemeral=True)
         except:
             await ctx.send('Cannot send letters to this user.', ephemeral=True)
             return
+        
         print('sending letter')
         await stamps.IncrementValue(ctx, 'letters_sent', int(ctx.author.id))
         if (ctx.author.id == 302883948424462346):
             await stamps.IncrementValue(ctx, 'owner_letter', int(user.id))
+        
+        async def check(ctx):
+            return True
+        
+        while True:
+            button_ctx : interactions.ComponentContext = await wait_for_component(bot, buttons, check=check)
+                
+            if (button_ctx.data.custom_id == f'report {button_ids}'):
+                result = await report.Report(bot, button_ctx, ctx.author.id)
+                if result != 'Invalid URL':
+                    buttons[0].disabled = True
+                
+            await awesome.edit(embeds=embed, components=buttons)
+        
     elif (not user.id in lllist):
         await ctx.send('This user has not opted in for recieving letters. Ask the other person to use /toggle_letters to recieve letters.', ephemeral=True)
     else:
@@ -599,7 +628,12 @@ async def allow(ctx : interactions.CommandContext):
     db.close()
 
 @bot.user_command(name="Send Letter")
-async def send_letter(ctx : interactions.CommandContext):
+async def send_letter(ctx : interactions.CommandContext, user = None):
+    
+    try:
+        user = ctx.target
+    except:
+        pass
     
     ban_list = []
         
@@ -631,8 +665,6 @@ async def send_letter(ctx : interactions.CommandContext):
 
     letter_ = []
 
-    print('lolcat')
-
     if modal_ctx.data.components:
         for component in modal_ctx.data.components:
             if component.components:
@@ -640,7 +672,7 @@ async def send_letter(ctx : interactions.CommandContext):
 
     ctx.target._client = bot._http # Needs HTTP Client to be set for some reason
     
-    await letter(modal_ctx, ctx.target, letter_[0])
+    await letter(modal_ctx, user, letter_[0])
 
 
 @bot.user_command(name="Action")
@@ -1153,7 +1185,11 @@ async def restart_bot(ctx):
                 interactions.Choice(name = 'Finnish', value = 'finnish'),
                 interactions.Choice(name = 'Japanese', value = 'japanese'),
                 interactions.Choice(name = 'Latin', value = 'latin'),
-                interactions.Choice(name = 'English', value = 'english'),
+                interactions.Choice(name = 'Albanian', value = 'albanian'),
+                interactions.Choice(name = 'Russian', value = 'russian'),
+                interactions.Choice(name = 'Polish', value = 'polish'),
+                interactions.Choice(name = 'Norwegian', value = 'norwegian'),
+                interactions.Choice(name = 'Swedish', value = 'swedish'),
             ]
         )
     ]
