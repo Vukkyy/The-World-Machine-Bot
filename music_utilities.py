@@ -10,6 +10,8 @@ import lavalink
 import database_manager as db_manager
 import music_update
 
+from interactions.ext.lavalink import VoiceClient, VoiceState, listener, Player
+
 def setup_(self):
     global bot
     bot = self
@@ -204,6 +206,13 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
             done, pending = await asyncio.wait({task}, timeout=2)
             
             if not done:
+                
+                player: Player  # Typehint player variable to see their methods
+                
+                voice: VoiceState = ctx.author.voice
+
+                if (player := ctx.guild.player) is None:
+                    player = await voice.connect()
                 
                 await music_update.update(ctx, player)
                 
