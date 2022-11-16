@@ -197,6 +197,13 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
     
     message = {'niko' : niko, 'message' : '', 'stop_votes' : 0, 'voted' : []}
     
+    player: Player  # Typehint player variable to see their methods
+                
+    voice: VoiceState = ctx.author.voice
+
+    if (player := ctx.guild.player) is None:
+        player = await voice.connect()
+    
     while True:
         
         button_ctx = msg
@@ -206,13 +213,6 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
             done, pending = await asyncio.wait({task}, timeout=2)
             
             if not done:
-                
-                player: Player  # Typehint player variable to see their methods
-                
-                voice: VoiceState = ctx.author.voice
-
-                if (player := ctx.guild.player) is None:
-                    player = await voice.connect()
                 
                 db = await db_manager.GetDatabase(int(ctx.guild_id), 'current_players', default_data)   
                 
