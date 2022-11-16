@@ -214,8 +214,6 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                 if (player := ctx.guild.player) is None:
                     player = await voice.connect()
                 
-                await music_update.update(ctx, player)
-                
                 db = await db_manager.GetDatabase(int(ctx.guild_id), 'current_players', default_data)   
                 
                 if player.current != song_:

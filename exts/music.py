@@ -182,7 +182,7 @@ class Music(interactions.Extension):
                         successful += 1
                     except:
                         pass
-                    if (successful % 2 == 0):
+                    if (successful % 10 == 0):
                         await msg_.edit(f'Adding **{len(playlist)}** songs to the queue. This might take a while. ({successful}/{len(playlist)}) <a:loading:1026539890382483576>')
                    #@ except:
                         #pass
