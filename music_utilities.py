@@ -8,24 +8,19 @@ import random
 import asyncio
 import lavalink
 import database_manager as db_manager
-import lyricsgenius
-import os
-import custom_source
+import music_update
 
 from interactions.ext.lavalink import VoiceClient, VoiceState, listener, Player
 
 def setup_(self):
     global bot
-    global genius
-    
     bot = self
-    genius = lyricsgenius.Genius(os.getenv('GENIUS'))
 
 async def GetButtons(guild_id):
     play_emoji = interactions.Emoji(name="playorpause", id=1019286927888883802)
     stop_emoji = interactions.Emoji(name="stopmusic", id=1019286931504386168)
     queue_emoji = interactions.Emoji(name="openqueue", id = 1019286929059086418)
-    loop_song_emoji = interactions.Emoji(name="loopsong", id=1042887337526444123)
+    loop_song_emoji = interactions.Emoji(name="loopsong", id=1019286926404091914)
     skip_emoji = interactions.Emoji(name="skipmusic", id=1019286930296410133)
 
     print(guild_id)
@@ -64,10 +59,7 @@ async def GetButtons(guild_id):
         ),
     ]
 
-async def GenerateEmbed(id : str, player : Player, show_timeline, show_lyrics = False, lyrics = ''):
-    
-    spotify = await custom_source.SearchSpotify(player.current.title, False)
-    
+async def GenerateEmbed(id : str, player, show_timeline):
     if (player.is_playing):
         current_length = player.position / 1000
         song_length = player.current.duration / 1000
@@ -87,34 +79,25 @@ async def GenerateEmbed(id : str, player : Player, show_timeline, show_lyrics = 
             i += 1
         
         length = "".join(l_length)
-        
-        if show_lyrics:
-            return interactions.Embed(
-                title = f"Now Playing: ***{spotify['name']}***",
-                thumbnail = interactions.EmbedImageStruct( url = spotify['art'], height = 720, width = 1280),
-                description = f"**Lyrics:** {lyrics}",
-                footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
-            )
     
         if (show_timeline):
             return interactions.Embed(
-                title = f"Now Playing: ***{spotify['name']}***",
-                thumbnail = interactions.EmbedImageStruct( url = spotify['art'], height = 720, width = 1280),
+                title = f"**Now Playing:** [{player.current.title}]",
+                thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
                 description = f"{length} \n\n *{new_c_length} / {new_length}*",
                 footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
+                url = player.current.uri
             )
         else:
             return interactions.Embed(
-                title = f"Now Playing: ***{spotify['name']}***",
-                thumbnail = interactions.EmbedImageStruct( url = spotify['art'], height = 720, width = 1280),
+                title = f"**Now Playing:** [{player.current.title}]",
+                thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{id}/maxresdefault.jpg", height = 720, width = 1280),
                 description = f"Loading Player... <a:loading:1026539890382483576> \n\n *00:00 / {new_length}*",
                 footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
+                url = player.current.uri
             )
 
 async def GenerateQueue(page_number, player, controls = False, forward = False):
-    
-    spotify = await custom_source.SearchSpotify(player.current.title, False)
-    
     full_queue = player.queue
     list_ = ""
 
@@ -136,16 +119,15 @@ async def GenerateQueue(page_number, player, controls = False, forward = False):
     
     try:
         for song in queue:
-            spotify_ = await custom_source.SearchSpotify(song.title, False)
             time = datetime.datetime.fromtimestamp(song.duration / 1000).strftime('%M:%S')
-            list_ = f"{list_}**{full_queue.index(song) + 1}.** `{spotify_['title']}` *({time})*\n"
+            list_ = f"{list_}**{full_queue.index(song) + 1}.** `{song.title}` *({time})*\n"
     except:
         pass
     
     if (len(list_) > 0):
         return interactions.Embed(
             title = "Music Queue",
-            description = f"\n**Currently Playing:** `{spotify['name']}`\n\n",
+            description = f"\n**Currently Playing:** `{player.current.title}`\n\n",
             thumbnail = interactions.EmbedImageStruct( url = "https://shortcut-test2.s3.amazonaws.com/uploads/role/attachment/346765/default_Enlarged_sunicon.png" ),
             fields = [
                 interactions.EmbedField(
@@ -213,7 +195,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
     song_ = player.current
     update_player = player.current
     
-    message = {'niko' : niko, 'message' : '', 'stop_votes' : 0, 'voted' : [], 'lyrics' : [False, None]}
+    message = {'niko' : niko, 'message' : '', 'stop_votes' : 0, 'voted' : []}
     
     player: Player  # Typehint player variable to see their methods
                 
@@ -243,21 +225,22 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                     return
                 
                 if not player.paused and player.is_playing:
-                    funny_embed = await GenerateEmbed(player.current.identifier, player, True, message['lyrics'][0], message['lyrics'][1])
+                    funny_embed = await GenerateEmbed(player.current.identifier, player, True)
                     funny_embed.set_author(name = message['message'])
                     await button_ctx.edit(message['niko'], embeds = funny_embed, components = buttons)
                 continue  # very important!
                 
             button_ctx = task.result()
-            message = await ButtonManager(niko, msg, ctx, button_ctx, player, message['stop_votes'], message['voted'], button_id, message['lyrics'][0])
+            message = await ButtonManager(niko, msg, ctx, button_ctx, player, message['stop_votes'], message['voted'], button_id)
             
-
+            print(message)
+            
             if (message == 'ended'):
                 print('stopping')
                 return
             break
             
-async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes, voted, button_id, lyrics):
+async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes, voted, button_id):
     
     message = ''
     
@@ -294,7 +277,6 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes
             jump_emoji = interactions.Emoji(id=1031309498557681717)
             left_emoji = interactions.Emoji(id=1031309494946385920)
             right_emoji = interactions.Emoji(id=1031309496401793064)
-            loop_song_emoji = interactions.Emoji(id=1019286926404091914)
             
             
             queue = await GenerateQueue(0, player)
@@ -317,11 +299,6 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes
                     style = interactions.ButtonStyle.PRIMARY,
                     custom_id = f"shuffle {str(id)}",
                     emoji = shuffle_emoji,
-                ),
-                interactions.Button(
-                    style=interactions.ButtonStyle.SECONDARY,
-                    custom_id = f"l {str(id)}",
-                    emoji = loop_song_emoji,
                 ),
                 interactions.Button(
                     style = interactions.ButtonStyle.DANGER,
@@ -428,15 +405,8 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes
                     del player.queue[0 : int(contexto.data.values[0])]
                     
                     await player.play(song_)
-                
-                if (shuffle_ctx.data.custom_id == f'l {str(id)}'): 
-                    if not (player.repeat):
-                        player.set_repeat(True)
-                        await shuffle_ctx.edit('`Looping Queue.`', embeds = queue, components=[row1, row2])
-                    else:
-                        player.set_repeat(False)
-                        await shuffle_ctx.edit('`Looping Stopped.`', embeds = queue, components=[row1, row2])
-                
+                    
+                    
                 if (shuffle_ctx.data.custom_id == f'b {str(id)}'):
                     page -= 1
                     
@@ -509,33 +479,12 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes
             stop_music = True
         
     elif (data == f"loop {button_id}"):
-        if not lyrics:
-            
-            await button_ctx.defer()
-            
-            embed = interactions.Embed(
-                title = 'Lyrics',
-                description = 'Searching Genius for lyrics... <a:loading:1026539890382483576>'
-            )
-            
-            msg = await button_ctx.send(embeds = embed)
-            
-            spotify = await custom_source.SearchSpotify(player.current.title, False)
-            
-            
-            
-            song = None
-            
-            song = genius.search_song(title = spotify['name'], artist= spotify['artist'])
-            
-            await msg.delete()
-            
-            final_song = song.lyrics
-            
-            lyrics = True
+        if not (player.repeat):
+            player.set_repeat(True)
+            message = "Looping Queue!"
         else:
-            lyrics = False
-            final_song = None
+            player.set_repeat(False)
+            message = "Loop Stopped!"
     try:    
         funny_embed = await GenerateEmbed(player.current.identifier, player, True)
         funny_embed.set_author(name = message)
@@ -547,4 +496,4 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes
         print('wahoo')
         return 'ended'
     else:
-        return {'niko' : niko, 'message' : message, 'stop_votes' : music_votes, 'voted' : voted, 'lyrics' : [lyrics, final_song]}
+        return {'niko' : niko, 'message' : message, 'stop_votes' : music_votes, 'voted' : voted}
