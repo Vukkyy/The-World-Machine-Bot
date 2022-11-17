@@ -71,22 +71,14 @@ class Music(interactions.Extension):
             host = '162.248.100.61',
             port = 10333,
             password = 'youshallnotpass',
-            region = "eu"
+            region = "usa"
         )
 
         ctx = event.player.fetch(f'channel {event.player.guild_id}')
 
         await ctx.send("An Unexpected error occurred. Skipping to the next track.")
         await event.player.play()
-
-    @interactions.extension_command()
-    async def lyrics(self, ctx):
-        await ctx.send('Getting lyrics')
         
-        song = genius.search_song("My Time", "bo en")
-        
-        await ctx.send(song.lyrics)
-
     @interactions.extension_listener()
     async def on_start(self):
         print('Loading Music Module')
@@ -94,7 +86,7 @@ class Music(interactions.Extension):
             host = '162.248.100.61',
             port = 10333,
             password = 'youshallnotpass',
-            region = "eu"
+            region = "us"
         ) # Woah, neat! Free Lavalink!
         
 
@@ -175,7 +167,8 @@ class Music(interactions.Extension):
                 
                 for video in playlist:
                     try:
-                        tracks = await player.search_youtube(video)
+                        search = await custom_source.SearchSpotify(video, False)
+                        tracks = await player.search_youtube(search)
                         track = tracks[0]
                         player.add(requester=int(ctx.author.id), track=track)
 
@@ -207,9 +200,12 @@ class Music(interactions.Extension):
                 await player.play(volume = 10)
                 return
             else:
+                
+                spotify = await custom_source.SearchSpotify(track.title, False)
+                
                 cool = interactions.Embed(
-                    title = f"**Added:** [{track.title}] to queue.",
-                    thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{track.identifier}/maxresdefault.jpg", height = 720, width = 1280),
+                    title = f"**Added:** {spotify['name']} to queue.",
+                    thumbnail = interactions.EmbedImageStruct( url = spotify['art'], height = 720, width = 1280),
                     description = f"Current Position: {len(player.queue)}",
                     url = player.queue[len(player.queue) - 1].uri
                 )
