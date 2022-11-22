@@ -14,6 +14,7 @@ load_dotenv()
 import cleantext
 import io
 import validators
+import humanfriendly
 
 # Other Scripts
 import custom_source
@@ -27,6 +28,8 @@ import Badges.stamp_viewer as view
 from slur_detection import slurs
 import database_manager
 import exts.report as report
+import chars
+import profile
 
 # Extension Libraries
 from interactions.ext.wait_for import wait_for_component, setup, wait_for
@@ -45,6 +48,7 @@ bot.load('interactions.ext.files')
 bot.load('exts.music')
 bot.load('exts.transmit')
 bot.load('exts.embed_creator')
+bot.load('profile')
 
 setup(bot)
 
@@ -67,7 +71,8 @@ async def on_start():
                     type=interactions.PresenceActivityType.LISTENING)
             ]))
 
-    await change_picture()
+    if not bot.me.id == 1028058097383641118:
+        await change_picture()
 
     music.bot = bot
     
@@ -1007,38 +1012,6 @@ async def assign_stamp(ctx : interactions.CommandContext, user : interactions.Me
         await ctx.send('Sorry, you cannot use this command!', ephemeral=True)
 
 @bot.command(
-    name = 'view_stamps',
-    description = 'Show off those stylish stamps!',
-    options = [interactions.Option(name = 'user', description = 'Select someone to view their stamps.', type = interactions.OptionType.USER)]
-)
-async def view_stamp(ctx : interactions.CommandContext, user = 'none'):
-
-    id_ = 0
-
-    msg = ''
-
-    user_ = ''
-
-    if (user == 'none'):
-        id_ = int(ctx.author.id)
-        msg = 'Loading your beautiful stamps... <a:loading:1026539890382483576>'
-        user_ = ctx.author.user.username
-    else:
-        id_ = int(user.id)
-        msg = f'Loading {user.user.username}\'s beautiful stamps... <a:loading:1026539890382483576>'
-        user_ = user.user.username
-    
-    msg = await ctx.send(msg)
-
-    print(user_)
-    
-    await view.DrawBadges(id_, user_)
-
-    img_ = interactions.File('Badges/result.png')
-
-    await msg.edit('', files = img_)
-
-@bot.command(
     name = 'blacklist-server-messages',
     description = 'Blacklist this server from getting message-based stamp achievements.',
     default_member_permissions=interactions.Permissions.ADMINISTRATOR,
@@ -1120,16 +1093,7 @@ async def on_message_create(message: interactions.Message):
                     await webhook.delete()
                     break
 
-characters = [
-    ['Images/Transmit/Niko.png', 'Niko'],
-    ['Images/Transmit/Silver.png', 'Silver'],
-    ['Images/Transmit/Alula.png', 'Alula'],
-    ['Images/Transmit/Calamus.png', 'Calamus'],
-    ['Images/Transmit/Plight.png', 'LampLighter'],
-    ['Images/Transmit/Kip.png', 'Kip'],
-    ['Images/Transmit/George1.png', 'George'],
-    ['Images/Transmit/clover.png', 'Owner'],
-]
+characters = chars.characters
 
 async def generate_userphone_embed(hidden : bool, message : interactions.Message):
     if hidden:
@@ -1214,5 +1178,24 @@ async def trans_gender_GET_IT(ctx : interactions.CommandContext):
     txt = generate_text.Response(f'Translate "{ctx.target.content}" to {db["language"]}')
     
     await ctx.send(txt[0], ephemeral = True)
+
+
+async def daily(ctx, delta):
+    
+    time = humanfriendly.format_timespan(delta, detailed=False, max_units=2)
+    
+    await ctx.send(f'Sorry! You have already claimed your daily wool! You can claim again in {time}! <:twmhappy:1023573455456698368>', ephemeral = True)
+  
+@bot.command(description='Get your daily wool!')
+@cooldown(hours=12, type='user', error = daily)
+async def daily(ctx : interactions.CommandContext):
+    random_ = random.randint(20, 50)
+    
+    id_ = int(ctx.author.id)
+    
+    coins = await database_manager.GetDatabase(id_, 'ram', {"uid" : id_, "coins" : 0})
+    await database_manager.SetDatabase(id_, 'ram', 'coins', coins['coins'] + random_)
+    
+    await ctx.send(f'Successfully claimed your daily wool! (+{random_}<:wool:1044668364422918176>)', ephemeral = True)
     
 bot.start()

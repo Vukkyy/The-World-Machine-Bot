@@ -243,13 +243,13 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                     return
                 
                 if not player.paused and player.is_playing:
-                    funny_embed = await GenerateEmbed(player.current.identifier, player, True, message['lyrics'][0], message['lyrics'][1])
+                    funny_embed = await GenerateEmbed(player.current.identifier, player, True)
                     funny_embed.set_author(name = message['message'])
                     await button_ctx.edit(message['niko'], embeds = funny_embed, components = buttons)
                 continue  # very important!
                 
             button_ctx = task.result()
-            message = await ButtonManager(niko, msg, ctx, button_ctx, player, message['stop_votes'], message['voted'], button_id, message['lyrics'][0])
+            message = await ButtonManager(niko, msg, ctx, button_ctx, player, message['stop_votes'], message['voted'], button_id)
             
 
             if (message == 'ended'):
@@ -257,7 +257,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                 return
             break
             
-async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes, voted, button_id, lyrics):
+async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes, voted, button_id):
     
     message = ''
     
@@ -509,33 +509,31 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes
             stop_music = True
         
     elif (data == f"loop {button_id}"):
-        if not lyrics:
-            
-            await button_ctx.defer()
-            
-            embed = interactions.Embed(
-                title = 'Lyrics',
-                description = 'Searching Genius for lyrics... <a:loading:1026539890382483576>'
-            )
-            
-            msg = await button_ctx.send(embeds = embed)
-            
-            spotify = await custom_source.SearchSpotify(player.current.title, False)
-            
-            
-            
-            song = None
-            
-            song = genius.search_song(title = spotify['name'], artist= spotify['artist'])
-            
-            await msg.delete()
-            
-            final_song = song.lyrics
-            
-            lyrics = True
+        await button_ctx.defer()
+        
+        embed_ = interactions.Embed(
+            title = 'Lyrics',
+            description = 'Searching Genius for lyrics... <a:loading:1026539890382483576>'
+        )
+        
+        msg = await ctx.send(embeds = embed_)
+        
+        spotify = await custom_source.SearchSpotify(player.current.title, False)
+        
+        song = None
+        
+        song = genius.search_song(title = spotify['name'], artist= spotify['artist'])
+        
+        desc = ''
+        
+        if song == None:
+            desc = 'Could not find song lyrics.'
         else:
-            lyrics = False
-            final_song = None
+            desc = song.lyrics
+            
+        embed_.description = desc
+
+        await msg.edit(embeds=embed_)
     try:    
         funny_embed = await GenerateEmbed(player.current.identifier, player, True)
         funny_embed.set_author(name = message)
@@ -547,4 +545,4 @@ async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes
         print('wahoo')
         return 'ended'
     else:
-        return {'niko' : niko, 'message' : message, 'stop_votes' : music_votes, 'voted' : voted, 'lyrics' : [lyrics, final_song]}
+        return {'niko' : niko, 'message' : message, 'stop_votes' : music_votes, 'voted' : voted}

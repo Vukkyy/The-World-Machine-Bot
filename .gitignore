@@ -3,6 +3,7 @@
 *.code-workspace
 profile_pictures.pfp
 /Transmissions/*
+Badges/Images/*
 
 slur_detection.py
 ban_list.txt

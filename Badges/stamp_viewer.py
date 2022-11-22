@@ -5,8 +5,11 @@ import aiohttp
 import aiofiles
 import Badges.stamp_system as stamps_
 import json
+import chars
+import database_manager as db
+import textwrap
     
-async def DrawBadges(user_id : int, user : str = 'awesome person'):
+async def DrawBadges(user_id : int, user : str = 'awesome person', user_pfp : str = ''):
     print('Viewing Badges...')
 
     images = []
@@ -14,37 +17,34 @@ async def DrawBadges(user_id : int, user : str = 'awesome person'):
     for stamp in list_.stamps:
         images.append(f'https://cdn.discordapp.com/emojis/{stamp["stamp_url"]}.png')
 
-    msg = f'{user}\'s unlocked stamps:'
+    msg = f'{user}\'s Profile'
 
     print(user)
+    
+    profile = await db.GetDatabase(user_id, 'profile', {"uid": user_id, "profile_background": "Normal", "profile_description": "I am a very mysterious person!"})
 
-    bg = Image.open('Badges/background.png')
+    bg = Image.open(f'Badges/Images/Backgrounds/{profile["profile_background"]}.png')
 
     equipped = await stamps_.GetCurrentBadge(user_id, False, '')
 
-    async with aiohttp.ClientSession() as session:
-            async with session.get(equipped) as resp:
-                if resp.status == 200:
-                    f = await aiofiles.open('Badges/equipped.png', mode='wb')
-                    await f.write(await resp.read())
-                    await f.close()
-
-    img_equipped = Image.open('Badges/equipped.png')
-
-    width, height = bg.size
+    img_equipped = await DownloadImage(equipped, 'equipped')
 
     fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 25) # Font
+    title_fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 25) # Font
     
     d = ImageDraw.Draw(bg)
 
-    w, h = fnt.getsize(msg)
+    d.text((32, 32), msg, font=title_fnt, fill=(252, 186, 86), stroke_width=1, stroke_fill=(252, 186, 86))
 
-    text_x = ((width - w) / 2)
-    text_y = 40
-
-    d.text((text_x, text_y), msg, font=fnt, fill=(255,255,255))
-
-    d.text((30, height - 60), 'Equipped Stamp:', font = fnt, fill=(255,255,255))
+    description = textwrap.fill(profile['profile_description'], 35)
+    
+    d.text((210, 140), f"\"{description}\"", font = fnt, fill=(255,255,255))
+    
+    pfp = await DownloadImage(user_pfp, 'profile_picture')
+    
+    pfp = pfp.resize((148, 148))
+    
+    bg.paste(pfp, (32, 80), pfp.convert('RGBA'))
     
     icons = []
     ids = []
@@ -52,32 +52,21 @@ async def DrawBadges(user_id : int, user : str = 'awesome person'):
     idx = 0
     
     for item in images:
-        print(item)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(item) as resp:
-                if resp.status == 200:
-                    f = await aiofiles.open('Badges/icon.png', mode='wb')
-                    await f.write(await resp.read())
-                    await f.close()
-        img = Image.open('Badges/icon.png')
+        img = await DownloadImage(item, 'icon')
         img = img.convert('RGBA')
-        img = img.resize((60, 60), Image.Resampling.NEAREST)
+        img = img.resize((35, 35), Image.Resampling.NEAREST)
         icons.append(img)
         ids.append(list_.stamps[idx]['stamp_id'])
 
         idx += 1
 
-    init_index = 68
-    
+    init_index = 90
     index = init_index
-
     i = 0
-
-    pos_y = 80
+    pos_y = 300
     
     for icon in icons:
         i += 1
-
         endexo = 0
         
         for id_ in ids:
@@ -89,16 +78,45 @@ async def DrawBadges(user_id : int, user : str = 'awesome person'):
             endexo += 1
 
         bg.paste(icon, (index, pos_y), icon.convert('RGBA'))
-        bg.paste(img_equipped, (230, height - 65), img_equipped.convert('RGBA'))
         index += 100
         
         if (i > 5):
             index = init_index
-            pos_y += 70
+            pos_y += 50
             i = 0
+            
+    bg.paste(img_equipped, (659, 25), img_equipped.convert('RGBA'))
+    
+    char = await db.GetDatabase(user_id, 'transmit', {"uid" : user_id, "character" : 0})
+    character = chars.characters[char['character']]
+    
+    character = Image.open(character[0])
+    character = character.resize((35, 35), resample=Image.Resampling.NEAREST)
 
+    bg.paste(character, (659, 64), character.convert('RGBA'))
+    d.text((648, 32), 'Equipped Stamp:', font = fnt, fill=(255,255,255), anchor='rt', align='right')
+    d.text((648, 64), 'Current Character:', font = fnt, fill=(255,255,255), anchor='rt', align='right')
+    
+    coins = await db.GetDatabase(user_id, 'ram', {"uid" : user_id, "coins" : 0})
+    d.text((648, 250), f'{coins["coins"]} x', font = fnt, fill=(255,255,255), anchor='rt', align='right')
+    wool_ = await DownloadImage('https://cdn.discordapp.com/emojis/1044668364422918176.png', 'wool')
+    
+    bg.paste(wool_, (659, 243), wool_.convert('RGBA'))
+    
+    d.text((42, 251), 'Unlocked Achievement Stamps:', font = fnt, fill=(255,255,255))
+    
     bg.save('Badges/result.png')
     print('finished')
+
+async def DownloadImage(image_url, filename):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(image_url) as resp:
+            if resp.status == 200:
+                f = await aiofiles.open(f'Badges/Images/{filename}.png', mode='wb')
+                await f.write(await resp.read())
+                await f.close()
+    
+    return Image.open(f'Badges/Images/{filename}.png')
 
 async def GetStamps(user_id, stamp_id):
 

@@ -125,13 +125,21 @@ class Music(interactions.Extension):
             ),
 
             interactions.Option(
-                name = "stop",
-                description = "Stop the music player.",
-                type = interactions.OptionType.SUB_COMMAND
+                name = "lyrics",
+                description = "Search for song lyrics.",
+                type = interactions.OptionType.SUB_COMMAND,
+                options =[
+                    interactions.Option(
+                        name = 'song',
+                        description = 'Search Lyrics for this song.',
+                        required = True,
+                        type = interactions.OptionType.STRING
+                    )
+                ]
             ),
         ]
     )   
-    async def music_(self, ctx: interactions.CommandContext, sub_command: str, search: str = "", fromindex: int = 0):
+    async def music_(self, ctx: interactions.CommandContext, sub_command: str, search: str = "", song: str = ''):
 
         voice: VoiceState = ctx.author.voice
         
@@ -167,8 +175,8 @@ class Music(interactions.Extension):
                 
                 for video in playlist:
                     try:
-                        search = await custom_source.SearchSpotify(video, False)
-                        tracks = await player.search_youtube(search)
+                        search_ = await custom_source.SearchSpotify(video, False)
+                        tracks = await player.search_youtube(f"{search_['name']} {search_['artist']}")
                         track = tracks[0]
                         player.add(requester=int(ctx.author.id), track=track)
 
@@ -182,7 +190,9 @@ class Music(interactions.Extension):
                 
                 await msg_.edit(f'Added **{successful}** songs to the queue successfully!')
             else:
-                tracks = await player.search_youtube(search)
+                
+                search_ = await custom_source.SearchSpotify(search, False)
+                tracks = await player.search_youtube(f"{search_['name']} {search_['artist']}")
 
                 if (len(tracks) < 1):
                     await ctx.send("Sorry! Couldn't find a song with that search query.")
@@ -216,9 +226,22 @@ class Music(interactions.Extension):
             player.store(f'channel {ctx.guild_id}', ctx)
             await music_.ShowPlayer(ctx, player, True)
             
-        elif (sub_command == "stop"):
-            await self.client.disconnect(ctx.guild_id)
-            await ctx.send('<:nikosleepy:1027492467337080872> `Successfully stopped the player.`', embeds=[], components =[], ephemeral=True)
+        elif (sub_command == "lyrics"):
+            msg = await ctx.send(f'Searching Genius for **{song}**... <a:loading:1026539890382483576>')
+            
+            search = genius.search_song(song)
+            
+            lyrics = search.lyrics
+            
+            if len(lyrics) > 5999:
+                lyrics = lyrics[0:5999]
+            
+            embed = interactions.Embed(
+                title=f'Lyrics for {song}',
+                description = lyrics
+            )
+            
+            await msg.edit('', embeds=embed)
             
 async def update_player(ctx, player):
     await music_.ShowPlayer(ctx, player, True, True)
