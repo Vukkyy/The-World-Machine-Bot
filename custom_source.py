@@ -10,18 +10,12 @@ credentials = SpotifyClientCredentials(
 
 spotify = spotipy.Spotify(client_credentials_manager=credentials)
 # Uses the URL the user puts in, searches spotify and then uses the name and artist to search youtube.
-async def SearchSpotify(url : str, is_url : bool = True):
-    result = None
-    
-    if is_url:
-        result = spotify.track(url)
-    else:
-        result = spotify.search(url)
-        result = result['tracks']['items'][0]
+async def SearchSpotify(url : str):
+    result = spotify.track(url)
     song_name = result['name']
     artist = result['artists'][0]['name']
-    art = result['album']['images'][0]['url']
-    final = {'name' : song_name, 'artist' : artist, 'art' : art}
+    final = f"{song_name} {artist}"
+    print (final)
     return final
 
 # Uses the youtube library to get all songs from a playlist.
