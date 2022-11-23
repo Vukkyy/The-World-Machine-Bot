@@ -130,7 +130,7 @@ class Profile(Extension):
             edit_profile : ComponentContext = await wait_for_component(self.client, edit_profile_button)
             
             if edit_profile.author.id != user.id:
-                edit_profile.send('Sorry! Only the person that owns this profile can edit it!', ephemeral=True)
+                await edit_profile.send('Sorry! Only the person that owns this profile can edit it!', ephemeral=True)
                 return
             
             edit_buttons = [
