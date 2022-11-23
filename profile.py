@@ -22,6 +22,8 @@ class Profile(Extension):
         edit_buttons = [
             Button(label='Edit Background', custom_id='background', style=ButtonStyle.PRIMARY),
             Button(label='Edit Description', custom_id='description', style=ButtonStyle.PRIMARY),
+            Button(label='How to change stamp?', custom_id='stamp', style=ButtonStyle.PRIMARY),
+            Button(label='How to change character?', custom_id='character', style=ButtonStyle.PRIMARY),
         ]
         
         await ctx.send('What do you want to edit?', components=edit_buttons, ephemeral = True)
