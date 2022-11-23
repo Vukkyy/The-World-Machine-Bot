@@ -1,5 +1,6 @@
 import database_manager as db
 import Badges.stamp_viewer as view
+from uuid import uuid4
 
 from interactions import *
 from interactions.ext.wait_for import *
@@ -19,11 +20,13 @@ class Profile(Extension):
     @profile.subcommand(description='Edit your profile.')
     async def edit(self, ctx : CommandContext):
         
+        uid = uuid4()
+        
         edit_buttons = [
-            Button(label='Edit Background', custom_id='background', style=ButtonStyle.PRIMARY),
-            Button(label='Edit Description', custom_id='description', style=ButtonStyle.PRIMARY),
-            Button(label='How to change stamp?', custom_id='stamp', style=ButtonStyle.PRIMARY),
-            Button(label='How to change character?', custom_id='character', style=ButtonStyle.PRIMARY),
+            Button(label='Edit Background', custom_id=f'background{uid}', style=ButtonStyle.PRIMARY),
+            Button(label='Edit Description', custom_id=f'description{uid}', style=ButtonStyle.PRIMARY),
+            Button(label='How to change stamp?', custom_id=f'stamp{uid}', style=ButtonStyle.PRIMARY),
+            Button(label='How to change character?', custom_id=f'character{uid}', style=ButtonStyle.PRIMARY),
         ]
         
         await ctx.send('What do you want to edit?', components=edit_buttons, ephemeral = True)
@@ -33,7 +36,7 @@ class Profile(Extension):
             
             data = button_ctx.data.custom_id
             
-            if (data == 'description'):
+            if (data == f'description{uid}'):
                 modal = Modal(
                     title = 'Edit Profile Description',
                     components=[TextInput(label = 'Description', style=TextStyleType.SHORT, custom_id='Among Us', max_length=100, placeholder='I am a very mysterious person!')],
@@ -42,7 +45,7 @@ class Profile(Extension):
                 
                 await button_ctx.popup(modal)
                 
-            if (data == 'background'):
+            if (data == f'background{uid}'):
                 
                 profile_background_choices = [
                     SelectOption(
@@ -84,10 +87,10 @@ class Profile(Extension):
                 
                 await button_ctx.send(f'Successfully set profile background to: ``{SelectOption_.data.values[0]}``, use </profile view:8328932897324897> to view your changes.', ephemeral = True)
 
-            if (data == 'stamp'):
+            if (data == f'stamp{uid}'):
                 await button_ctx.send('Simply use </select_stamp:100> to select a stamp to use both in letters and your profile!', ephemeral = True)
                 
-            if (data == 'character'):
+            if (data == f'character{uid}'):
                 await button_ctx.send('Simply use </transmit hidden-profile:100> to select a character to use for Transmissions and your profile!', ephemeral = True)
             
     @profile.subcommand(description='View a profile.')
@@ -117,22 +120,24 @@ class Profile(Extension):
 
         img_ = File('Badges/result.png')
         
-        edit_profile_button = Button(label='Edit Profile', custom_id='editprofile', style=ButtonStyle.SUCCESS)
+        uid = uuid4()
+        
+        edit_profile_button = Button(label='Edit Profile', custom_id=f'editprofile{uid}', style=ButtonStyle.SUCCESS)
 
         await msg.edit('', files = img_, components=edit_profile_button)
         
         while True:
             edit_profile : ComponentContext = await wait_for_component(self.client, edit_profile_button)
             
-            if edit_profile.author.id != ctx.author.id:
+            if edit_profile.author.id != user.id:
                 edit_profile.send('Sorry! Only the person that owns this profile can edit it!', ephemeral=True)
                 return
             
             edit_buttons = [
-                Button(label='Edit Background', custom_id='background', style=ButtonStyle.PRIMARY),
-                Button(label='Edit Description', custom_id='description', style=ButtonStyle.PRIMARY),
-                Button(label='How to change stamp?', custom_id='stamp', style=ButtonStyle.PRIMARY),
-                Button(label='How to change character?', custom_id='character', style=ButtonStyle.PRIMARY),
+                Button(label='Edit Background', custom_id=f'background{uid}', style=ButtonStyle.PRIMARY),
+                Button(label='Edit Description', custom_id=f'description{uid}', style=ButtonStyle.PRIMARY),
+                Button(label='How to change stamp?', custom_id=f'stamp{uid}', style=ButtonStyle.PRIMARY),
+                Button(label='How to change character?', custom_id=f'character{uid}', style=ButtonStyle.PRIMARY),
             ]
         
             await edit_profile.send('What do you want to edit?', components=edit_buttons, ephemeral = True)
@@ -141,7 +146,7 @@ class Profile(Extension):
             
             data = button_ctx.data.custom_id
             
-            if (data == 'description'):
+            if (data == f'description{uid}'):
                 modal = Modal(
                     title = 'Edit Profile Description',
                     components=[TextInput(label = 'Description', style=TextStyleType.SHORT, custom_id='Among Us', max_length=100, placeholder='I am a very mysterious person!')],
@@ -150,7 +155,7 @@ class Profile(Extension):
                 
                 await button_ctx.popup(modal)
                 
-            if (data == 'background'):
+            if (data == f'background{uid}'):
                 
                 profile_background_choices = [
                     SelectOption(
@@ -192,10 +197,10 @@ class Profile(Extension):
                 
                 await button_ctx.send(f'Successfully set profile background to: ``{SelectOption_.data.values[0]}``, use </profile view:8328932897324897> to view your changes.', ephemeral = True)
 
-            if (data == 'stamp'):
+            if (data == f'stamp{uid}'):
                 await button_ctx.send('Simply use </select_stamp:100> to select a stamp to use both in letters and your profile!', ephemeral = True)
                 
-            if (data == 'character'):
+            if (data == f'character{uid}'):
                 await button_ctx.send('Simply use </transmit hidden-profile:100> to select a character to use for Transmissions and your profile!', ephemeral = True)
     @extension_modal('ModalSus')
     async def set_description(self, ctx : CommandContext, description : str):
