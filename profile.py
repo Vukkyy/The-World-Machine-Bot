@@ -2,6 +2,8 @@ import database_manager as db
 import Badges.stamp_viewer as view
 from uuid import uuid4
 
+import os
+
 from interactions import *
 from interactions.ext.wait_for import *
 
@@ -120,8 +122,9 @@ class Profile(Extension):
 
         img_ = File('Badges/result.png')
         
-
         await msg.edit('', files = img_)
+        
+        os.remove('Badges/result.png')
     @extension_modal('ModalSus')
     async def set_description(self, ctx : CommandContext, description : str):
         id_ = int(ctx.author.id)
