@@ -71,22 +71,14 @@ class Music(interactions.Extension):
             host = '162.248.100.61',
             port = 10333,
             password = 'youshallnotpass',
-            region = "eu"
+            region = "usa"
         )
 
         ctx = event.player.fetch(f'channel {event.player.guild_id}')
 
         await ctx.send("An Unexpected error occurred. Skipping to the next track.")
         await event.player.play()
-
-    @interactions.extension_command()
-    async def lyrics(self, ctx):
-        await ctx.send('Getting lyrics')
         
-        song = genius.search_song("My Time", "bo en")
-        
-        await ctx.send(song.lyrics)
-
     @interactions.extension_listener()
     async def on_start(self):
         print('Loading Music Module')
@@ -94,7 +86,7 @@ class Music(interactions.Extension):
             host = '162.248.100.61',
             port = 10333,
             password = 'youshallnotpass',
-            region = "eu"
+            region = "us"
         ) # Woah, neat! Free Lavalink!
         
 
@@ -131,23 +123,14 @@ class Music(interactions.Extension):
                 description = "See what is playing now.",
                 type = interactions.OptionType.SUB_COMMAND
             ),
-
             interactions.Option(
-                name = "lyrics",
-                description = "Search for song lyrics.",
-                type = interactions.OptionType.SUB_COMMAND,
-                options =[
-                    interactions.Option(
-                        name = 'song',
-                        description = 'Search Lyrics for this song.',
-                        required = True,
-                        type = interactions.OptionType.STRING
-                    )
-                ]
+                name = "stop",
+                description = "Stop the music player.",
+                type = interactions.OptionType.SUB_COMMAND
             ),
         ]
     )   
-    async def music_(self, ctx: interactions.CommandContext, sub_command: str, search: str = "", song: str = ''):
+    async def music_(self, ctx: interactions.CommandContext, sub_command: str, search: str = "", fromindex: int = 0):
 
         voice: VoiceState = ctx.author.voice
         
@@ -183,8 +166,8 @@ class Music(interactions.Extension):
                 
                 for video in playlist:
                     try:
-                        search_ = await custom_source.SearchSpotify(video, False)
-                        tracks = await player.search_youtube(f"{search_['name']} {search_['artist']}")
+                        search = await custom_source.SearchSpotify(video, False)
+                        tracks = await player.search_youtube(search)
                         track = tracks[0]
                         player.add(requester=int(ctx.author.id), track=track)
 
@@ -198,9 +181,7 @@ class Music(interactions.Extension):
                 
                 await msg_.edit(f'Added **{successful}** songs to the queue successfully!')
             else:
-                
-                search_ = await custom_source.SearchSpotify(search, False)
-                tracks = await player.search_youtube(f"{search_['name']} {search_['artist']}")
+                tracks = await player.search_youtube(search)
 
                 if (len(tracks) < 1):
                     await ctx.send("Sorry! Couldn't find a song with that search query.")
@@ -218,9 +199,12 @@ class Music(interactions.Extension):
                 await player.play(volume = 10)
                 return
             else:
+                
+                spotify = await custom_source.SearchSpotify(track.title, False)
+                
                 cool = interactions.Embed(
-                    title = f"**Added:** [{track.title}] to queue.",
-                    thumbnail = interactions.EmbedImageStruct( url = f"https://i3.ytimg.com/vi/{track.identifier}/maxresdefault.jpg", height = 720, width = 1280),
+                    title = f"**Added:** {spotify['name']} to queue.",
+                    thumbnail = interactions.EmbedImageStruct( url = spotify['art'], height = 720, width = 1280),
                     description = f"Current Position: {len(player.queue)}",
                     url = player.queue[len(player.queue) - 1].uri
                 )
@@ -231,22 +215,9 @@ class Music(interactions.Extension):
             player.store(f'channel {ctx.guild_id}', ctx)
             await music_.ShowPlayer(ctx, player, True)
             
-        elif (sub_command == "lyrics"):
-            msg = await ctx.send(f'Searching Genius for **{song}**... <a:loading:1026539890382483576>')
-            
-            search = genius.search_song(song)
-            
-            lyrics = search.lyrics
-            
-            if len(lyrics) > 5999:
-                lyrics = lyrics[0:5999]
-            
-            embed = interactions.Embed(
-                title=f'Lyrics for {song}',
-                description = lyrics
-            )
-            
-            await msg.edit('', embeds=embed)
+        elif (sub_command == "stop"):
+            await self.client.disconnect(ctx.guild_id)
+            await ctx.send('<:nikosleepy:1027492467337080872> `Successfully stopped the player.`', embeds=[], components =[], ephemeral=True)
             
 async def update_player(ctx, player):
     await music_.ShowPlayer(ctx, player, True, True)
