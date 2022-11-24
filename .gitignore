@@ -4,6 +4,7 @@
 profile_pictures.pfp
 /Transmissions/*
 Badges/Images/*
+Badges/result.png
 
 slur_detection.py
 ban_list.txt

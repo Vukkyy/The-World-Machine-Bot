@@ -1098,7 +1098,9 @@ characters = chars.characters
 async def generate_userphone_embed(hidden : bool, message : interactions.Message):
     if hidden:
         
-        number = await database_manager.GetDatabase(int(message.author.id), 'transmit', {"uid" : int(message.author.id), "character" : 0})
+        default_data = {"uid" : int(message.author.id), "character" : 0}
+        
+        number = await database_manager.GetDatabase(int(message.author.id), 'transmit', default_data)
         
         picture = interactions.Image(characters[number['character']][0])
         username = characters[number['character']][1]
