@@ -16,7 +16,25 @@ async def GenerateText(prompt : str, user : str):
 
 async def GenerateBattle(gender1, name1, weapon1, personality1, gender2, name2, weapon2, personality2, winner):
     
-    final_prompt = f"write me a long battle to the death. The first fighter is named {name1}, {gender1} wield a weapon or tool called {weapon1}, {personality1}.\n{gender1} fight against another person who is named {name2}, {gender2} wield a weapon or tool called {weapon2}, {personality2}\nThis battle should have {winner} win.\nthe battle to the death begins in an arena.\n"
+    weapon_1 = ''
+    
+    if gender1 == 'Magical':
+        weapon_1 = 'Prepares a spell from their weapon'
+    if gender1 == 'Physical':
+        weapon_1 = 'Holds their weapon'
+    if gender1 == 'Tool':
+        weapon_1 = 'Prepares their tool'
+        
+    weapon_2 = ''
+    
+    if gender2 == 'Magical':
+        weapon_2 = 'Prepares a spell from their weapon'
+    if gender2 == 'Physical':
+        weapon_2 = 'Holds their weapon'
+    if gender2 == 'Tool':
+        weapon_2 = 'Prepares their tool'
+    
+    final_prompt = f"write me a long battle to the death. The first fighter is named {name1}, {name1} {weapon_1} called {weapon1}, {personality1} VS {name2}, {name2} {weapon_2} called {weapon2}, {personality2}\nThe winner of this battle should be {winner} due to their skills.\nthe battle to the death begins in an arena.\n"
     
     return Response(final_prompt)
 

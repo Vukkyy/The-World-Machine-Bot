@@ -1,11 +1,11 @@
-import interactions
+from interactions import *
 import lavalink
-from interactions.ext.lavalink import VoiceClient, VoiceState, listener, Player
-import music_utilities as music_
+from interactions.ext.lavalink import Lavalink
 import custom_source
 import lyricsgenius
 import os
 import random
+import music_utilities as music_
 
 default_songs = [
     "https://youtu.be/TqMo9HwiNOo",
@@ -19,12 +19,14 @@ default_songs = [
 
 genius = lyricsgenius.Genius(os.getenv('GENIUS'))
 
-class Music(interactions.Extension):
+class Music(Extension):
+    
     def __init__(self, client):
-        self.client: VoiceClient = client
+        self.client = client
+        self.lavalink: Lavalink = None
         music_.setup_(client)
 
-    @listener()
+    @extension_listener()
     async def on_track_start(self, event: lavalink.TrackStartEvent):
         is_quiet = event.player.fetch(f'isquiet {event.player.guild_id}')
         
@@ -44,13 +46,26 @@ class Music(interactions.Extension):
                           
             await music_.ShowPlayer(ctx, event.player, False)
 
-    @listener()
+    @extension_listener()
+    async def on_start(self):
+        print('Loading Music Module')
+        
+        self.lavalink: Lavalink = Lavalink(self.client)
+        
+        self.lavalink.add_node(
+            host = '162.248.100.61',
+            port = 10333,
+            password = 'youshallnotpass',
+            region = "us"
+        )
+        
+    @extension_listener()
     async def on_queue_end(self, event: lavalink.QueueEndEvent):
         ctx = event.player.fetch(f'channel {event.player.guild_id}')
-        embed = interactions.Embed(
+        embed = Embed(
             title = 'End of Queue',
             description = 'Add more songs using /music play.',
-            footer = interactions.EmbedFooter(text = 'Playing some quiet OneShot music in the meantime :)')
+            footer = EmbedFooter(text = 'Playing some quiet OneShot music in the meantime :)')
         )
         await ctx.channel.send("", embeds= embed)
 
@@ -64,33 +79,10 @@ class Music(interactions.Extension):
         event.player.store(f'isquiet {event.player.guild_id}', True)
         event.player.store(f'currently quiet {ctx.guild_id}', True)
         await event.player.play(track, volume = 8)
-
-    @listener()
-    async def disconnected(self, event : lavalink.NodeDisconnectedEvent):
-        self.client.lavalink_client.add_node(
-            host = '162.248.100.61',
-            port = 10333,
-            password = 'youshallnotpass',
-            region = "usa"
-        )
-
-        ctx = event.player.fetch(f'channel {event.player.guild_id}')
-
-        await ctx.send("An Unexpected error occurred. Skipping to the next track.")
-        await event.player.play()
         
-    @interactions.extension_listener()
-    async def on_start(self):
-        print('Loading Music Module')
-        self.client.lavalink_client.add_node(
-            host = '162.248.100.61',
-            port = 10333,
-            password = 'youshallnotpass',
-            region = "us"
-        ) # Woah, neat! Free Lavalink!
         
 
-    @interactions.extension_listener()
+    @extension_listener()
     async def on_voice_state_update(self, before: VoiceState, after: VoiceState):
         """
         Disconnect if bot is alone
@@ -100,39 +92,42 @@ class Music(interactions.Extension):
             if len(voice_states) == 1 and voice_states[0].user_id == self.client.me.id:
                 await self.client.disconnect(before.guild_id)
 
-    @interactions.extension_command(
+    @extension_command(
         name="music",
         options=[
-            interactions.Option(
+            Option(
                 name="play",
                 description="Add Music to the music queue to be played.",
-                type=interactions.OptionType.SUB_COMMAND,
+                type=OptionType.SUB_COMMAND,
                 options=[                
-                    interactions.Option(
+                    Option(
                         name="search",
                         description=
                         "Search for the track you are looking for.",
                         required=True,
-                        type=interactions.OptionType.STRING
+                        type=OptionType.STRING
                     )
                 ]
             ),
     
-            interactions.Option(
+            Option(
                 name = "get_player",
                 description = "See what is playing now.",
-                type = interactions.OptionType.SUB_COMMAND
+                type = OptionType.SUB_COMMAND
             ),
-            interactions.Option(
+            Option(
                 name = "stop",
                 description = "Stop the music player.",
-                type = interactions.OptionType.SUB_COMMAND
+                type = OptionType.SUB_COMMAND
             ),
         ]
     )   
-    async def music_(self, ctx: interactions.CommandContext, sub_command: str, search: str = "", fromindex: int = 0):
+    async def music_(self, ctx: CommandContext, sub_command: str, search: str = "", fromindex: int = 0):
+        
+        await ctx.send('Unfortunately this command is a work in progress. Please try again in the future.', ephemeral = True)
+        return
 
-        voice: VoiceState = ctx.author.voice
+        voice: VoiceState = ctx.author.voice_state
         
         if (not voice or not voice.joined):
             await ctx.send("Sorry! You need to be in a voice channel to use this command.", ephemeral = True)
@@ -144,10 +139,7 @@ class Music(interactions.Extension):
         
         #await ctx.defer()
 
-        player: Player  # Typehint player variable to see their methods
-
-        if (player := ctx.guild.player) is None:
-            player = await voice.connect()
+        player = await self.lavalink.connect(voice.guild_id, voice.channel_id)
         
         if (sub_command == "play"):
             player.store(f'channel {ctx.guild_id}', ctx)
@@ -202,9 +194,9 @@ class Music(interactions.Extension):
                 
                 spotify = await custom_source.SearchSpotify(track.title, False)
                 
-                cool = interactions.Embed(
+                cool = Embed(
                     title = f"**Added:** {spotify['name']} to queue.",
-                    thumbnail = interactions.EmbedImageStruct( url = spotify['art'], height = 720, width = 1280),
+                    thumbnail = EmbedImageStruct( url = spotify['art'], height = 720, width = 1280),
                     description = f"Current Position: {len(player.queue)}",
                     url = player.queue[len(player.queue) - 1].uri
                 )

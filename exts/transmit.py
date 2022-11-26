@@ -3,14 +3,13 @@ import os
 from pathlib import Path
 import json
 import asyncio
-from interactions.ext.lavalink import VoiceClient
 from interactions.ext.wait_for import wait_for_component
 from humanfriendly import format_timespan
 import database_manager
 
 class Transmissions(interactions.Extension):
     def __init__(self, client):
-        self.client: VoiceClient = client
+        self.client = client
         print("Loaded Transmissions")
         with open('Transmissions/connected.userphone', 'w') as f:
             f.write(json.dumps({"connection_one" : 0, "connection_two" : 0, "hidden" : False}))

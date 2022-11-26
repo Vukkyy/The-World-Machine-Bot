@@ -12,7 +12,7 @@ import lyricsgenius
 import os
 import custom_source
 
-from interactions.ext.lavalink import VoiceClient, VoiceState, listener, Player
+from interactions.ext.lavalink import Lavalink
 
 def setup_(self):
     global bot
@@ -64,7 +64,7 @@ async def GetButtons(guild_id):
         ),
     ]
 
-async def GenerateEmbed(id : str, player : Player, show_timeline, show_lyrics = False, lyrics = ''):
+async def GenerateEmbed(id : str, player, show_timeline, show_lyrics = False, lyrics = ''):
     
     spotify = await custom_source.SearchSpotify(player.current.title, False)
     
@@ -214,13 +214,10 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
     update_player = player.current
     
     message = {'niko' : niko, 'message' : '', 'stop_votes' : 0, 'voted' : [], 'lyrics' : [False, None]}
-    
-    player: Player  # Typehint player variable to see their methods
                 
-    voice: VoiceState = ctx.author.voice
+    voice = ctx.author.voice_state
 
-    if (player := ctx.guild.player) is None:
-        player = await voice.connect()
+    player = await bot.lavalink.connect(voice.guild_id, voice.channel_id)
     
     while True:
         
@@ -257,7 +254,7 @@ async def ShowPlayer(ctx : interactions.CommandContext, player : lavalink.Defaul
                 return
             break
             
-async def ButtonManager(niko, msg, ctx, button_ctx, player : Player, music_votes, voted, button_id, lyrics):
+async def ButtonManager(niko, msg, ctx, button_ctx, player, music_votes, voted, button_id, lyrics):
     
     message = ''
     

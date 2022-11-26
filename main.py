@@ -30,10 +30,11 @@ import database_manager
 import exts.report as report
 import chars
 import profile
+import battle
 
 # Extension Libraries
 from interactions.ext.wait_for import wait_for_component, setup, wait_for
-from interactions.ext.lavalink import VoiceClient
+import interactions.ext.lavalink
 import interactions.ext.files
 from interactions.ext.enhanced import cooldown
 import exts.music
@@ -42,13 +43,14 @@ import exts.embed_creator
 
 TOKEN = os.getenv('BOT-TOKEN')
 
-bot = VoiceClient(token=TOKEN, intents=interactions.Intents.DEFAULT | interactions.Intents.GUILD_MESSAGE_CONTENT)
+bot = interactions.Client(token=TOKEN, intents=interactions.Intents.DEFAULT | interactions.Intents.GUILD_MESSAGE_CONTENT)
     
 bot.load('interactions.ext.files')
 bot.load('exts.music')
 bot.load('exts.transmit')
 bot.load('exts.embed_creator')
 bot.load('profile')
+bot.load('battle')
 
 setup(bot)
 
@@ -777,177 +779,6 @@ async def explosion(ctx):
         )
 
     await ctx.send(embeds=embed)
-
-@bot.command(
-    name = 'generate-battles',
-    description = 'Generate battles using GPT-3 from OpenAI.',
-    options = [
-        interactions.Option(
-            name = 'bcl',
-            description = 'Battle Contestant List',
-            type = interactions.OptionType.STRING,
-            required = False
-        ),
-        
-        interactions.Option(
-            name = 'bcl_',
-            description = 'Battle Contestant List',
-            type = interactions.OptionType.ATTACHMENT,
-            required = False
-        )
-    ]
-)
-async def fight(ctx : interactions.CommandContext, bcl = None, bcl_ : interactions.Attachment = None):
-    
-    if (bcl == None):
-        text_file : io.BytesIO = await bcl_.download()
-        
-        bcl = text_file.read().decode('utf-8')
-    
-    await ctx.send('BCL Loaded!', ephemeral=True)
-    
-    contestants = bcl.split('^')
-    
-    random.shuffle(contestants)
-    
-    if not ctx.author.id == 302883948424462346:
-        if len(contestants) > 2:
-            await ctx.send('To prevent spamming, please do not include more than two fighters!', ephemeral = True)
-            return
-    
-    battles = []
-    
-    i = 1
-    for contestant in contestants:
-        if i % 2 == 0:
-            battles.append([contestants[i - 2], contestants[i - 1]])
-            
-        i += 1
-    
-    b_index = 0
-    
-    while len(contestants) > 1:
-        if not b_index == 0:
-            await ctx.channel.send('**Starting Next Round!**')
-            battles = []
-            
-            i = 1
-            for contestant in contestants:
-                if i % 2 == 0:
-                    battles.append([contestants[i - 2], contestants[i - 1]])
-                i += 1
-            
-        index = 0
-        
-        for battle in battles:
-            
-            c_one = battle[0].split('>')
-            c_two = battle[1].split('>')
-            btl = await ctx.channel.send(f"**A battle begins! {c_one[0]} versus {c_two[0]}!**")
-            
-            btl1 = await btl.reply('Generating battle... <a:loading:1026539890382483576>')
-            
-            num = random.randint(0, 1)
-            
-            winner = None
-            
-            if num == 0:
-                winner = c_one
-                contestants.remove(battle[1])
-            else:
-                winner = c_two
-                contestants.remove(battle[0])
-            
-            text = await generate_text.GenerateBattle(c_one[1], c_one[0], c_one[2], c_one[3], c_two[1], c_two[0], c_two[2], c_two[3], winner[0])
-            
-            embed = interactions.Embed(
-                title = f'{c_one[0]} versus {c_two[0]}',
-                description = text[0]
-            )
-            
-            result = await btl1.edit(content = '', embeds=embed)
-            
-            index += 1
-            
-            if index == len(battles):
-                result_embed = interactions.Embed(
-                        title = f'{winner[0]} is the winner of this round!',
-                        thumbnail=interactions.EmbedImageStruct(url=winner[4]),
-                    )
-            
-            else:
-                result_embed = interactions.Embed(
-                    title = f'{winner[0]} is the winner!',
-                    thumbnail=interactions.EmbedImageStruct(url=winner[4]),
-                    description='The next battle will begin in 20 seconds!'
-                )
-            
-            await result.reply(embeds=result_embed)
-            
-            await asyncio.sleep(20)
-            
-        b_index += 1
-        
-@bot.command()
-async def generate_bcl(ctx):
-    modal = interactions.Modal(
-            custom_id='battle',
-            title = 'Generate a Battle Contestant',
-            components=[
-                interactions.TextInput(
-                    style = interactions.TextStyleType.SHORT,
-                    custom_id='name',
-                    label='Name',
-                    placeholder='What is their name?',
-                    required=True
-                ),
-                interactions.TextInput(
-                    style = interactions.TextStyleType.SHORT,
-                    custom_id='gender',
-                    label='Pronoun',
-                    placeholder='He/She/They, for example.',
-                    required=True
-                ),
-                interactions.TextInput(
-                    style = interactions.TextStyleType.SHORT,
-                    custom_id='weapon',
-                    label='Weapon',
-                    placeholder='What weapon do they wield?',
-                    required=True
-                ),
-                interactions.TextInput(
-                    style = interactions.TextStyleType.PARAGRAPH,
-                    custom_id='description',
-                    label='Personality',
-                    placeholder='Write a short description of your fighter\'s personality.',
-                    required=True
-                ),
-                interactions.TextInput(
-                    style = interactions.TextStyleType.SHORT,
-                    custom_id='url',
-                    label='Image URL',
-                    placeholder='https://image/my_image.png',
-                    required=True
-                )
-            ]
-        )
-        
-    await ctx.popup(modal)    
-@bot.modal('battle')
-async def on_modal(ctx, name, gender, weapon, personality, image_url):
-    
-    if validators.url(image_url):
-        await ctx.send(f'{name}>{gender}>{weapon}>{personality}>{image_url}')
-        return
-    
-    await ctx.send('You need to put in a valid image url!', ephemeral = True)
-    
-@bot.command()
-@interactions.option()
-async def amount_of_battlers(ctx, bcl : str = ''):
-    l = bcl.split('^')
-    
-    await ctx.send(f'{len(l)} fighters.')
 
 @bot.command(
     name = 'select_stamp',
