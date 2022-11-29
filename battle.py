@@ -78,7 +78,8 @@ class BATTLES(Extension):
             Button(style=ButtonStyle.SUCCESS, label='Create Fighter', custom_id=f'create {uid}'),
             Button(style=ButtonStyle.PRIMARY, label='Import from BCL', custom_id=f'import {uid}'),
             Button(style=ButtonStyle.SECONDARY, label='Remove Fighter', custom_id=f'delete {uid}', disabled=True),
-            Button(style=ButtonStyle.DANGER, label='Start Tournament', custom_id=f'start {uid}', disabled=True)
+            Button(style=ButtonStyle.DANGER, label='Start Tournament', custom_id=f'start {uid}', disabled=True),
+            Button(style=ButtonStyle.SECONDARY, label='Cancel', custom_id=f'cancel {uid}')
         ]
         
         msg = await ctx.send(embeds=embed, components=buttons)
@@ -108,16 +109,15 @@ class BATTLES(Extension):
                 
                         if len(name_list) % 2 == 0:
                             buttons[3].disabled = False
-                        
                         if not len(name_list) == 0:
                             current_embed.fields[1].value = '\n'.join(name_list)
                             buttons[2].disabled = False
-                            await msg.edit(embeds=current_embed, components= buttons)
                         else:
                             current_embed.fields[1].value = 'There are no fighters in this tournament!'
                             buttons[2].disabled = True
                             buttons[3].disabled = True
-                            await msg.edit(embeds=current_embed, components= buttons)
+
+                        await msg.edit(embeds=current_embed, components= buttons)
                     continue
                 
                 break
@@ -309,6 +309,18 @@ class BATTLES(Extension):
                             await asyncio.sleep(20)
                             
                         b_index += 1
+                        
+            if (data == f'cancel {uid}'):
+                can_pass = True
+                
+                if not Permissions.MANAGE_CHANNELS in button_ctx.author.permissions:
+                    await button_ctx.send('Sorry! But you need the ``MANAGE_CHANNELS`` permission in this server to remove a fighter!', ephemeral = True)
+                    can_pass = False
+                
+                if can_pass:
+                    await msg.edit('``Tournament Cancelled.``', embeds=[], components=[])
+                    await button_ctx.send(f'<@{button_ctx.author.id}> Cancelled the Tournament.')
+                    await db.SetDatabase(int(button_ctx.guild_id), 'battles', 'battling', False)
                         
     @extension_modal('battle')
     async def create_fighter(self, modal_ctx : CommandContext, name, type, weapon, description, url):
