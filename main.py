@@ -102,6 +102,10 @@ async def change_picture():
     except:
         print("Couldn't change avatar. Whoops, either way...")
 
+@bot.command(description='Check how many servers I am in!')
+async def server_amount(ctx):
+    await ctx.send(f'I am in {len(bot.guilds)} servers!')
+
 
 @bot.command(name="say",
              description="Repeats whatever the user puts in.",
