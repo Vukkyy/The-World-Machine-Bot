@@ -83,7 +83,7 @@ class Music(Extension):
         
 
     @extension_listener()
-    async def on_voice_state_update(self, before: VoiceState, after: VoiceState):
+    async def on_voice_state_update(self, before, after):
         """
         Disconnect if bot is alone
         """
