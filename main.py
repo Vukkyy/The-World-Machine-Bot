@@ -895,10 +895,11 @@ async def on_message_create(message: interactions.Message):
                         
                         files = []
                         for a in message.attachments:
-                            a._client = bot._http
-                            files.append(interactions.File(a.filename, await a.download()))
+                            files.append(a.url)
                         
-                        await channel.send(embeds=data, files = files)
+                        data.set_image(files[0])
+                        
+                        await channel.send(embeds=data)
                     else:
                         await channel.send(embeds=data)
                     break
@@ -913,10 +914,11 @@ async def on_message_create(message: interactions.Message):
                     if len(message.attachments) > 0:
                         files = []
                         for a in message.attachments:
-                            a._client = bot._http
-                            files.append(interactions.File(a.filename, await a.download()))
+                            files.append(a.url)
                         
-                        await channel.send(embeds=data, files = files)
+                        data.set_image(files[0])
+                        
+                        await channel.send(embeds=data)
                     else:
                         await channel.send(embeds=data)
                     break
@@ -930,14 +932,15 @@ async def generate_userphone_embed(hidden : bool, message : interactions.Message
         
         number = await database_manager.GetDatabase(int(message.author.id), 'transmit', default_data)
         
-        picture = f'attachment://{characters[number["character"]][0]}'
+        picture = f'{characters[number["character"]][0]}'
         username = characters[number['character']][1]
                     
         return interactions.Embed(
             author = interactions.EmbedAuthor(
                 name = username,
                 icon_url = picture
-            )
+            ),
+            description = message.content
         )
     else:
         picture = message.author.avatar_url

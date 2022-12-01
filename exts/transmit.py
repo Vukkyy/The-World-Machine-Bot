@@ -188,7 +188,7 @@ class Transmissions(interactions.Extension):
                 
                 guild = await interactions.get(self.client, interactions.Channel, object_id=channel_id['connection_two'])
             
-                if hidden:
+                if hidden or hide:
                     await get_call(self, ctx, msg, True, guild.name)
                 else:
                     await get_call(self, ctx, msg, False, guild.name)
@@ -208,7 +208,7 @@ class Transmissions(interactions.Extension):
             
             del channel_ids[0]
             
-            json_list.append(json.dumps({'connection_one': connection_one, 'connection_two' : int(ctx.channel.id), "hidden" : hidden}))
+            json_list.append(json.dumps({'connection_one': connection_one, 'connection_two' : int(ctx.channel.id), "hidden" : hide}))
             
             with open('Transmissions/transmissions.userphone', 'w') as f:
                 f.write('\n'.join(channel_ids))
@@ -221,7 +221,7 @@ class Transmissions(interactions.Extension):
             
             guild = await interactions.get(self.client, interactions.Channel, object_id=connection_one)
             
-            if hidden:
+            if hidden or hide:
                 await get_call(self, ctx, msg, True, guild.name)
             else:
                 await get_call(self, ctx, msg, False, guild.name)
@@ -286,7 +286,7 @@ async def get_call(self, ctx : interactions.CommandContext, message : interactio
                         break
                     i += 1
                 
-                await disconnect(self, ctx, current, i, 0)
+                await disconnect(self, ctx, current, i, 0, server)
                 return
             
             if not done:
