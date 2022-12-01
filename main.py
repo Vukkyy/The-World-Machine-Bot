@@ -885,14 +885,11 @@ async def on_message_create(message: interactions.Message):
             for channel_id in channel_ids:
                 channel_id = json.loads(channel_id)
                 if (int(channel_id['connection_one']) == int(message.channel_id)):
-                    webhook = None
                     data = await generate_userphone_embed(channel_id['hidden'], message)
                         
                     channel = await interactions.get(bot, interactions.Channel, object_id=int(channel_id['connection_two']))
                     
                     await bot._http.trigger_typing(channel_id=int(channel_id['connection_two']))
-                    
-                    webhook : interactions.Webhook = await interactions.Webhook.create(bot._http, channel.id, data[0], data[1])
                     
                     if len(message.attachments) > 0:
                         
@@ -901,10 +898,9 @@ async def on_message_create(message: interactions.Message):
                             a._client = bot._http
                             files.append(interactions.File(a.filename, await a.download()))
                         
-                        await webhook.execute(message.content, files=files)
+                        await channel.send(embeds=data, files = files)
                     else:
-                        await webhook.execute(message.content)
-                    await webhook.delete()
+                        await channel.send(embeds=data)
                     break
                 elif (int(channel_id['connection_two']) == int(message.channel_id)):                  
                     webhook = None
@@ -914,18 +910,15 @@ async def on_message_create(message: interactions.Message):
                     
                     await bot._http.trigger_typing(channel_id=int(channel_id['connection_one']))
                     
-                    webhook : interactions.Webhook = await interactions.Webhook.create(bot._http, channel.id, data[0], data[1])
-                    
                     if len(message.attachments) > 0:
                         files = []
                         for a in message.attachments:
                             a._client = bot._http
                             files.append(interactions.File(a.filename, await a.download()))
                         
-                        await webhook.execute(message.content, files=files)
+                        await channel.send(embeds=data, files = files)
                     else:
-                        await webhook.execute(message.content)
-                    await webhook.delete()
+                        await channel.send(embeds=data)
                     break
 
 characters = chars.characters
@@ -937,24 +930,25 @@ async def generate_userphone_embed(hidden : bool, message : interactions.Message
         
         number = await database_manager.GetDatabase(int(message.author.id), 'transmit', default_data)
         
-        picture = interactions.Image(characters[number['character']][0])
+        picture = f'attachment://{characters[number["character"]][0]}'
         username = characters[number['character']][1]
                     
-        return [username, picture]
+        return interactions.Embed(
+            author = interactions.EmbedAuthor(
+                name = username,
+                icon_url = picture
+            )
+        )
     else:
         picture = message.author.avatar_url
-                    
-        async with aiohttp.ClientSession() as session:
-            url = picture
-            async with session.get(url) as resp:
-                if resp.status == 200:
-                    f = await aiofiles.open('Images/transmitpfp.png', mode='wb')
-                    await f.write(await resp.read())
-                    await f.close()
-                    
-        fpicture = interactions.Image('Images/transmitpfp.png')
         
-        return [message.author.username, fpicture]
+        return interactions.Embed(
+            author = interactions.EmbedAuthor(
+                name = message.author.username,
+                icon_url = picture
+            ),
+            description = message.content
+        )
 
 @bot.command()
 async def restart_bot(ctx):
