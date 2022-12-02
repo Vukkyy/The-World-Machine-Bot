@@ -90,7 +90,7 @@ async def DrawBadges(user_id : int, user : str = 'awesome person', user_pfp : st
     char = await db.GetDatabase(user_id, 'transmit', {"uid" : user_id, "character" : 0})
     character = chars.characters[char['character']]
     
-    character = Image.open(character[0])
+    character = await DownloadImage(character[0], 'character')
     character = character.resize((35, 35), resample=Image.Resampling.NEAREST)
 
     bg.paste(character, (659, 64), character.convert('RGBA'))
