@@ -49,7 +49,7 @@ bot.load('interactions.ext.files')
 bot.load('exts.music')
 bot.load('exts.transmit')
 bot.load('exts.embed_creator')
-bot.load('profile')
+bot.load('profile_')
 bot.load('battle')
 
 setup(bot)
