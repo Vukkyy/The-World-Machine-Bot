@@ -29,7 +29,7 @@ from slur_detection import slurs
 import database_manager
 import exts.report as report
 import chars
-import profile
+import profile_
 import battle
 
 # Extension Libraries
