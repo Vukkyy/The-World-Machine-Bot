@@ -6,6 +6,8 @@ profile_pictures.pfp
 Badges/Images/*
 Badges/result.png
 
+interaction-database/*
+
 slur_detection.py
 ban_list.txt
 

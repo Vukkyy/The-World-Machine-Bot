@@ -83,6 +83,9 @@ async def on_start():
 
 
 async def change_picture():
+    
+    print('Set Profile Pictures')
+    
     profile_pictures = icons.icons
     ran_num = random.randint(0, len(profile_pictures) - 1)
     picture = profile_pictures[ran_num]
@@ -940,7 +943,8 @@ async def generate_userphone_embed(hidden : bool, message : interactions.Message
                 name = username,
                 icon_url = picture
             ),
-            description = message.content
+            description = message.content,
+            color = 0x2f3136
         )
     else:
         picture = message.author.avatar_url
@@ -950,7 +954,8 @@ async def generate_userphone_embed(hidden : bool, message : interactions.Message
                 name = message.author.username,
                 icon_url = picture
             ),
-            description = message.content
+            description = message.content,
+            color = 0x2f3136
         )
 
 @bot.command()
