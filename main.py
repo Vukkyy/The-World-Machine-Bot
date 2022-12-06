@@ -618,6 +618,9 @@ async def allow(ctx : interactions.CommandContext):
         custom_id = str(uuid.uuid4())
     )
 
+    db = open('databases/loveletters.db', 'w')
+    db.close()
+    
     db = open('databases/loveletters.db', 'r+')
     
     f = db.read()
