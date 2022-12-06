@@ -29,6 +29,23 @@ class Music(Extension):
     def __init__(self, client):
         self.client = client
         self.lavalink: Lavalink = None
+        print('loaded music')
+
+    @extension_component('play')
+    async def play(self, ctx : CommandContext):
+        print('play')
+        await ctx.send('play')
+        await Database.set_item(ctx, 'Music', 'is_paused', True)
+        
+    @extension_component('skip')
+    async def play(self, ctx : CommandContext):
+        await ctx.send('skip')
+        await Database.set_item(ctx, 'Music', 'music_stopped', True)
+        
+    @extension_component('stop')
+    async def play(self, ctx : CommandContext):
+        await ctx.send('stop')
+        await Database.set_item(ctx, 'Music', 'music_skipped', True)
 
     @extension_listener()
     async def on_track_start(self, event: lavalink.TrackStartEvent):
@@ -53,7 +70,6 @@ class Music(Extension):
 
     @extension_listener()
     async def on_start(self):
-        print('Loading Music Module')
         
         self.lavalink: Lavalink = Lavalink(self.client)
         
@@ -113,92 +129,78 @@ class Music(Extension):
             if len(voice_states) == 1 and voice_states[0].user_id == self.client.me.id:
                 await self.client.disconnect(before.guild_id)
 
-    @extension_command(
-        name="music",
-        options=[
-            Option(
-                name="play",
-                description="Add Music to the music queue to be played.",
-                type=OptionType.SUB_COMMAND,
-                options=[                
-                    Option(
-                        name="search",
-                        description=
-                        "Search for the track you are looking for.",
-                        required=True,
-                        type=OptionType.STRING
-                    )
-                ]
-            ),
+    @extension_command() 
+    async def music(self, ctx: CommandContext):
+        pass
     
-            Option(
-                name = "get_player",
-                description = "See what is playing now.",
-                type = OptionType.SUB_COMMAND
-            ),
-            Option(
-                name = "stop",
-                description = "Stop the music player.",
-                type = OptionType.SUB_COMMAND
-            ),
-        ]
-    )   
-    async def music_(self, ctx: CommandContext, sub_command: str, search: str = "", fromindex: int = 0):
-
+    async def check(self, ctx : CommandContext = None):
+        
         voice : VoiceState = ctx.author.voice_state
         
-        if (not voice or not voice.joined):
+        await ctx.defer()
+        
+        if not voice or not voice.joined:
             await ctx.send("Sorry! You need to be in a voice channel to use this command.", ephemeral = True)
-            return
+            return False
     
         if (voice.guild_id != ctx.guild_id):
             await ctx.send("Sorry! You need to be in a voice channel to use this command.", ephemeral = True)
+            return False
+        
+        return True
+    
+    @music.subcommand(description='Play a song.')
+    @option(description = 'A song to search for.', required = True, autocomplete=True)
+    async def search(self, ctx: CommandContext, query : str):
+        
+        if not await self.check(ctx):
             return
+        
+        voice : VoiceState = ctx.author.voice_state
         
         #await ctx.defer()
 
         player = await self.lavalink.connect(voice.guild_id, voice.channel_id)
-        
-        if (sub_command == "play"):
-            player.store(f'channel {ctx.guild_id}', ctx)
-    
-            if (search.startswith("https://open.spotify.com/")):
-                search = await custom_source.SearchSpotify(search)
-    
-            if ('playlist' in search or 'list=PL' in search):
-                playlist = await custom_source.GetPlaylist(search)
-    
-                msg_ = await ctx.send(f'Adding **{len(playlist)}** songs to the queue. This might take a while. <a:loading:1026539890382483576>')
-    
-                print(playlist)
-    
-                successful = 0
-                
-                for video in playlist:
-                    try:
-                        search = await custom_source.SearchSpotify(video, False)
-                        tracks = await player.search_youtube(search)
-                        track = tracks[0]
-                        player.add(requester=int(ctx.author.id), track=track)
 
-                        successful += 1
-                    except:
-                        pass
-                    if (successful % 10 == 0):
-                        await msg_.edit(f'Adding **{len(playlist)}** songs to the queue. This might take a while. ({successful}/{len(playlist)}) <a:loading:1026539890382483576>')
-                   #@ except:
-                        #pass
-                
-                await msg_.edit(f'Added **{successful}** songs to the queue successfully!')
-            else:
-                tracks = await player.search_youtube(search)
+        player.store(f'channel {ctx.guild_id}', ctx)
 
-                if (len(tracks) < 1):
-                    await ctx.send("Sorry! Couldn't find a song with that search query.")
-                    return
-                
-                track = tracks[0]
-                player.add(requester=int(ctx.author.id), track=track)
+        if (query.startswith("https://open.spotify.com/")):
+            query = await custom_source.SearchSpotify(query)
+
+        if ('playlist' in query or 'list=PL' in query):
+            playlist = await custom_source.GetPlaylist(query)
+
+            msg_ = await ctx.send(f'Adding **{len(playlist)}** songs to the queue. This might take a while. <a:loading:1026539890382483576>')
+
+            print(playlist)
+
+            successful = 0
+            
+            for video in playlist:
+                try:
+                    query = await custom_source.SearchSpotify(video, False)
+                    tracks = await player.search_youtube(query)
+                    track = tracks[0]
+                    player.add(requester=int(ctx.author.id), track=track)
+
+                    successful += 1
+                except:
+                    pass
+                if (successful % 10 == 0):
+                    await msg_.edit(f'Adding **{len(playlist)}** songs to the queue. This might take a while. ({successful}/{len(playlist)}) <a:loading:1026539890382483576>')
+                #@ except:
+                    #pass
+            
+            await msg_.edit(f'Added **{successful}** songs to the queue successfully!')
+        else:
+            tracks = await player.search_youtube(query)
+
+            if (len(tracks) < 1):
+                await ctx.send("Sorry! Couldn't find a song with that search query.")
+                return
+            
+            track = tracks[0]
+            player.add(requester=int(ctx.author.id), track=track)
 
     
             player.store(f'isquiet {ctx.guild_id}', False)
@@ -221,60 +223,61 @@ class Music(Extension):
                 
                 await ctx.send(embeds = cool)    
                 return
-        elif (sub_command == "get_player"):
-            player.store(f'channel {ctx.guild_id}', ctx)
-            await self.ShowPlayer(ctx, player, True)
             
-        elif (sub_command == "stop"):
-            await self.client.lavalink.disconnect(ctx.guild_id)
-            await ctx.send('<:nikosleepy:1027492467337080872> `Successfully stopped the player.`', embeds=[], components =[], ephemeral=True)
+    @search.autocomplete('query')
+    async def search_(self, ctx : CommandContext, search_):
+        
+        print(search_)
+        
+        items = await custom_source.SearchAll(search_)
+        # add item to the choices list only if the user_input is in the item name
+        choices = [
+            interactions.Choice(name=item, value=item) for item in items
+        ] 
+        await ctx.populate(choices)
+        
+    @music.subcommand()
+    async def get_player(self, ctx : CommandContext):
+        
+        if not await self.check(ctx):
+            return
+        
+        voice : VoiceState = ctx.author.voice_state
+        player = await self.lavalink.connect(voice.guild_id, voice.channel_id)
+        
+        player.store(f'channel {ctx.guild_id}', ctx)
+        await self.ShowPlayer(ctx, player, True)
+    
+    @music.subcommand()
+    async def stop(self, ctx : CommandContext):
+        
+        if not await self.check(ctx):
+            return
+        
+        await ctx.send('Stopping music...', ephemeral = True)
+        await Database.set_item(ctx, 'Music', 'music_stopped', True)
+        
+    @music.subcommand()
+    async def skip(self, ctx : CommandContext):
+        
+        if not await self.check(ctx):
+            return
+        
+        await ctx.send('Skipping music...', ephemeral = True)
+        await Database.set_item(ctx, 'Music', 'music_skipped', True)
+        
+    @music.subcommand()
+    async def pause(self, ctx : CommandContext):
+        
+        if not await self.check(ctx):
+            return
+        
+        await ctx.send('Playing/Pausing music...', ephemeral = True)
+        await Database.set_item(ctx, 'Music', 'is_paused', True)
             
-    async def GetButtons(guild_id):
-        play_emoji = interactions.Emoji(name="playorpause", id=1019286927888883802)
-        stop_emoji = interactions.Emoji(name="stopmusic", id=1019286931504386168)
-        queue_emoji = interactions.Emoji(name="openqueue", id = 1019286929059086418)
-        loop_song_emoji = interactions.Emoji(name="loopsong", id=1042887337526444123)
-        skip_emoji = interactions.Emoji(name="skipmusic", id=1019286930296410133)
-
-        print(guild_id)
+    async def GenerateEmbed(self, id : str, player__ : lavalink.DefaultPlayer, player, show_lyrics = False, spotifydata : dict = {}):
         
-        return [
-            # Queue Button
-            interactions.Button(
-                style=interactions.ButtonStyle.DANGER,
-                emoji = queue_emoji,
-                custom_id = f"queue",
-            ),
-            # Loop Button
-            interactions.Button(
-                style=interactions.ButtonStyle.DANGER,
-                custom_id = f"loop",
-                emoji = loop_song_emoji,
-            ),
-
-            # Play Button
-            interactions.Button(
-                style=interactions.ButtonStyle.DANGER,
-                custom_id = f"play",
-                emoji = play_emoji,
-            ),
-            # Skip Button
-            interactions.Button(
-                style=interactions.ButtonStyle.DANGER,
-                custom_id = f"skip",
-                emoji = skip_emoji
-            ),
-            # Stop Button
-            interactions.Button(
-                style=interactions.ButtonStyle.DANGER,
-                custom_id = f"stop",
-                emoji = stop_emoji
-            ),
-        ]
-
-    async def GenerateEmbed(self, id : str, player__ : lavalink.DefaultPlayer, player, show_lyrics = False, lyrics = ''):
-        
-        spotify = await custom_source.SearchSpotify(player.current.title, False)
+        spotify = spotifydata
         
         if (player.is_playing):
             current_length = player.position / 1000
@@ -296,14 +299,6 @@ class Music(Extension):
             
             length = "".join(l_length)
             
-            if show_lyrics:
-                return interactions.Embed(
-                    title = f"Now Playing: ***{spotify['name']}***",
-                    thumbnail = interactions.EmbedImageStruct( url = spotify['art'], height = 720, width = 1280),
-                    description = f"**Lyrics:** {lyrics}",
-                    footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
-                )
-        
             if (player):
                 return interactions.Embed(
                     title = f"Now Playing: ***{spotify['name']}***",
@@ -381,9 +376,13 @@ class Music(Extension):
 
     async def ShowPlayer(self, ctx : interactions.CommandContext, player : lavalink.DefaultPlayer, player__ : bool, updating : bool = False):
         
+        buttons = []
+        
         voice = ctx.author.voice_state
         
         player = await self.lavalink.connect(voice.guild_id, voice.channel_id)
+        
+        spotify = await custom_source.SearchSpotify(f'{player.current.title} {player.current.author}', False)
         
         if updating:
             return
@@ -399,9 +398,10 @@ class Music(Extension):
         msg = await ctx.send('Loading Player... <a:loading:1026539890382483576>')
         niko = '<a:vibe:1027325436360929300>'
         
+        await Database.set_item(ctx, 'Music', 'niko', niko)
+        
         if (player.is_playing):
-            embed = await self.GenerateEmbed(self, player.current.identifier, player)
-            buttons = await self.GetButtons()
+            embed = await self.GenerateEmbed(self, player.current.identifier, player, spotifydata=spotify)
             msg = await msg.edit(niko, embeds=embed, components=buttons)
         else:
             embed = interactions.Embed(
@@ -413,15 +413,7 @@ class Music(Extension):
             await msg.edit(niko, embeds=embed)
             return
 
-        async def check(ctx):
-            if (not ctx.author.voice.joined):
-                await ctx.send('Sorry! But you need to be in the voice call in order to use these buttons!', ephemeral=True)
-                return False
-            else:
-                return True
-
         song_ = player.current
-        update_player = player.current
         
         while True:
             
@@ -434,17 +426,18 @@ class Music(Extension):
             is_paused = db['is_paused']
             music_stopped = db['music_stopped']
             music_skipped = db['music_skipped']
+            niko = db['niko']
             
             if is_paused:
                 
                 paused = not player.paused
                 
-                player.set_pause(paused)
+                await player.set_pause(paused)
                 
                 if player.paused:
                     edb = await Database.set_item(ctx, 'Music', 'message', 'Player is currently paused.')
                     
-                    funny_embed = await self.GenerateEmbed(self, player.current.identifier, player, True)
+                    funny_embed = await self.GenerateEmbed(self, player.current.identifier, player, True, spotifydata=spotify)
                     funny_embed.set_author(name = edb['message'])
                     
                     await Database.set_item(ctx, 'Music', 'niko', '<:nikosleepy:1027492467337080872>')
@@ -454,6 +447,7 @@ class Music(Extension):
                     
                     continue
                 else:
+                    await Database.set_item(ctx, 'Music', 'niko', '<a:vibe:1027325436360929300>')
                     await Database.set_item(ctx, 'Music', 'is_paused', False)
             
             if music_stopped:
@@ -476,14 +470,14 @@ class Music(Extension):
                             await ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds = [], components = [])
                             
                             await Database.delete_item(ctx, 'Music')
-                            return
+                            break
                         
                         await Database.set_item(ctx, 'Music', 'st_voted', voted)
                         await Database.set_item(ctx, 'Music', 'stop_votes', stop_votes)
                         
                         edb = await Database.set_item(ctx, 'Music', 'message', f'Not enough votes to stop music! Need {votes_needed - stop_votes} more.')
                 
-                        funny_embed = await self.GenerateEmbed(self, player.current.identifier, player, True)
+                        funny_embed = await self.GenerateEmbed(self, player.current.identifier, player, True, spotifydata=spotify)
                         funny_embed.set_author(name = edb['message'])
                         
                         await ctx.edit(edb['niko'], embeds = funny_embed)
@@ -498,11 +492,14 @@ class Music(Extension):
                     await ctx.edit('<:nikosleepy:1027492467337080872> `Song Stopped.`', embeds = [], components = [])
                     
                     await Database.delete_item(ctx, 'Music')
-                    return
+                    break
                 
             if music_skipped:
                 
-                voice_states = ctx.channel.voice_states
+                channel : Channel = await get(self.client, Channel, object_id = player.channel_id)
+                
+                voice_states = channel.voice_states
+                
                 channel_members = len(voice_states) - 1
                 
                 votes_needed = round((channel_members / 2))
@@ -520,14 +517,14 @@ class Music(Extension):
                             await ctx.edit('<:nikosleepy:1027492467337080872> `Song Skipped.`', embeds = [], components = [])
                             
                             await Database.delete_item(ctx, 'Music')
-                            return
+                            break
                         
                         await Database.set_item(ctx, 'Music', 'sk_voted', voted)
                         await Database.set_item(ctx, 'Music', 'skip_votes', stop_votes)
                         
                         edb = await Database.set_item(ctx, 'Music', 'message', f'Not enough votes to skip track! Need {votes_needed - stop_votes} more.')
                 
-                        funny_embed = await self.GenerateEmbed(self, player.current.identifier, player, True)
+                        funny_embed = await self.GenerateEmbed(self, player.current.identifier, player, True, spotifydata=spotify)
                         funny_embed.set_author(name = edb['message'])
                         
                         await ctx.edit(edb['niko'], embeds = funny_embed)
@@ -542,7 +539,7 @@ class Music(Extension):
                     await ctx.edit('<:nikosleepy:1027492467337080872> `Song Skipped.`', embeds = [], components = [])
                     
                     await Database.delete_item(ctx, 'Music')
-                    return
+                    break
             
             if player.current != song_ or music_stopped:
                 await ctx.edit('<:nikosleepy:1027492467337080872> `Song Ended.`', embeds = [], components = [])
@@ -553,24 +550,14 @@ class Music(Extension):
                 return
             
             if not player.paused and player.is_playing:
-                funny_embed = await self.GenerateEmbed(self, player.current.identifier, player, False)
-                funny_embed.set_author(name = message)
-                await ctx.edit(db['niko'], embeds = funny_embed, components = buttons)       
-    
-    @extension_component('play')
-    async def play(self, ctx : CommandContext):
-        await ctx.send('play')
-        await Database.set_item(ctx, 'Music', 'is_paused', True)
-        
-    @extension_component('skip')
-    async def play(self, ctx : CommandContext):
-        await ctx.send('skip')
-        await Database.set_item(ctx, 'Music', 'music_stopped', True)
-        
-    @extension_component('stop')
-    async def play(self, ctx : CommandContext):
-        await ctx.send('stop')
-        await Database.set_item(ctx, 'Music', 'music_skipped', True)
+                try:
+                    funny_embed = await self.GenerateEmbed(self, player.current.identifier, player, False, spotifydata=spotify)
+                    funny_embed.set_author(name = message)
+                    await ctx.edit(db['niko'], embeds = funny_embed, components = buttons)
+                except:
+                    pass
+                
+        return
     
 def setup(client):
     Music(client)

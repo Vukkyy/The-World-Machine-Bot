@@ -25,6 +25,20 @@ async def SearchSpotify(url : str, is_url : bool = True):
     final = {'name' : song_name, 'artist' : artist, 'art' : art}
     return final
 
+async def SearchAll(query:str):
+    result = spotify.search(f'track:{query}')
+    
+    items = []
+    
+    tracks = result['tracks']['items']
+    
+    i = 0
+    for track in tracks:
+        items.append(f"{track['name']} - {track['artists'][0]['name']}")
+    
+        i += 1    
+    return items
+
 # Uses the youtube library to get all songs from a playlist.
 async def GetPlaylist(url : str):
     return Playlist(url)

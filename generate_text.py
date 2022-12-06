@@ -40,7 +40,7 @@ async def GenerateBattle(gender1, name1, weapon1, personality1, gender2, name2, 
 
 def Response(final_prompt : str):  
     # create a completion
-    completion = openai.Completion.create(engine="text-davinci-002", prompt=final_prompt, max_tokens = 1024)
+    completion = openai.Completion.create(engine="text-davinci-003", prompt=final_prompt, max_tokens = 1024)
 
     full_text = []
 
