@@ -26,7 +26,7 @@ async def SearchSpotify(url : str, is_url : bool = True):
     return final
 
 async def SearchAll(query:str):
-    result = spotify.search(f'track:{query}')
+    result = spotify.search(query)
     
     items = []
     
