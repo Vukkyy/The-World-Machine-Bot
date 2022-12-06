@@ -617,14 +617,15 @@ async def allow(ctx : interactions.CommandContext):
         label = 'Yes',
         custom_id = str(uuid.uuid4())
     )
-
-    db = open('databases/loveletters.db', 'w')
-    db.close()
     
-    db = open('databases/loveletters.db', 'r+')
+    db = open('databases/loveletters.db', 'r')
     
     f = db.read()
     lllist = f.split('\n')
+    
+    db.close()
+    
+    db = open('databases/loveletters.db', 'w')
     
     if (ctx.author.id in lllist):
         lllist.remove(str(ctx.author.id))
