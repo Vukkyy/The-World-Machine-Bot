@@ -34,6 +34,7 @@ import battle
 
 # Extension Libraries
 from interactions.ext.wait_for import wait_for_component, setup, wait_for
+from interactions.ext.database import Database
 import interactions.ext.lavalink
 import interactions.ext.files
 from interactions.ext.enhanced import cooldown
@@ -77,6 +78,8 @@ async def on_start():
         await change_picture()
 
     music.bot = bot
+    
+    await Database.create_database('GIVEMEMONEYPLS', Database.DatabaseType.USER, {'donotshow': False})
     
     print(f"{bot.me.name} is ready!")
 
@@ -470,21 +473,63 @@ async def gen_text(ctx : interactions.CommandContext):
     await ctx.popup(modal)
 
 @bot.modal('funny modal')
-async def on_modal(ctx, prompt : str):
+async def on_modal(ctx : interactions.CommandContext, prompt : str):
     msg = await ctx.send('Generating text... <a:loading:1026539890382483576>')
 
-    await stamps.IncrementValue(ctx, 'times_asked', int(ctx.author.id))
+    #await stamps.IncrementValue(ctx, 'times_asked', int(ctx.author.id))
     
-    result = await generate_text.GenerateText(prompt + '?', ctx.author.user.username)
+    result = await generate_text.GenerateText(f"\"{prompt}?\"", ctx.author.user.username)
 
     newline = '\n'
 
     embed = interactions.Embed(
-        title = 'Result',
-        description = f'**{prompt}**' + f'\n\n[ {result[0].strip(newline)} ]'
+        description = f'\n[ {result[0].strip(newline)} ]',
+        color = 0x2f3136
     )
+    
+    embed.set_author(name = f'\"{prompt}\"', icon_url = ctx.author.user.avatar_url)
 
     await msg.edit('', embeds=embed)
+    
+    buttons = [
+        interactions.Button(
+            style = interactions.ButtonStyle.SUCCESS,
+            label='Okay',
+            custom_id='yea'
+        ),
+        
+        interactions.Button(
+            style = interactions.ButtonStyle.PRIMARY,
+            label='Later',
+            custom_id='later'
+        ),
+        
+        interactions.Button(
+            style = interactions.ButtonStyle.DANGER,
+            label='Don\'t show again.',
+            custom_id='no'
+        ),
+    ]
+    
+    money_pls = await Database.get_item(ctx, 'GIVEMEMONEYPLS')
+    
+    if money_pls['donotshow'] == False:
+        await ctx.send('Hey, using this command costs a little bit of money for me! Do you want the link to this bot\'s ko-fi so you can donate?', ephemeral = True, components = buttons)
+        
+        button_ctx = await bot.wait_for_component(buttons)
+        
+        data = button_ctx.data.custom_id
+        
+        if (data == 'yea'):
+            await button_ctx.send('Thank you! Here is the link. https://ko-fi.com/worldmachinebot', ephemeral=True)
+            await Database.set_item(button_ctx, 'GIVEMEMONEYPLS', 'donotshow', True)
+            
+        if (data == 'later'):
+            await button_ctx.send('Alright. This will be sent the next time you run this command.', ephemeral=True)
+            
+        if (data == 'no'):
+            await button_ctx.send('okay :(', ephemeral = True)
+            await Database.set_item(button_ctx, 'GIVEMEMONEYPLS', 'donotshow', True)
 
 def Modal(starting_prompt : str):
     return interactions.Modal(
