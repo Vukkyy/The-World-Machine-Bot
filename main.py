@@ -1097,7 +1097,7 @@ async def format_time(ctx : interactions.CommandContext, hour, minute):
     
     time_ = f"{hour}:{minute}"
     
-    formatted_time = humanfriendly.parse_date(f'2000-01-01 {time_}:00') + (-1, -1, -1)
+    formatted_time = humanfriendly.parse_date(f'2004-07-10 {time_}:00') + (-1, -1, -1)
     
     print(formatted_time)
     
