@@ -1101,5 +1101,5 @@ async def format_time(ctx : interactions.CommandContext, hour, minute):
     
     print(formatted_time)
     
-    await ctx.send(f"Copy and paste this: `<t:{int(time.mktime(formatted_time))}:t>`")
+    await ctx.send(f"Copy and paste this: `<t:{int(time.mktime(formatted_time))}:t>`", ephemeral = True)
 bot.start()
