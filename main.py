@@ -15,6 +15,7 @@ import cleantext
 import io
 import validators
 import humanfriendly
+import time
 
 # Other Scripts
 import custom_source
@@ -1084,6 +1085,21 @@ async def daily(ctx : interactions.CommandContext):
     coins = await database_manager.GetDatabase(id_, 'ram', {"uid" : id_, "coins" : 0})
     await database_manager.SetDatabase(id_, 'ram', 'coins', coins['coins'] + random_)
     
-    await ctx.send(f'Successfully claimed your daily wool! (+{random_}<:wool:1044668364422918176>)', ephemeral = True)
+    await ctx.send(f'Successfully claimed your daily wool! (+{random_}<:wool:1044668364422918176>)', ephemeral = True) 
+#, required = True
+@bot.command(description='Format time.')
+@interactions.option(description='Hour (12 HR)', max_value = 24, min_value = 1, required = True, type = interactions.OptionType.INTEGER)
+@interactions.option(description='Minute', max_value = 60, min_value = 0, required = True, type = interactions.OptionType.INTEGER)
+async def format_time(ctx : interactions.CommandContext, hour, minute):
     
+    if len(str(minute)) == 1:
+        minute = f'0{minute}'
+    
+    time_ = f"{hour}:{minute}"
+    
+    formatted_time = humanfriendly.parse_date(f'2000-01-01 {time_}:00') + (-1, -1, -1)
+    
+    print(formatted_time)
+    
+    await ctx.send(f"Copy and paste this: `<t:{int(time.mktime(formatted_time))}:t>`")
 bot.start()
