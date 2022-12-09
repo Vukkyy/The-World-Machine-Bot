@@ -278,6 +278,9 @@ class BATTLES(Extension):
                             index += 1
                             
                             if len(battle_list) == 1:
+                                
+                                await db.SetDatabase(int(button_ctx.guild_id), 'battles', 'battling', False)
+                                
                                 result_embed = Embed(
                                         title = f'{winner[0]} is the winner of the tournament!',
                                         description='Congrats!',
@@ -285,7 +288,6 @@ class BATTLES(Extension):
                                     )
                                 
                                 await result.reply(embeds=result_embed)
-                                await db.SetDatabase(int(button_ctx.guild_id), 'battles', 'battling', False)
                                 return
                             
                             if index == len(battles):
