@@ -34,7 +34,7 @@ async def GenerateBattle(gender1, name1, weapon1, personality1, gender2, name2, 
     if gender2 == 'Tool':
         weapon_2 = 'Prepares their tool'
     
-    final_prompt = f"write me a long battle to the death. The first fighter is named {name1}, {name1} {weapon_1} called {weapon1}, {personality1} VS {name2}, {name2} {weapon_2} called {weapon2}, {personality2}\nThe winner of this battle should be {winner} due to their skills.\nthe battle to the death begins in an arena.\n"
+    final_prompt = f"write me a long battle to the death. The first fighter is named {name1}, {name1} {weapon_1} called {weapon1}, {personality1} VS {name2}, {name2} {weapon_2} called {weapon2}, {personality2}. Let's think step by step. Everyone should be refered to with they/them pronouns, the winner of this battle should be {winner} due to their skills and the battle to the death begins in an arena.\n"
     
     return Response(final_prompt)
 
