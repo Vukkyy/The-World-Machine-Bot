@@ -482,10 +482,15 @@ async def on_modal(ctx : interactions.CommandContext, prompt : str):
     result = await generate_text.GenerateText(f"\"{prompt}?\"", ctx.author.user.username)
 
     newline = '\n'
+    
+    text = f'[ {result[0].strip(newline)} ]'
+    
+    image = await dialogue_generator.test(text)
 
     embed = interactions.Embed(
-        description = f'\n[ {result[0].strip(newline)} ]',
-        color = 0x2f3136
+        color = 0x2f3136,
+        title = 'Ask',
+        image = 'attachment://Images/pil_text.png'
     )
     
     embed.set_author(name = f'\"{prompt}\"', icon_url = ctx.author.user.avatar_url)

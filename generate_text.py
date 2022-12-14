@@ -8,7 +8,7 @@ async def GenerateText(prompt : str, user : str):
     final_prompt = ''
     
     with open('response.txt') as f:
-        final_prompt = f'{f.read()}{user}: {prompt}'
+        final_prompt = eval(f.read())
     
     return Response(final_prompt)
 
