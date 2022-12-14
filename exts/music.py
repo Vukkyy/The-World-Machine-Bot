@@ -304,14 +304,14 @@ class Music(Extension):
                     title = f"Now Playing: ***{spotify['name']}***",
                     thumbnail = interactions.EmbedImageStruct( url = spotify['art'], height = 720, width = 1280),
                     description = f"{length} \n\n *{new_c_length} / {new_length}*",
-                    footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
+                    footer = interactions.EmbedFooter( text = 'Do /music get_player if you\'ve lost the player.'),
                 )
             else:
                 return interactions.Embed(
                     title = f"Now Playing: ***{spotify['name']}***",
                     thumbnail = interactions.EmbedImageStruct( url = spotify['art'], height = 720, width = 1280),
                     description = f"Loading Player... <a:loading:1026539890382483576> \n\n *00:00 / {new_length}*",
-                    footer = interactions.EmbedFooter( text = 'Do /music get_player if the buttons don\'t work or if you\'ve lost the player.'),
+                    footer = interactions.EmbedFooter( text = 'Do /music get_player if you\'ve lost the player.'),
                 )
 
     async def GenerateQueue(self, page_number, player : lavalink.DefaultPlayer, controls = False, forward = False):
