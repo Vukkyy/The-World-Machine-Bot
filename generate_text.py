@@ -10,7 +10,8 @@ async def GenerateText(prompt : str, user : str):
     with open('response.aidata') as f:
         final_prompt = f.read()
         
-    final_prompt.format(username = user, prompt = prompt)
+    final_prompt.replace('%1', user)
+    final_prompt.replace('%2', prompt)
     
     return Response(final_prompt)
 
@@ -21,25 +22,33 @@ async def GenerateBattle(gender1, name1, weapon1, personality1, gender2, name2, 
     weapon_1 = ''
     
     if gender1 == 'Magical':
-        weapon_1 = 'Prepares a spell from their weapon'
+        weapon_1 = 'A magical weapon.'
     if gender1 == 'Physical':
-        weapon_1 = 'Holds their weapon'
+        weapon_1 = 'A weapon you can swing.'
     if gender1 == 'Tool':
-        weapon_1 = 'Prepares their tool'
+        weapon_1 = 'A tool to use for many different things.'
         
     weapon_2 = ''
     
     if gender2 == 'Magical':
-        weapon_2 = 'Prepares a spell from their weapon'
-    if gender2 == 'Physical':
-        weapon_2 = 'Holds their weapon'
-    if gender2 == 'Tool':
-        weapon_2 = 'Prepares their tool'
+        weapon_2 = 'A magical weapon.'
+    if gender1 == 'Physical':
+        weapon_2 = 'A weapon you can swing.'
+    if gender1 == 'Tool':
+        weapon_2 = 'A tool to use for many different things.'
     
     with open('response_battle.aidata') as f:
         final_prompt = f.read()
         
-    final_prompt.format(name1 = name1, w_description1 = weapon_1, w_name1 = weapon1, personality1 = personality1, name2 = name2, w_description2 = weapon_2, w_name2 = weapon2, personality2 = personality2, winner = winner)
+    final_prompt.replace('%1', name1)
+    final_prompt.replace('%2', weapon_1)
+    final_prompt.replace('%3', weapon1)
+    final_prompt.replace('%4', personality1)
+    final_prompt.replace('%5', name2)
+    final_prompt.replace('%6', weapon_2)
+    final_prompt.replace('%7', weapon2)
+    final_prompt.replace('%8', personality2)
+    final_prompt.replace('%9', winner)
     
     return Response(final_prompt)
 

@@ -6,5 +6,5 @@ Your Rules:
 3. Always act like the character no matter what.
 4. Answer must in a new line.
 
-The User: {username}
-The Question: {prompt}
+The User: %1
+The Question: %2
