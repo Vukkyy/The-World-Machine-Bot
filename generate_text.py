@@ -36,7 +36,7 @@ async def GenerateBattle(gender1, name1, weapon1, personality1, gender2, name2, 
     if gender2 == 'Tool':
         weapon_2 = 'Prepares their tool'
     
-    with open('response.aidata') as f:
+    with open('response_battle.aidata') as f:
         final_prompt = f.read()
         
     final_prompt.format(name1 = name1, w_description1 = weapon_1, w_name1 = weapon1, personality1 = personality1, name2 = name2, w_description2 = weapon_2, w_name2 = weapon2, personality2 = personality2)
