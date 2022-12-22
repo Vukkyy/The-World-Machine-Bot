@@ -7,8 +7,10 @@ openai.api_key = os.getenv('OPENAI-KEY')
 async def GenerateText(prompt : str, user : str):
     final_prompt = ''
     
-    with open('response.txt') as f:
-        final_prompt = eval(f.read())
+    with open('response.aidata') as f:
+        final_prompt = f.read()
+        
+    final_prompt.format(username = user, prompt = prompt)
     
     return Response(final_prompt)
 
@@ -34,7 +36,10 @@ async def GenerateBattle(gender1, name1, weapon1, personality1, gender2, name2, 
     if gender2 == 'Tool':
         weapon_2 = 'Prepares their tool'
     
-    final_prompt = f"write me a long battle to the death. The first fighter is named {name1}, {name1} {weapon_1} called {weapon1}, {personality1} VS {name2}, {name2} {weapon_2} called {weapon2}, {personality2}. Let's think step by step. Everyone should be refered to with they/them pronouns, the winner of this battle should be {winner} due to their skills and the battle to the death begins in an arena.\n"
+    with open('response.aidata') as f:
+        final_prompt = f.read()
+        
+    final_prompt.format(name1 = name1, w_description1 = weapon_1, w_name1 = weapon1, personality1 = personality1, name2 = name2, w_description2 = weapon_2, w_name2 = weapon2, personality2 = personality2)
     
     return Response(final_prompt)
 
