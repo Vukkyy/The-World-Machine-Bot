@@ -10,7 +10,7 @@ import chars
 import textwrap
 import database_manager as db
     
-async def DrawBadges(user_id : int, user : str = 'awesome person', user_pfp : str = ''):
+async def DrawBadges(user_id : int, ctx, user : str = 'awesome person', user_pfp : str = ''):
     print('Viewing Badges...')
 
     images = []
@@ -22,7 +22,7 @@ async def DrawBadges(user_id : int, user : str = 'awesome person', user_pfp : st
 
     print(user)
     
-    profile = await Database.get_item(user_id, 'profile_information')
+    profile = await Database.get_item(ctx, 'profile_information')
 
     bg = Image.open(f'Badges/Images/Backgrounds/{profile["profile_background"]}.png')
 

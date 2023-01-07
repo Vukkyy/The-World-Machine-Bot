@@ -112,7 +112,7 @@ class Command(Extension):
 
         print(user_)
         
-        await view.DrawBadges(id_, user_, user.avatar_url)
+        await view.DrawBadges(id_, ctx, user_, user.avatar_url)
 
         img_ = File('Badges/result.png')
         
