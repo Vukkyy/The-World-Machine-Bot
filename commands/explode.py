@@ -61,15 +61,14 @@ class Command(Extension):
             if explosion_amount % 50 == 0:
                 embed = Embed(title = Command.random_message[random.randint(1, len(Command.random_message)) - 1])
             
-            match explosion_amount:
-                case 69:
-                    embed = Embed(title = 'nice')
-                case 420:
-                    embed = Embed(title = 'nice')
-                case 42069:
-                    embed = Embed(title = 'nice')
-                case 69420:
-                    embed = Embed(title = 'nice')
+            if explosion_amount == 69:
+                embed = Embed(title = 'nice')
+            if explosion_amount == 420:
+                embed = Embed(title = 'nice')
+            if explosion_amount == 42069:
+                embed = Embed(title = 'nice')
+            if explosion_amount == 69420:
+                embed = Embed(title = 'nice')
             
             embed.set_image(url = Command.explosion_image[random_number])
             embed.set_footer(f'The Sun has been exploded {explosion_amount} times.')
