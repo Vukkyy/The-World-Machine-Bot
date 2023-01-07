@@ -16,12 +16,9 @@ class BATTLES(Extension):
     
     def __init__(self, client):
         self.client = client
-        print("Loaded Battles")
         with open('databases/battles.db', 'w') as f:
             f.write(json.dumps({'uid': 0, 'battle_list':[], 'name_list':[], 'battling': False}))
-    
-    async def error_(ctx, error):
-        await ctx.send('An error occurred, please try again!', ephemeral = True)
+            
     @battles.subcommand(description='Convert old BCLs to the new format.')
     @option(description='The BCL to convert to the new format.', required=True)
     async def convert_bcl(self, ctx : CommandContext, old_bcl : str = ''):
@@ -78,12 +75,24 @@ class BATTLES(Extension):
         buttons = [
             Button(style=ButtonStyle.SUCCESS, label='Create Fighter', custom_id=f'create {uid}'),
             Button(style=ButtonStyle.PRIMARY, label='Import from BCL', custom_id=f'import {uid}'),
+        ]
+        
+        admin_buttons = [
             Button(style=ButtonStyle.SECONDARY, label='Remove Fighter', custom_id=f'delete {uid}', disabled=True),
             Button(style=ButtonStyle.DANGER, label='Start Tournament', custom_id=f'start {uid}', disabled=True),
+            Button(style=ButtonStyle.PRIMARY, label='Export Roster', custom_id=f'export {uid}'),
             Button(style=ButtonStyle.SECONDARY, label='Cancel', custom_id=f'cancel {uid}')
         ]
         
-        msg = await ctx.send(embeds=embed, components=buttons)
+        action_row = ActionRow(
+            components=buttons
+        )
+        
+        action_row2 = ActionRow(
+            components=admin_buttons
+        )
+        
+        msg = await ctx.send(embeds=embed, components=[action_row, action_row2])
         
         battle_list = []
         name_list = []
@@ -92,7 +101,7 @@ class BATTLES(Extension):
         
         while True:
             
-            task = asyncio.create_task(self.client.wait_for_component(components=buttons))
+            task = asyncio.create_task(self.client.wait_for_component(components=[action_row, action_row2]))
             while True:
                 done, pending = await asyncio.wait({task}, timeout=1)
                 
@@ -109,16 +118,16 @@ class BATTLES(Extension):
                         current_embed: Embed = msg.embeds[0]
                 
                         if len(name_list) % 2 == 0:
-                            buttons[3].disabled = False
+                            admin_buttons[1].disabled = False
                         if not len(name_list) == 0:
                             current_embed.fields[1].value = '\n'.join(name_list)
-                            buttons[2].disabled = False
+                            admin_buttons[0].disabled = False
                         else:
                             current_embed.fields[1].value = 'There are no fighters in this tournament!'
-                            buttons[2].disabled = True
-                            buttons[3].disabled = True
+                            admin_buttons[1].disabled = True
+                            admin_buttons[0].disabled = True
 
-                        await msg.edit(embeds=current_embed, components= buttons)
+                        await msg.edit(embeds=current_embed, components=[action_row, action_row2])
                     continue
                 
                 break
@@ -266,11 +275,18 @@ class BATTLES(Extension):
                                 del name_list[battle_list.index(battle[0])]
                                 battle_list.remove(battle[0])
                             
-                            text = await generate_text.GenerateBattle(c_one[1], c_one[0], c_one[2], c_one[3], c_two[1], c_two[0], c_two[2], c_two[3], winner[0])
+                            final_round = False
+                            
+                            if len(battle_list) == 1:
+                                final_round = True
+                            
+                            
+                            text = await generate_text.GenerateBattle(c_one[1], c_one[0], c_one[2], c_one[3], c_two[1], c_two[0], c_two[2], c_two[3], winner[0], final_round)
                             
                             embed = Embed(
                                 title = f'{c_one[0]} versus {c_two[0]}',
-                                description = text[0]
+                                description = text[0],
+                                color=0x7d00b8
                             )
                             
                             result = await btl1.edit(content = '', embeds=embed)
@@ -285,6 +301,7 @@ class BATTLES(Extension):
                                         title = f'{winner[0]} is the winner of the tournament!',
                                         description='Congrats!',
                                         thumbnail=EmbedImageStruct(url=winner[4]),
+                                        color=0x7d00b8
                                     )
                                 
                                 await result.reply(embeds=result_embed)
@@ -298,13 +315,15 @@ class BATTLES(Extension):
                                         title = f'{winner[0]} is the winner of this round!',
                                         description=f'The next round will begin in {delay} seconds!',
                                         thumbnail=EmbedImageStruct(url=winner[4]),
+                                        color=0x7d00b8
                                     )
                             
                             else:
                                 result_embed = Embed(
                                     title = f'{winner[0]} is the winner!',
                                     thumbnail=EmbedImageStruct(url=winner[4]),
-                                    description=f'The next battle will begin in {delay} seconds!'
+                                    description=f'The next battle will begin in {delay} seconds!',
+                                    color=0x7d00b8
                                 )
                             
                             await result.reply(embeds=result_embed)
@@ -317,14 +336,29 @@ class BATTLES(Extension):
                 can_pass = True
                 
                 if not Permissions.MANAGE_CHANNELS in button_ctx.author.permissions:
-                    await button_ctx.send('Sorry! But you need the ``MANAGE_CHANNELS`` permission in this server to remove a fighter!', ephemeral = True)
+                    await button_ctx.send('[ Sorry! But you need the ``MANAGE_CHANNELS`` permission in this server to remove a fighter! ]', ephemeral = True)
                     can_pass = False
                 
                 if can_pass:
-                    await msg.edit('``Tournament Cancelled.``', embeds=[], components=[])
+                    await msg.delete()
                     await button_ctx.send(f'<@{button_ctx.author.id}> Cancelled the Tournament.')
                     await db.SetDatabase(int(button_ctx.guild_id), 'battles', 'battling', False)
                     return
+                
+            if data == f'export {uid}':
+                
+                bcl_list = []
+                
+                for bcl in battle_list:
+                    encode = bcl.encode('utf-8')
+                    base64_ = base64.b64encode(encode)
+                    bcl_list.append(base64_.decode('utf-8'))
+                
+                bcl_string = ','.join(bcl_list)
+                
+                await button_ctx.send(f'[ Here is the exported roster. Use "Import from BCL" to load the roster again. ] ```{bcl_string}```')
+                    
+                    
                         
     @extension_modal('battle')
     async def create_fighter(self, modal_ctx : CommandContext, name, type, weapon, description, url):

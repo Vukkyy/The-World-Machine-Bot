@@ -99,7 +99,6 @@ async def OpenStampMenu(user_id : int):
         if (data_['user_id'] == user_id):
             index = 0
             for stamp in stamps:
-                print(stamp)
                 if (stamp['stamp_id'] in data_['badges_earned']):
                     emoji : interactions.Emoji = interactions.Emoji(id = stamp['stamp_url'])
                     index += 1

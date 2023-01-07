@@ -1,23 +1,22 @@
-import database_manager as db
+from interactions import *
+from error_handler import on_error
+from interactions.ext.database.database import Database
 import Badges.stamp_viewer as view
 from uuid import uuid4
-
 import os
 
-from interactions import *
-from interactions.ext.wait_for import *
-
-class Profile(Extension):
+class Command(Extension):
     
-    def __init__(self, client):
-        print('Profile settings loaded!')
-        
-    def GetValues(index):
+    def GetValues(self, index):
         values = []
         
     @extension_command()
     async def profile(self, ctx):
         pass
+    
+    @extension_listener
+    async def on_start(self):
+        await Database.create_database('profile_information', Database.DatabaseType.USER, {"uid": 0, "profile_background": "Normal", "profile_description": "I am a very mysterious person!"})
     
     @profile.subcommand(description='Edit your profile.')
     async def edit(self, ctx : CommandContext):
@@ -27,14 +26,13 @@ class Profile(Extension):
         edit_buttons = [
             Button(label='Edit Background', custom_id=f'background{uid}', style=ButtonStyle.PRIMARY),
             Button(label='Edit Description', custom_id=f'description{uid}', style=ButtonStyle.PRIMARY),
-            Button(label='How to change stamp?', custom_id=f'stamp{uid}', style=ButtonStyle.PRIMARY),
-            Button(label='How to change character?', custom_id=f'character{uid}', style=ButtonStyle.PRIMARY),
+            Button(label='Edit Stamp', custom_id=f'stamp{uid}', style=ButtonStyle.PRIMARY),
         ]
         
         await ctx.send('What do you want to edit?', components=edit_buttons, ephemeral = True)
         
         while True:
-            button_ctx : ComponentContext = await wait_for_component(self.client, edit_buttons)
+            button_ctx : ComponentContext = await self.client.wait_for_component(edit_buttons)
             
             data = button_ctx.data.custom_id
             
@@ -80,20 +78,16 @@ class Profile(Extension):
                 
                 await button_ctx.send('Select a profile background.', components=menu, ephemeral=True)
                 
-                SelectOption_ : ComponentContext = await wait_for_component(self.client, components = menu)
+                SelectOption_ : ComponentContext = await self.client.wait_for_component(menu)
                 
                 id_ = int(ctx.author.id)
         
-                await db.GetDatabase(id_, 'profile', {"uid": id_, "profile_background": "Normal", "profile_description": "I am a very mysterious person!"})
-                await db.SetDatabase(id_, 'profile', 'profile_background', SelectOption_.data.values[0])
+                await Database.set_item(ctx, 'profile_information', {'profile_background' : SelectOption_.data.values[0]})
                 
-                await button_ctx.send(f'Successfully set profile background to: ``{SelectOption_.data.values[0]}``, use </profile view:8328932897324897> to view your changes.', ephemeral = True)
+                await button_ctx.send(f'[ Successfully set profile background to: ``{SelectOption_.data.values[0]}``, use </profile view:8328932897324897> to view your changes. ]', ephemeral = True)
 
             if (data == f'stamp{uid}'):
-                await button_ctx.send('Simply use </select_stamp:100> to select a stamp to use both in letters and your profile!', ephemeral = True)
-                
-            if (data == f'character{uid}'):
-                await button_ctx.send('Simply use </transmit hidden-profile:100> to select a character to use for Transmissions and your profile!', ephemeral = True)
+                await button_ctx.send('[ Simply use </select_stamp:100> to select a stamp to use both in letters and your profile. ]', ephemeral = True)
             
     @profile.subcommand(description='View a profile.')
     @option(description='The user\'s profile to view.', required=True, type=OptionType.USER)
@@ -107,11 +101,11 @@ class Profile(Extension):
         if (user == 'none'):
             id_ = int(ctx.author.id)
             user = ctx.author
-            msg = 'Loading your profile... <a:loading:1026539890382483576>'
+            msg = '[ Loading your profile... <a:loading:1026539890382483576> ]'
             user_ = ctx.author.user.username
         else:
             id_ = int(user.id)
-            msg = f'Loading {user.user.username}\'s profile... <a:loading:1026539890382483576>'
+            msg = f'[ Loading {user.user.username}\'s profile... <a:loading:1026539890382483576> ]'
             user_ = user.user.username
         
         msg = await ctx.send(msg)
@@ -129,10 +123,17 @@ class Profile(Extension):
     async def set_description(self, ctx : CommandContext, description : str):
         id_ = int(ctx.author.id)
         
-        await db.GetDatabase(id_, 'profile', {"uid": id_, "profile_background": "Normal", "profile_description": "I am a very mysterious person!"})
-        await db.SetDatabase(id_, 'profile', 'profile_description', description)
+        await Database.set_item(ctx, 'profile_information', {'profile_description' : description})
         
-        await ctx.send(f'Successfully set profile description to: ``{description}``, use </profile view:8328932897324897> to view your changes.', ephemeral = True)
+        await ctx.send(f'[ Successfully set profile description to: ``{description}``, use </profile view:8328932897324897> to view your changes. ]', ephemeral = True)
 
+    
+    @profile.error
+    async def error(self, ctx : CommandContext, error):
+        
+        embed = await on_error(error)
+        
+        await ctx.send(embeds=embed)
+        
 def setup(client):
-    Profile(client)
+    Command(client)

@@ -1,8 +1,14 @@
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
+from asyncio import sleep
+import aiohttp
+import aiofiles
  
-async def test(l1):
+async def test(l1, image_url):
     img = Image.open("Images/niko-background.png") # Opening Images for both the background...
+    
+    await DownloadImage(image_url=image_url, filename='Images/niko.png')
+    
     icon = Image.open("Images/niko.png") #...And the niko face selected in the command
 
     fnt = ImageFont.truetype("font/TerminusTTF-Bold.ttf", 20) # Font
@@ -18,3 +24,13 @@ async def test(l1):
     img.paste(icon, (496, 16), icon.convert('RGBA')) # The face sprite to use on the textbox
     
     img.save('Images/pil_text.png')
+    
+    await sleep(0.2)
+    
+async def DownloadImage(image_url, filename):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(image_url) as resp:
+            if resp.status == 200:
+                f = await aiofiles.open(filename, mode='wb')
+                await f.write(await resp.read())
+                await f.close()

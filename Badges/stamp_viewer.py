@@ -1,13 +1,14 @@
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 from os import listdir
+from interactions.ext.database.database import Database
 import Badges.stamp_list as list_
 import aiohttp        
 import aiofiles
 import Badges.stamp_system as stamps_
 import json
 import chars
-import database_manager as db
 import textwrap
+import database_manager as db
     
 async def DrawBadges(user_id : int, user : str = 'awesome person', user_pfp : str = ''):
     print('Viewing Badges...')
@@ -21,7 +22,7 @@ async def DrawBadges(user_id : int, user : str = 'awesome person', user_pfp : st
 
     print(user)
     
-    profile = await db.GetDatabase(user_id, 'profile', {"uid": user_id, "profile_background": "Normal", "profile_description": "I am a very mysterious person!"})
+    profile = await Database.get_item(user_id, 'profile_information')
 
     bg = Image.open(f'Badges/Images/Backgrounds/{profile["profile_background"]}.png')
 
@@ -86,16 +87,8 @@ async def DrawBadges(user_id : int, user : str = 'awesome person', user_pfp : st
             i = 0
             
     bg.paste(img_equipped, (659, 25), img_equipped.convert('RGBA'))
-    
-    char = await db.GetDatabase(user_id, 'transmit', {"uid" : user_id, "character" : 0})
-    character = chars.characters[char['character']]
-    
-    character = await DownloadImage(character[0], 'character')
-    character = character.resize((35, 35), resample=Image.Resampling.NEAREST)
 
-    bg.paste(character, (659, 64), character.convert('RGBA'))
     d.text((648, 32), 'Equipped Stamp:', font = fnt, fill=(255,255,255), anchor='rt', align='right')
-    d.text((648, 64), 'Current Character:', font = fnt, fill=(255,255,255), anchor='rt', align='right')
     
     coins = await db.GetDatabase(user_id, 'ram', {"uid" : user_id, "coins" : 0})
     d.text((648, 250), f'{coins["coins"]} x', font = fnt, fill=(255,255,255), anchor='rt', align='right')
