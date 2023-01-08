@@ -94,9 +94,6 @@ class Command(Extension):
             if button_ctx.author.id != targeted_user.id:
                 await ctx.send('[ Sorry! But you can\'t respond to this interaction! ]', ephemeral = True)
                 return False
-            if interaction == 5:
-                await ctx.send('[ You can\'t stab back, you\'re already dead! ]', ephemeral = True)
-                return False
             return True
         
         if not targeted_user.bot:
@@ -104,11 +101,18 @@ class Command(Extension):
             
         await msg.edit(components = [])
         
-        embed = Embed(
-            title = f'{name} back!',
-            description = f'<@{targeted_user.id}> {action} <@{user}> back!',
-            color=0x7d00b8
-        )
+        if not interaction == 5:
+            embed = Embed(
+                title = f'{name} back!',
+                description = f'<@{targeted_user.id}> {action} <@{user}> back!',
+                color=0x7d00b8
+            )
+        else:
+            embed = Embed(
+                title = f'whoops',
+                description = f'<@{targeted_user.id}> could not stab <@{user}> back, because they are already dead.',
+                color=0x7d00b8
+            )
         
         msg = await msg.reply(embeds = embed)
         

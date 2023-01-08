@@ -9,7 +9,7 @@ import dialogue_generator
 class Command(Extension):
     
     @extension_command(description = 'Put Command Description here.')
-    @option(description = 'What you want the character to say.')
+    @option(description = 'What you want the character to say.', max_length = 184)
     async def say(self, ctx : CommandContext, text : str):
         async def check(ctx):
             return True
