@@ -100,9 +100,7 @@ class Command(Extension):
             return True
         
         if not targeted_user.bot:
-            button_ctx = await self.client.wait_for_component(button, check=check)
-        else:
-            button_ctx = ctx
+            await self.client.wait_for_component(button, check=check)
             
         await msg.edit(components = [])
         
