@@ -49,7 +49,7 @@ class Command(Extension):
         result_ : str = await generate_text.GenerateText(q, ctx.author.user.username, db['last_thing_said'])
         result_ = result_.strip()
         
-        await Database.set_item(ctx, 'the bot remembers', {'last_thing_said' : result_})
+        await Database.set_item(uid = ctx, database = 'the bot remembers', data = {'last_thing_said' : result_})
         
         # * second stage...
         embed.description = '[ Judging your decisions... <a:loading:1026539890382483576> ]'
