@@ -5,7 +5,7 @@ import load_data
 
 openai.api_key = load_data.load_config()['openai']
 
-async def GenerateText(prompt : str, user : str):
+async def GenerateText(prompt : str, user : str, last_said : str):
     final_prompt = ''
     
     with open('response.aidata') as f:
@@ -13,6 +13,7 @@ async def GenerateText(prompt : str, user : str):
         
     final_prompt = final_prompt.replace('%1', user)
     final_prompt = final_prompt.replace('%2', prompt)
+    final_prompt = final_prompt.replace('%3', last_said)
 
     return Response(final_prompt)
 

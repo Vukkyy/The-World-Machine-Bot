@@ -4,7 +4,7 @@ import profile_icons as icons
 import aiohttp
 import aiofiles
 import dialogue_generator
-
+from interactions.ext.database.database import Database
 
 class Command(Extension):
     

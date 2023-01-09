@@ -4,6 +4,7 @@ import dialogue_generator
 import aiohttp
 import aiofiles
 from error_handler import on_error
+from interactions.ext.database.database import Database
 
 import textwrap
 
@@ -18,6 +19,10 @@ import requests
 from LeXmo import LeXmo
 
 class Command(Extension):
+    
+    @extension_listener
+    async def on_start(self):
+        await Database.create_database('the bot remembers', Database.DatabaseType.USER, {'last_thing_said' : 'Hello.'}, True)
     
     @extension_command(description = 'Ask The World Machine a question.')
     @option(description='The question to ask!')
@@ -39,8 +44,12 @@ class Command(Extension):
         
         msg = await ctx.send(embeds = embed)
         
-        result_ : str = await generate_text.GenerateText(q, ctx.author.user.username)
+        db = await Database.get_item(ctx, 'the bot remembers')
+        
+        result_ : str = await generate_text.GenerateText(q, ctx.author.user.username, db['last_thing_said'])
         result_ = result_.strip()
+        
+        await Database.set_item(ctx, 'the bot remembers', {'last_thing_said' : result_})
         
         # * second stage...
         embed.description = '[ Judging your decisions... <a:loading:1026539890382483576> ]'
@@ -69,7 +78,7 @@ class Command(Extension):
         if emotion == 'negative':
             twm = 'https://cdn.discordapp.com/emojis/1023573456664662066.webp?size=96&quality=lossless'
         if emotion == 'positive':
-            twm = 'https://cdn.discordapp.com/emojis/1023573455456698368.webp?size=96&quality=lossless'
+            twm = 'https://cdn.discordapp.com/emojis/1023573459676172359.webp?size=96&quality=lossless'
         if emotion == 'sadness':
             twm = 'https://cdn.discordapp.com/emojis/1023573454307463338.webp?size=96&quality=lossless'
         if emotion == 'surprise':
