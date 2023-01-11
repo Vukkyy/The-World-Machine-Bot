@@ -13,7 +13,6 @@ async def GenerateText(prompt : str, user : str, last_said : str):
         
     final_prompt = final_prompt.replace('%1', user)
     final_prompt = final_prompt.replace('%2', prompt)
-    final_prompt = final_prompt.replace('%3', last_said)
 
     return Response(final_prompt)
 
