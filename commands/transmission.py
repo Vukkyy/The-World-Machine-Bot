@@ -3,6 +3,10 @@ from error_handler import on_error
 import asyncio
 import humanfriendly
 import uuid
+import validators
+import aiohttp
+import aiofiles
+import cleantext
 
 class Command(Extension):
     
@@ -153,6 +157,16 @@ class Command(Extension):
                 
                 continue # * Important
             
+            if disconnect_timer == 0:
+                embed = Command.cancel_embed_manager(self, 'transmittime')
+                    
+                Command.initial_connected_server = None
+                Command.next_connected_server = None
+                
+                await msg.edit(embeds = embed, components=[])
+                await msg.reply(embeds = embed)
+                return
+            
             embed = Command.cancel_embed_manager(self, 'manual', id_)
             
             await msg.edit(embeds = embed, components=[])
@@ -226,6 +240,16 @@ class Command(Extension):
                 
                 continue # * Important
             
+            if disconnect_timer == 0:
+                embed = Command.cancel_embed_manager(self, 'transmittime')
+                    
+                Command.initial_connected_server = None
+                Command.next_connected_server = None
+                
+                await msg.edit(embeds = embed, components=[])
+                await msg.reply(embeds = embed)
+                return
+            
             embed = Command.cancel_embed_manager(self, 'manual', id_)
             
             await msg.edit(embeds = embed, components=[])
@@ -268,7 +292,7 @@ class Command(Extension):
                 
             if can_pass:
                 
-                embed = Command.message_manager(self, message)
+                embed = await Command.message_manager(self, message)
                 
                 async with other_connection.typing:
 
@@ -276,12 +300,14 @@ class Command(Extension):
                     
                     await other_connection.send(embeds = embed)
     
-    def message_manager(self, message : Message):
+    async def message_manager(self, message : Message):
         author = message.author
+        
+        final_text = cleantext.replace_urls(message.content, '`` ＵＲＬ ``')
         
         embed = Embed(
             color=0x36393f,
-            description=message.content,
+            description=final_text,
         )
         
         if len(message.attachments) > 0:
@@ -289,11 +315,23 @@ class Command(Extension):
             embed.image = EmbedImageStruct(url=image)
             
             if '.mp4' in image or '.mov' in image:
-                embed.description = f'{message.content}\n**[Video]({image})**'
+                embed.description = f'{final_text}\n**[Video]({image})**'
+                
+        can_pass = False
         
         embed.set_author(name = author.username, icon_url = author.avatar_url)
         
         return embed
+    
+    async def DownloadImage(self, image_url, filename):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(image_url) as resp:
+                if resp.status == 200:
+                    f = await aiofiles.open(f'Images/{filename}', mode='wb')
+                    await f.write(await resp.read())
+                    await f.close()
+        
+        return Image.open(f'Badges/Images/{filename}.png')
                 
     @transmit.error
     async def error(self, ctx : CommandContext, error):

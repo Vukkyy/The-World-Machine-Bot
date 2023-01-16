@@ -92,6 +92,10 @@ class Command(Extension):
     @profile.subcommand(description='View a profile.')
     @option(description='The user\'s profile to view.', required=True, type=OptionType.USER)
     async def view(self, ctx : CommandContext, user : User):
+        
+        if user.bot:
+            await ctx.send('[ Cannot view profiles of bots. ]', ephemeral = True)
+        
         id_ = 0
 
         msg = ''

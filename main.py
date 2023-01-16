@@ -29,6 +29,8 @@ async def on_start():
     
 @client.event()
 async def on_message_create(message : Message):
-    await stamps.IncrementValue(message, 'times_messaged', int(message.author.id))
+    
+    if not message.author.bot:
+        await stamps.IncrementValue(message, 'times_messaged', int(message.author.id))
     
 client.start()

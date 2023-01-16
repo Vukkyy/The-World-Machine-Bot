@@ -1,5 +1,6 @@
 import interactions
 import json
+from interactions.ext.database.database import Database
 
 guild_id = 1017479547664482444
 
@@ -11,10 +12,17 @@ def setup(client):
 
 async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : str, badge_description : str, user_id : int):
     
+    db = await Database.get_item(int(ctx.guild_id), 'notifications')
+    
+    can_notify = db['can_notify']
+    
     try:
         user : interactions.User = await interactions.get(bot, interactions.User, object_id = user_id)
     except:
         return # ! Band-aid Fix
+    
+    if user.bot:
+        return
     
     embed=interactions.Embed(title=f"\"{badge_name}\"", description=f"{badge_description}")
     embed.set_author(name=f"✨{user.username}, you earned a stamp!")
@@ -22,12 +30,14 @@ async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : 
     embed.set_footer(text="Use /select_stamps to equip it.")
     try:
         try:
-            msg = ''
-            
-            if (user_id != int(ctx.author.id)):
-                msg = f'<@{user_id}>'
-            
-            await ctx.send(msg, embeds=embed)
+            if can_notify:
+                msg = ''
+                
+                if (user_id != int(ctx.author.id)):
+                    msg = f'<@{user_id}>'
+                
+                await ctx.send(msg, embeds=embed)
+            return
         except:
             msg = ''
             
@@ -39,6 +49,7 @@ async def EarnBadge(ctx : interactions.Message, badge_name : str, badge_emoji : 
         pass #Fallback if can't send message.
 
 async def IncrementValue(message : interactions.Message, value : str, targeted : int):
+    
     db = ''
         
     with open('databases/user_database.db', 'r') as f:

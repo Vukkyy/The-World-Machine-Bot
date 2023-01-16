@@ -44,12 +44,8 @@ class Command(Extension):
         
         msg = await ctx.send(embeds = embed)
         
-        db = await Database.get_item(ctx, 'the bot remembers')
-        
-        result_ : str = await generate_text.GenerateText(q, ctx.author.user.username, db['last_thing_said'])
+        result_ : str = await generate_text.GenerateText(q, ctx.author.user.username, 'gay gay homosexual gay')
         result_ = result_.strip()
-        
-        await Database.set_item(uid = ctx, database = 'the bot remembers', data = {'last_thing_said' : result_})
         
         # * second stage...
         embed.description = '[ Judging your decisions... <a:loading:1026539890382483576> ]'
