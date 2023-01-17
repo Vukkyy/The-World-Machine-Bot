@@ -497,7 +497,7 @@ class BATTLES(Extension):
     @battles.error
     async def you_fucked_up_gpt_three(self, ctx : CommandContext, error):
         
-        await db.SetDatabase(int(ctx), 'battles', 'battling', False)
+        await db.SetDatabase(int(ctx.guild_id), 'battles', 'battling', False)
         
         embed = await on_error(error)
         
