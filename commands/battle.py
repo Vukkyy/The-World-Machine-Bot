@@ -9,6 +9,8 @@ import asyncio
 import database_manager as db
 import json
 
+from error_handler import on_error
+
 class BATTLES(Extension):
     @extension_command()
     async def battles(self, ctx):
@@ -491,6 +493,15 @@ class BATTLES(Extension):
         
         await db.SetDatabase(int(menu_modal.guild_id), 'battles', 'battle_list', battle_list)
         await db.SetDatabase(int(menu_modal.guild_id), 'battles', 'name_list', name_list)
+        
+    @battles.error
+    async def you_fucked_up_gpt_three(self, ctx : CommandContext, error):
+        
+        await db.SetDatabase(int(button_ctx.guild_id), 'battles', 'battling', False)
+        
+        embed = await on_error(error)
+        
+        await ctx.send(embeds= embed)
 
 def setup(client):
     BATTLES(client)

@@ -34,7 +34,7 @@ class Command(Extension):
         
         target_language = button_ctx.data.values[0]
         
-        message = text.Response(f'Translate this message to {target_language}: "{ctx.target.content}". For the user, very briefly, but positively,D teach about the original language from the message.')
+        message = text.Response(f'Translate this message to {target_language}: "{ctx.target.content}". For the user, very briefly, but positively, teach about the original language from the message.')
         message = message.strip('\n')
         
         embed = Embed(
