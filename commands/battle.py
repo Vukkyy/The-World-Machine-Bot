@@ -285,7 +285,7 @@ class BATTLES(Extension):
                             
                             embed = Embed(
                                 title = f'{c_one[0]} versus {c_two[0]}',
-                                description = text[0],
+                                description = text,
                                 color=0x7d00b8
                             )
                             

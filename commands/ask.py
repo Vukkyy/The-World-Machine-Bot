@@ -46,6 +46,7 @@ class Command(Extension):
         
         result_ : str = await generate_text.GenerateText(q, ctx.author.user.username, 'gay gay homosexual gay')
         result_ = result_.strip()
+        result_ = result_.strip('"')
         
         # * second stage...
         embed.description = '[ Judging your decisions... <a:loading:1026539890382483576> ]'
@@ -89,21 +90,34 @@ class Command(Extension):
         
         result_ = result_.replace('\n', ' ')
         
-        n = 160
-        r = "#".join(textwrap.wrap(result_, n))
-        finalresult_ = r.split('#')
+        n = 172
+        r = ">".join(textwrap.wrap(result_, n))
+        finalresult_ = r.split('>')
         
         embed.description = ''
         
         await msg.edit(embeds=embed)
         
+        i = 0
         for text in finalresult_:
-        
-            await dialogue_generator.test(f'[ {text} ]', twm)
             
-            file = File('Images/pil_text.png', description=text)
+            if i < 5:
+                if text == ' ' or text == '':
+                    continue
+                
+                text = text.strip(' ')
+                
+                await dialogue_generator.test(f'[{text}]', twm)
+                
+                file = File('Images/pil_text.png', description=text)
+                
+                await ctx.channel.send(files = file)
+            else:
+                
+                await ctx.channel.send('[ Message cut off for being too long. ]')
+                break
             
-            await ctx.channel.send(files = file)
+            i += 1
         
     @ask.error
     async def you_fucked_up_gpt_three(self, ctx : CommandContext, error):
