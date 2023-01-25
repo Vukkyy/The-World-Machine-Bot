@@ -3,13 +3,13 @@ from uuid import uuid4
 import validators
 import re
 import base64
-import generate_text
+import bot_data.generate_text as generate_text
 import random
 import asyncio
-import database_manager as db
+import bot_data.database_manager as db
 import json
 
-from error_handler import on_error
+from bot_data.error_handler import on_error
 
 class BATTLES(Extension):
     @extension_command()

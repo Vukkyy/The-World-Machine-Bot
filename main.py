@@ -1,9 +1,9 @@
 from interactions import *
-import command_manager
-import load_data
+import bot_data.command_manager as command_manager
+import bot_data.load_data as load_data
 import Badges.stamp_system as stamps
 
-TOKEN = load_data.load_config()['token']
+TOKEN = load_data.load_config('token')
 
 client = Client(TOKEN, intents = Intents.DEFAULT | Intents.GUILD_MESSAGE_CONTENT)
 

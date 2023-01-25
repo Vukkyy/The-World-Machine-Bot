@@ -1,9 +1,9 @@
 from interactions import *
-from error_handler import on_error
-import profile_icons as icons
+from bot_data.error_handler import on_error
+import bot_data.profile_icons as icons
 import aiohttp
 import aiofiles
-import dialogue_generator
+import bot_data.dialogue_generator as dialogue_generator
 from interactions.ext.database.database import Database
 
 class Command(Extension):

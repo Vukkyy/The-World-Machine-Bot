@@ -2,15 +2,6 @@ import interactions
 
 icons = []
 
-with open('profile_pictures.pfp', 'r') as f:
-    icons = f.readlines()
-
-lightbulbs = [
-    'https://empire-s3-production.bobvila.com/articles/wp-content/uploads/2018/07/broken-light-bulb.jpg',
-    'https://media.sketchfab.com/models/606df8ee438d442ea7b237c4894c8197/thumbnails/f9a72362c23344a9bb81a31a16b3982d/65cc0d991be8406997beac6fe09e4697.jpeg',
-    'https://previews.123rf.com/images/coprid/coprid1209/coprid120900003/15094351-broken-light-bulb-isolated-on-white.jpg',
-]
-
 awesome = None
 
 def Emojis():

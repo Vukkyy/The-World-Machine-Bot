@@ -1,5 +1,5 @@
 from interactions import *
-from error_handler import on_error
+from bot_data.error_handler import on_error
 import Badges.stamp_list as stamp_list
 import Badges.stamp_system as stamps
 import uuid
@@ -132,7 +132,7 @@ class Command_(Extension):
     
     @letters.subcommand(description='Send a letter.')
     @option(description='The user to send a letter to.')
-    async def send__(self, ctx : CommandContext, user : User):
+    async def send(self, ctx : CommandContext, user : User):
         await Command_.send_letter(self, ctx, user)
 
     @extension_user_command(name = '💡 Send Letter...')

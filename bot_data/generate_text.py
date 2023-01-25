@@ -1,9 +1,9 @@
 import openai
 import os
 import random
-import load_data
+import bot_data.load_data as load_data
 
-openai.api_key = load_data.load_config()['openai']
+openai.api_key = load_data.load_config('openai')
 
 async def GenerateText(prompt : str, user : str, last_said : str):
     final_prompt = ''

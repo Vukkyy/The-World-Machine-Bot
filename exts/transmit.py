@@ -5,7 +5,7 @@ import json
 import asyncio
 from interactions.ext.wait_for import wait_for_component
 from humanfriendly import format_timespan
-import database_manager
+import bot_data.database_manager as database_manager
 
 class Transmissions(interactions.Extension):
     def __init__(self, client):

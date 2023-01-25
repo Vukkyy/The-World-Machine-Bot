@@ -1,9 +1,9 @@
 from interactions import *
-import generate_text
-import dialogue_generator
+import bot_data.generate_text as generate_text
+import bot_data.dialogue_generator as dialogue_generator
 import aiohttp
 import aiofiles
-from error_handler import on_error
+from bot_data.error_handler import on_error
 from interactions.ext.database.database import Database
 
 import textwrap
@@ -90,9 +90,11 @@ class Command(Extension):
         
         result_ = result_.replace('\n', ' ')
         
-        n = 172
-        r = ">".join(textwrap.wrap(result_, n))
+        n = 165
+        r = ">".join(textwrap.wrap(result_, n, max_lines=4))
         finalresult_ = r.split('>')
+        
+        print(len(finalresult_))
         
         embed.description = ''
         
@@ -106,6 +108,8 @@ class Command(Extension):
                     continue
                 
                 text = text.strip(' ')
+                if not i == 0:
+                    text = '...' + text
                 
                 await dialogue_generator.test(f'[{text}]', twm)
                 

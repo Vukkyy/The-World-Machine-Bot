@@ -1,6 +1,6 @@
 from interactions import *
-from error_handler import on_error
-import generate_text as text
+from bot_data.error_handler import on_error
+import bot_data.generate_text as text
 
 class Command(Extension):
     

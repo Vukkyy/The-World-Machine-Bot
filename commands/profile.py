@@ -1,5 +1,5 @@
 from interactions import *
-from error_handler import on_error
+from bot_data.error_handler import on_error
 from interactions.ext.database.database import Database
 import Badges.stamp_viewer as view
 from uuid import uuid4

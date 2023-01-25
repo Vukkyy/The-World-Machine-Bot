@@ -6,9 +6,8 @@ import aiohttp
 import aiofiles
 import Badges.stamp_system as stamps_
 import json
-import chars
 import textwrap
-import database_manager as db
+import bot_data.database_manager as db
     
 async def DrawBadges(user_id : int, ctx, user : str = 'awesome person', user_pfp : str = ''):
     print('Viewing Badges...')

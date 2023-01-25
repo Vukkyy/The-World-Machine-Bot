@@ -1,5 +1,5 @@
 from interactions import *
-from error_handler import on_error
+from bot_data.error_handler import on_error
 import Badges.stamp_system as stamps
 import random
 import datetime

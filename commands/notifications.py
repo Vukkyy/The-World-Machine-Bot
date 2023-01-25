@@ -1,12 +1,12 @@
 from interactions import *
-from error_handler import on_error
+from bot_data.error_handler import on_error
 from interactions.ext.database.database import Database
 
 class Command(Extension):
     
     @extension_listener
     async def on_start(self):
-        await Database.create_database('notifications', Database.DatabaseType.GUILD, {'can_notify' : False})
+        await Database.create_database('notifications', Database.DatabaseType.GUILD, {'can_notify' : True})
     
     @extension_command(description = 'Toggle whether achievement stamps are shown on this server.')
     async def stamp_notifications(self, ctx : CommandContext):
