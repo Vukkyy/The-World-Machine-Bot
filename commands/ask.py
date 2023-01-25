@@ -5,6 +5,8 @@ import aiohttp
 import aiofiles
 from bot_data.error_handler import on_error
 from interactions.ext.database.database import Database
+from uuid import uuid4
+import os
 
 import textwrap
 
@@ -100,6 +102,10 @@ class Command(Extension):
         
         await msg.edit(embeds=embed)
         
+        uuid = uuid4()
+        
+        uuid = str(uuid)
+        
         i = 0
         for text in finalresult_:
             
@@ -111,9 +117,9 @@ class Command(Extension):
                 if not i == 0:
                     text = '...' + text
                 
-                await dialogue_generator.test(f'[{text}]', twm)
+                await dialogue_generator.test(f'[{text}]', twm, uuid)
                 
-                file = File('Images/pil_text.png', description=text)
+                file = File(f'Images/{uuid}.png', description=text)
                 
                 await ctx.channel.send(files = file)
             else:
@@ -122,6 +128,8 @@ class Command(Extension):
                 break
             
             i += 1
+            
+        os.remove(f'Images/{uuid}.png')
         
     @ask.error
     async def you_fucked_up_gpt_three(self, ctx : CommandContext, error):

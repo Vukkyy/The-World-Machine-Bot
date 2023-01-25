@@ -4,7 +4,7 @@ from asyncio import sleep
 import aiohttp
 import aiofiles
  
-async def test(l1, image_url):
+async def test(l1, image_url, uuid):
     img = Image.open("Images/niko-background.png") # Opening Images for both the background...
     
     await DownloadImage(image_url=image_url, filename='Images/niko.png')
@@ -23,7 +23,7 @@ async def test(l1, image_url):
       
     img.paste(icon, (496, 16), icon.convert('RGBA')) # The face sprite to use on the textbox
     
-    img.save('Images/pil_text.png')
+    img.save(f'Images/{uuid}.png')
     
     await sleep(0.2)
     
