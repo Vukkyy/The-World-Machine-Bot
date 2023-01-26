@@ -10,7 +10,7 @@ import os
 
 class Command(Extension):
     
-    @extension_command(description = 'Put Command Description here.')
+    @extension_command(description = 'Make OneShot characters say whatever you want.')
     @option(description = 'What you want the character to say.', max_length = 184)
     async def say(self, ctx : CommandContext, text : str):
         async def check(ctx):

@@ -14,7 +14,7 @@ class Command(Extension):
     
     next_connected_server = None
     
-    @extension_command()
+    @extension_command(description = 'Transmit to over servers!')
     async def transmit(self, ctx : CommandContext):
         pass
     

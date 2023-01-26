@@ -12,7 +12,7 @@ import json
 from bot_data.error_handler import on_error
 
 class BATTLES(Extension):
-    @extension_command()
+    @extension_command(description = 'Generate Epic battles!')
     async def battles(self, ctx):
         pass
     

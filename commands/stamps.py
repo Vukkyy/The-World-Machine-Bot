@@ -6,7 +6,7 @@ import uuid
 
 class Command_(Extension):
     
-    @extension_command(description = 'Put Command Description here.')
+    @extension_command(description = 'Send or recieve letters, and use stamps!')
     async def letters(self, ctx : CommandContext):
         # await ctx.send('hello world')
         pass
