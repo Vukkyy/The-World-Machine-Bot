@@ -809,7 +809,7 @@ class Command(Extension):
             else:
                 buttons[1].disabled = True
                 
-            queue_embed = self.get_music_queue(page, player.queue, ctx.guild, player.current.title, player.current.author, player.current.source_name, player.current.identifier)
+            queue_embed = self.get_music_queue(page, player.queue, ctx.guild, player.current.title, player.current.author, player.current.source_name)
                 
             await msg.edit(embeds=queue_embed, components = [buttons, self.music_queue_buttons])
     
