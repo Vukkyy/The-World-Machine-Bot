@@ -45,6 +45,7 @@ class Command(Extension):
         
         queue_embed.set_author(name = f'Queue for {server.name}', icon_url=server.icon_url)
         queue_embed.set_thumbnail(url = song_cover)
+        queue_embed.set_footer(text = '[ Navigation buttons not working? Try re-opening the queue! ]')
         
         return queue_embed
     
@@ -242,7 +243,7 @@ class Command(Extension):
             
             select_list.append(
                 SelectMenu(
-                    custom_id=f'SelectMenu1',
+                    custom_id=f'WhatToDelete',
                     placeholder=f'What to delete?',
                     options=song_list[starting_index : number]
                 )
@@ -252,7 +253,7 @@ class Command(Extension):
         else:        
             select_list.append(
                 SelectMenu(
-                    custom_id=f'SelectMenu1',
+                    custom_id=f'SelectMenu1WhatToDelete',
                     placeholder=f'What to delete?',
                     options=song_list[0 : 26]
                 )
@@ -753,6 +754,8 @@ class Command(Extension):
     @extension_component('queue')
     async def on_queue(self, ctx : CommandContext):
         
+        uuid = str(uuid4())
+        
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if len(player.queue) == 0:
@@ -766,12 +769,12 @@ class Command(Extension):
         buttons = [
             Button(
                 emoji = Emoji(id=1031309494946385920),
-                custom_id = 'left',
+                custom_id = f'left {uuid}',
                 style = ButtonStyle.PRIMARY
             ),
             Button(
                 emoji = Emoji(id=1031309496401793064),
-                custom_id = 'right',
+                custom_id = f'right {uuid}',
                 style = ButtonStyle.PRIMARY
             ),
         ]
@@ -788,15 +791,17 @@ class Command(Extension):
         while True:
             
             button_ctx : ComponentContext = await self.client.wait_for_component(buttons)
-            
-            await button_ctx.defer(edit_origin=True)
+            try:
+                await button_ctx.defer(edit_origin=True)
+            except:
+                continue
             
             data = button_ctx.data.custom_id
             
-            if data == 'left':
+            if data == f'left {uuid}':
                 page -= 1
             
-            if data == 'right':
+            if data == f'right {uuid}':
                 page += 1
                 
             if page > 1:
