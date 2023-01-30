@@ -11,7 +11,6 @@ import os
 import textwrap
 
 import nltk
-nltk.download('punkt')
 
 import pandas as pd
 from nltk import word_tokenize
@@ -37,12 +36,11 @@ class Command(Extension):
         embed = Embed(color=0x7d00b8)
         
         embed.set_author(
-            name = f'"{question}"',
-            icon_url= ctx.author.user.avatar_url
+            name = f'> {question}'
         )
         
         # * first stage...
-        embed.description = '[ Thinking about what you have asked... <a:loading:1026539890382483576> ]'
+        embed.description = '[ Generating my thoughts... <a:loading:1026539890382483576> ]'
         
         msg = await ctx.send(embeds = embed)
         
@@ -51,7 +49,7 @@ class Command(Extension):
         result_ = result_.strip('"')
         
         # * second stage...
-        embed.description = '[ Judging your decisions... <a:loading:1026539890382483576> ]'
+        embed.description = '[ Thinking... <a:loading:1026539890382483576> ]'
         
         await msg.edit(embeds=embed)
         
@@ -86,7 +84,7 @@ class Command(Extension):
             twm = 'https://cdn.discordapp.com/emojis/1023573459676172359.webp?size=96&quality=lossless'
         
         # * third stage...
-        embed.description = '[ Final decisions... <a:loading:1026539890382483576> ]'
+        embed.description = '[ Last decisions... <a:loading:1026539890382483576> ]'
         
         await msg.edit(embeds=embed)
         

@@ -828,8 +828,8 @@ class Command(Extension):
         
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
-        if player.channel_id == None:
-            await ctx.send("[ Player needs to be in a voice channel to be disconnected. ]", ephemeral = True)
+        if player == None:
+            await ctx.send("[ I need to be in a voice channel to be disconnected. ]", ephemeral = True)
             return
         
         if not await self.check(player.current.requester, ctx.author):
