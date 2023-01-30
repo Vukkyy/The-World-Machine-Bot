@@ -823,6 +823,23 @@ class Command(Extension):
         """Fires when track starts"""
         await self.on_player(event)
         
+    @music.subcommand(description='Disconnects the bot from the Voice Channel.')
+    async def disconnect(self, ctx : CommandContext):
+        
+        player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
+        
+        if player.channel_id == None:
+            await ctx.send("[ Player needs to be in the voice channel to be disconnected. ]", ephemeral = True)
+            return
+        
+        if not await self.check(player.current.requester, ctx.author):
+            await ctx.send('[ You cannot disconnect the player. ]', ephemeral = True)
+            return
+        
+        await self.lavalink.disconnect(ctx.guild_id)
+        
+        await ctx.send(f'[ <@{int(ctx.author.id)}> disconnected the bot from the current voice channel. ]')
+        
     @music.subcommand(description='Opens the player.')
     async def open_player(self, ctx : CommandContext):
         
