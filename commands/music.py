@@ -283,7 +283,7 @@ class Command(Extension):
         
         return embed
     
-    def get_music_playing_embed(self, text : str, song_title : str, song_artist : str, song_cover : str, song_url : str,  song_time : int, song_dur : int, author : User):
+    def get_music_playing_embed(self, text : str, song_title : str, song_artist : str, song_cover : str, song_url : str,  song_time : int, song_dur : int, author : User, allowed_control : bool):
         
         end_emoji_empty = '<:End2:1066466225321947177>'
         end_emoji_filled = '<:End2_filled:1066466227519766648>'
@@ -333,7 +333,12 @@ class Command(Extension):
             
         embed.set_thumbnail(song_cover)
         
-        embed.set_footer(f'Requested by {author.username}', icon_url=author.avatar_url)
+        control_text = 'Currently has control'
+        
+        if allowed_control:
+            control_text = 'All can control'
+        
+        embed.set_footer(f'Requested by {author.username} ● {control_text}', icon_url=author.avatar_url)
         
         return embed
     
@@ -665,7 +670,17 @@ class Command(Extension):
         )
     ]
     
-    async def check(self, requester : int, author : Member):
+    async def check(self, requester : int, author : Member, timeline : bool = False):
+        
+        if timeline == True:
+            requester_member : Member = await get(self.client, Member, object_id=requester, guild_id = author.guild_id)
+        
+            voice_state = requester_member.voice_state
+
+            if not voice_state or not voice_state.joined:
+                return True
+            else:
+                return False
         
         db = await Database.get_item(requester, 'allowed_users')
         
@@ -678,8 +693,6 @@ class Command(Extension):
         requester_member : Member = await get(self.client, Member, object_id=requester, guild_id = author.guild_id)
         
         voice_state = requester_member.voice_state
-        
-        print(voice_state)
         
         if not voice_state or not voice_state.joined:
             return True
@@ -832,10 +845,13 @@ class Command(Extension):
             await ctx.send("[ I need to be in a voice channel to be disconnected. ]", ephemeral = True)
             return
         
-        if not await self.check(player.current.requester, ctx.author):
-            await ctx.send('[ You cannot disconnect the player. ]', ephemeral = True)
-            return
-        
+        if player.is_playing:
+            if not await self.check(player.current.requester, ctx.author):
+                await ctx.send('[ You cannot disconnect the player. ]', ephemeral = True)
+                return
+
+            await player.stop()
+            
         await self.lavalink.disconnect(ctx.guild_id)
         
         await ctx.send(f'[ <@{int(ctx.author.id)}> disconnected the bot from the current voice channel. ]')
@@ -895,8 +911,10 @@ class Command(Extension):
             else:
                 text = 'Now Playing...'
                 niko = '<a:vibe:1027325436360929300>'
+                
+            can_control = await self.check(player.current.requester, ctx.author, True)
             
-            music_playing_embed = self.get_music_playing_embed(text, song['name'], song['artists'], song['cover'], song['url'], song_time= player.position, song_dur= player.current.duration, author= requester)
+            music_playing_embed = self.get_music_playing_embed(text, song['name'], song['artists'], song['cover'], song['url'], song_time= player.position, song_dur= player.current.duration, author= requester, allowed_control=can_control)
             await msg.edit(niko, embeds = music_playing_embed, components = self.buttons)
             
             await asyncio.sleep(1)
