@@ -88,13 +88,6 @@ class Command(Extension):
         os.remove(f'Images/{uuid}.png')
         
         pass
-    
-    @say.error
-    async def error(self, ctx : CommandContext, error):
-        
-        embed = await on_error(error)
-        
-        await ctx.send(embeds=embed)
         
 def setup(client):
     Command(client)

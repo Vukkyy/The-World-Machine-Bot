@@ -18,16 +18,49 @@ from nltk.stem.snowball import SnowballStemmer
 import requests
 
 from LeXmo import LeXmo
+from datetime import datetime, timedelta
 
 class Command(Extension):
     
     @extension_listener
     async def on_start(self):
-        await Database.create_database('the bot remembers', Database.DatabaseType.USER, {'last_thing_said' : 'Hello.'}, True)
+        default_data = {"daily_limit_hit": False, "last_reset_time": None, "daily_limit_count" : self.current_limit}
+        await Database.create_database(
+                name = 'daily_limit',
+                type = Database.DatabaseType.USER,
+                default_data = default_data
+            )
+        
+    current_limit = 7
     
     @extension_command(description = 'Ask The World Machine a question.')
-    @option(description='The question to ask!')
+    @option(description='The question to ask!', max_length = 256)
     async def ask(self, ctx : CommandContext, question : str):
+        
+        limit = 0
+        
+        db = await Database.get_item(uid = ctx, database = 'daily_limit')
+        last_reset_time = datetime.strptime(db.get("last_reset_time"), '%Y-%m-%d %H:%M:%S')
+        limit_hit = db.get("daily_limit_hit", False)
+        now = datetime.utcnow()
+        reset_time = datetime.combine(now.date(), datetime.min.time()) + timedelta(days=1)
+        reset_time = reset_time.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        if limit_hit or (last_reset_time is not None and last_reset_time > reset_time):
+            return await ctx.send("[ Daily limit reached. Please try again tomorrow. ]", ephemeral = True)
+
+        # reset the limit if it is a new day
+        if not last_reset_time or last_reset_time < reset_time:
+            await Database.set_item(uid=ctx, database='daily_limit', data={"daily_limit_hit": False, "last_reset_time": reset_time.strftime("%Y-%m-%d %H:%M:%S"), "daily_limit_count": self.current_limit})
+        else:
+            limit = db.get("daily_limit_count", self.current_limit)
+            if limit <= 0:
+                await Database.set_item(uid=ctx, database='daily_limit', data={"daily_limit_hit": True})
+                return await ctx.send("[ Daily limit reached. Please try again tomorrow. ]", ephemeral = True)
+            else:
+                await Database.set_item(uid=ctx, database='daily_limit', data={"daily_limit_count": limit - 1})
+        
+        limit = db.get("daily_limit_count", self.current_limit)
         
         c = question[len(question) - 1]
         
@@ -128,6 +161,8 @@ class Command(Extension):
             i += 1
             
         os.remove(f'Images/{uuid}.png')
+        
+        await ctx.send(f'[ You have {limit - 1} uses of this command left for today. ]', ephemeral = True)
         
     @ask.error
     async def you_fucked_up_gpt_three(self, ctx : CommandContext, error):
