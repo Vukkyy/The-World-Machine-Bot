@@ -24,7 +24,7 @@ class Command(Extension):
     
     @extension_listener
     async def on_start(self):
-        default_data = {"daily_limit_hit": False, "last_reset_time": None, "daily_limit_count" : self.current_limit}
+        default_data = {"daily_limit_hit": False, "last_reset_time": "2023-02-08 00:00:00", "daily_limit_count" : self.current_limit}
         await Database.create_database(
                 name = 'daily_limit',
                 type = Database.DatabaseType.USER,
