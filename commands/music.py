@@ -684,6 +684,9 @@ class Command(Extension):
         
         db = await Database.get_item(requester, 'allowed_users')
         
+        if user in db['users']:
+            return True
+        
         if Permissions.MANAGE_CHANNELS in author.permissions:
             return True
         
@@ -696,11 +699,6 @@ class Command(Extension):
         
         if not voice_state or not voice_state.joined:
             return True
-        
-        if user in db['users']:
-            return True
-        else:
-            return False
     
     @extension_component('pause')
     async def on_pause(self, ctx : CommandContext):    
