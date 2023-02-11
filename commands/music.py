@@ -13,6 +13,8 @@ import asyncio
 import lavalink
 import random
 
+from bot_data.embed_gen import fancy_send
+
 credentials = SpotifyClientCredentials(
     client_id=load_config('CLIENTID'),
     client_secret=load_config('CLIENT-SECRET')
@@ -72,16 +74,16 @@ class Command(Extension):
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if len(player.queue) == 0:
-            await ctx.send(' [ Cannot shuffle anything. ]', ephemeral = True)
+            await fancy_send(ctx, '[ Cannot shuffle anything. ]', ephemeral = True, color = 0xff0d13)
             return
         
         if not await self.check(player.current.requester, ctx.author):
-            await ctx.send('[ You cannot edit the queue. ]', ephemeral = True)
+            await fancy_send(ctx, '[ You cannot edit the queue. ]', ephemeral = True, color = 0xff0d13)
             return
         
         random.shuffle(player.queue)
         
-        await ctx.send('[ Successfully shuffled queue. ]', ephemeral = True)
+        await fancy_send(ctx, '[ Successfully shuffled queue. ]', ephemeral = True)
         await ctx.channel.send(f'[ <@{int(ctx.author.id)}> shuffled the queue. ]')
     
     @extension_component('jump')
@@ -89,11 +91,11 @@ class Command(Extension):
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if len(player.queue) == 0:
-            await ctx.send(' [ Cannot jump to anything. ]', ephemeral = True)
+            await fancy_send(ctx, '[ Cannot jump to anything. ]', ephemeral = True, color = 0xff0d13)
             return
         
         if not await self.check(player.current.requester, ctx.author):
-            await ctx.send('[ You cannot edit the queue. ]', ephemeral = True)
+            await fancy_send(ctx, '[ You cannot edit the queue. ]', ephemeral = True, color = 0xff0d13)
             return
         
         song_list = []
@@ -164,7 +166,7 @@ class Command(Extension):
                 )
             )
             
-        await ctx.send(components = select_list, ephemeral = True)
+        await ctx.send(components = select_list, ephemeral = True, color = 0xff0d13)
         
         s_ctx = await self.client.wait_for_component(select_list)
         
@@ -184,11 +186,11 @@ class Command(Extension):
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if len(player.queue) == 0:
-            await ctx.send(' [ Cannot remove anything. ]', ephemeral = True)
+            await fancy_send(ctx, '[ Cannot remove anything. ]', ephemeral = True, color = 0xff0d13)
             return
         
         if not await self.check(player.current.requester, ctx.author):
-            await ctx.send('[ You cannot edit the queue. ]', ephemeral = True)
+            await fancy_send(ctx, '[ You cannot edit the queue. ]', ephemeral = True, color = 0xff0d13)
             return
         
         song_list = []
@@ -230,7 +232,7 @@ class Command(Extension):
                               options=page_list
                           )
                 
-            await ctx.send(components = select_page_list, ephemeral = True)
+            await ctx.send(components = select_page_list, ephemeral = True, color = 0xff0d13)
             
             s_ctx = await self.client.wait_for_component(select_page_list)
         
@@ -259,7 +261,7 @@ class Command(Extension):
                 )
             )
             
-        await ctx.send(components = select_list, ephemeral = True)
+        await ctx.send(components = select_list, ephemeral = True, color = 0xff0d13)
         
         s_ctx = await self.client.wait_for_component(select_list)
         
@@ -269,7 +271,7 @@ class Command(Extension):
         
         del player.queue[data]
         
-        await s_ctx.send('[ Successfully removed song. ]', ephemeral = True)
+        await s_ctx.send('[ Successfully removed song. ]', ephemeral = True, color = 0xff0d13)
         await s_ctx.channel.send(f'[ <@{int(ctx.author.id)}> removed **{song.title}** from the queue. ]')  
     
     def get_music_stopped_embed(self, song_title : str, song_artist : str, song_cover : str, song_url : str):
@@ -419,7 +421,7 @@ class Command(Extension):
         await Database.create_database('allowed_users', Database.DatabaseType.USER, {'users' : []})
         
         if int(self.client.me.id) == 1028058097383641118:
-            channel = await get(self.client, Channel, object_id=850069038804631575)
+            channel = await get(self.client, Channel, object_id=1028022857877422120)
             
             await channel.send('Bot has restarted.')
         
@@ -447,7 +449,7 @@ class Command(Extension):
         
         await Database.set_item(ctx, 'allowed_users', {'users' : users})
         
-        await ctx.send(f'[ Added {user.username}. ]', ephemeral = True)
+        await fancy_send(ctx, f'[ Added {user.username}. ]', ephemeral = True)
         
     @music.subcommand(description = 'Remove a user from controlling the player')
     @option(description='The user.')
@@ -462,11 +464,11 @@ class Command(Extension):
             
             await Database.set_item(ctx, 'allowed_users', {'users' : users})
             
-            await ctx.send(f'[ Removed {user.username}. ]', ephemeral = True)
+            await fancy_send(ctx, f'[ Removed {user.username}. ]', ephemeral = True)
             
             return
         
-        await ctx.send(f'[ Cannot remove {user.username}. ]', ephemeral = True)
+        await fancy_send(ctx, f'[ Cannot remove {user.username}. ]', ephemeral = True, color = 0xff0d13)
     
     @music.subcommand(description='Plays a music track from Spotify.')
     @option(description = 'A song to search for.', autocomplete = True)
@@ -479,7 +481,7 @@ class Command(Extension):
         # Getting user's voice state
         voice_state: VoiceState = ctx.author.voice_state
         if not voice_state or not voice_state.joined:
-            return await ctx.send("[ You're not connected to the voice channel. Try rejoining. ]")
+            return await fancy_send(ctx, "[ You're not connected to a voice channel. Try rejoining. ]", ephemeral = True, color = 0xff0d13)
 
         # Connecting to voice channel and getting player instance
         player = await self.lavalink.connect(voice_state.guild_id, voice_state.channel_id)
@@ -489,7 +491,7 @@ class Command(Extension):
                 yt = YouTube(search)
                 song = await self.load_spotify_result(f'{yt.title}')
             except:
-                await ctx.send('[ Could not find anything on Spotify for this Youtube URL. ]', ephemeral=True)
+                await fancy_send(ctx, '[ Could not find anything on Spotify for this Youtube URL. ]', ephemeral=True , color = 0xff0d13)
                 return
                 
                 
@@ -506,7 +508,7 @@ class Command(Extension):
                 if ctx_.author.id == ctx.author.id:
                     return True
                 else:
-                    await ctx_.send('[ Only the requester of this track can search for this track. ]', ephemeral = True)
+                    await ctx_.send('[ Only the requester of this track can search for this track. ]', ephemeral = True, color = 0xff0d13)
                     return False
             
             button_ctx = await self.client.wait_for_component(button, check = check_)
@@ -514,12 +516,12 @@ class Command(Extension):
             data = button_ctx.data.custom_id
             
             if data == 'search_for_this':
-                await button_ctx.defer(edit_origin = True)
+                await button_ctx.defer(edit_origin = True, color = 0xff0d13)
                 await youtube_message.delete()
             
                 search = song['url']
             else:
-                await button_ctx.send('[ Cancelled decision. ]', ephemeral = True)
+                await button_ctx.send('[ Cancelled decision. ]', ephemeral = True, color = 0xff0d13)
                 await youtube_message.delete()
                 return
             
@@ -532,11 +534,11 @@ class Command(Extension):
                 else:
                     playlist = await self.load_spotify_playlist(search)
             except:
-                await ctx.send('[ This seems to be an invalid Spotify Playlist/Album URL. ]', ephemeral = True)
+                await fancy_send(ctx, '[ This seems to be an invalid Spotify Playlist/Album URL. ]', ephemeral = True, color = 0xff0d13)
                 return
                 
             if len(playlist) == 0:
-                await ctx.send('[ This seems to be an invalid Spotify Playlist/Album URL. ]', ephemeral = True)
+                await fancy_send(ctx, '[ This seems to be an invalid Spotify Playlist/Album URL. ]', ephemeral = True, color = 0xff0d13)
                 return
             
             msg = await ctx.send(f"[ Adding **{len(playlist)} songs** to the queue... <a:loading:1026539890382483576> ]")
@@ -594,14 +596,14 @@ class Command(Extension):
         try:
             song = await self.load_spotify_result(search)
         except:
-            await ctx.send(f'[ No results for **{search}**. ]', ephemeral = True)
+            await fancy_send(ctx, f'[ No results for **{search}**. ]', ephemeral = True, color = 0xff0d13)
             return
         
-        search = f'{song["name"]} by {song["artists"]}'
+        search = f'{song["name"]} by {song["artists"]} - audio'
 
         # Selecting first founded track
          # Getting tracks from youtube
-        tracks = await player.search_youtube(f'{search}')
+        tracks = await player.search_youtube(search)
         
         track = None
         
@@ -637,8 +639,10 @@ class Command(Extension):
             
             return await ctx.send(embeds = add_to_queue_embed)
 
-        await ctx.send('[ Now playing selected track. ]', ephemeral = True)
+        msg = await fancy_send(ctx, '[ Loading Player... <a:loading:1026539890382483576> ]', ephemeral = True)
 
+        await msg.delete()
+        
         # Starting playing track
         await player.play()
         
@@ -708,7 +712,7 @@ class Command(Extension):
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if not await self.check(player.current.requester, ctx.author):
-            await ctx.send('[ You cannot control the player. ]', ephemeral = True)
+            await fancy_send(ctx, '[ You cannot control the player. ]', ephemeral = True, color = 0xff0d13)
             return
         
         paused = not player.paused
@@ -716,9 +720,13 @@ class Command(Extension):
         await player.set_pause(paused)
         
         if paused:
-            await ctx.send(f'[ <@{int(ctx.author.id)}> paused. ]')
+            msg = await fancy_send(ctx, f'[ <@{int(ctx.author.id)}> paused. ]')
         else:
-            await ctx.send(f'[ <@{int(ctx.author.id)}> unpaused. ]')
+            msg = await fancy_send(ctx, f'[ <@{int(ctx.author.id)}> unpaused. ]')
+            
+        await asyncio.sleep(3)
+        
+        await msg.delete()
             
     @extension_component('stop')
     async def on_stop(self, ctx : CommandContext):
@@ -726,12 +734,12 @@ class Command(Extension):
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if not await self.check(player.current.requester, ctx.author):
-            await ctx.send('[ You cannot control the player. ]', ephemeral = True)
+            await fancy_send(ctx, '[ You cannot control the player. ]', ephemeral = True, color = 0xff0d13)
             return
         
         await player.stop()
         
-        await ctx.send(f'[ <@{int(ctx.author.id)}> stopped the current track playing. ]')
+        await fancy_send(ctx, f'[ <@{int(ctx.author.id)}> stopped the current track playing. ]')
         
     @extension_component('skip')
     async def on_skip(self, ctx : CommandContext):
@@ -739,12 +747,10 @@ class Command(Extension):
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if not await self.check(player.current.requester, ctx.author):
-            await ctx.send('[ You cannot control the player. ]', ephemeral = True)
+            await fancy_send(ctx, '[ You cannot control the player. ]', ephemeral = True, color = 0xff0d13)
             return
         
-        await ctx.defer(edit_origin = True)
-        
-        await ctx.channel.send(f'[ <@{int(ctx.author.id)}> skipped the current track playing. ]')
+        await fancy_send(ctx,f'[ <@{int(ctx.author.id)}> skipped the current track playing. ]')
         
         await player.skip()
         
@@ -754,15 +760,19 @@ class Command(Extension):
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if not await self.check(player.current.requester, ctx.author):
-            await ctx.send('[ You cannot control the player. ]', ephemeral = True)
+            await fancy_send(ctx, '[ You cannot control the player. ]', ephemeral = True, color = 0xff0d13)
             return
         
         if player.loop == 0:
             player.set_loop(1)
-            await ctx.send(f'[ <@{int(ctx.author.id)}> started looping the current track. ]')
+            msg = await fancy_send(ctx, f'[ <@{int(ctx.author.id)}> started looping the current track. ]')
         else:
             player.set_loop(0)
-            await ctx.send(f'[ <@{int(ctx.author.id)}> stopped looping the current track. ]')
+            msg = await fancy_send(ctx, f'[ <@{int(ctx.author.id)}> stopped looping the current track. ]')
+            
+        await asyncio.sleep(3)
+        
+        await msg.delete()
         
     @extension_component('queue')
     async def on_queue(self, ctx : CommandContext):
@@ -772,7 +782,7 @@ class Command(Extension):
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if len(player.queue) == 0:
-            await ctx.send('[ Queue is currently empty! ]', ephemeral = True)
+            await fancy_send(ctx, '[ Queue is currently empty! ]', ephemeral = True, color = 0xff0d13)
             return
 
         page = 1
@@ -842,19 +852,19 @@ class Command(Extension):
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if player == None:
-            await ctx.send("[ I need to be in a voice channel to be disconnected. ]", ephemeral = True)
+            await fancy_send(ctx, '[ I need to be in a voice channel to be disconnected. ]', ephemeral = True, color = 0xff0d13)
             return
         
         if player.is_playing:
             if not await self.check(player.current.requester, ctx.author):
-                await ctx.send('[ You cannot disconnect the player. ]', ephemeral = True)
+                await fancy_send(ctx, '[ You cannot disconnect the player. ]', ephemeral = True, color = 0xff0d13)
                 return
 
             await player.stop()
             
         await self.lavalink.disconnect(ctx.guild_id)
         
-        await ctx.send(f'[ <@{int(ctx.author.id)}> disconnected the bot from the current voice channel. ]')
+        await fancy_send(ctx, f'[ <@{int(ctx.author.id)}> disconnected the bot from the current voice channel. ]')
         
     @music.subcommand(description='Opens the player.')
     async def open_player(self, ctx : CommandContext):
@@ -862,10 +872,10 @@ class Command(Extension):
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
         if not player.is_playing:
-            await ctx.send("[ Player needs to playing something in order to show! ]", ephemeral = True)
+            await ctx.send("[ Player needs to playing something in order to show! ]", ephemeral = True, color = 0xff0d13)
             return
             
-        await ctx.send("[ Opened the player. ]", ephemeral = True)
+        await ctx.send("[ Opened the player. ]", ephemeral = True, color = 0xff0d13)
         await self.on_player(ctx = ctx)
         
     async def on_player(self, event: lavalink.TrackStartEvent = None, ctx : CommandContext = None):

@@ -6,6 +6,7 @@ import bot_data.dialogue_generator as dialogue_generator
 from interactions.ext.database.database import Database
 from uuid import uuid4
 import os
+from bot_data.embed_gen import fancy_send
 
 class Command(Extension):
     
@@ -24,7 +25,7 @@ class Command(Extension):
             placeholder='...'
         )
 
-        msg = await ctx.send(f"<@{ctx.author.id}>, select a character!", components=text__, ephemeral=True)
+        msg = await fancy_send(ctx, f"[ <@{ctx.author.id}>, select a character. ]", ephemeral=True, components=text__)
         
         char_ctx : ComponentContext = await self.client.wait_for_component(text__)
 
@@ -66,13 +67,13 @@ class Command(Extension):
         
         text__.disabled = True
         
-        await char_ctx.send(f"<@{ctx.author.id}>, select a face!", components=select_menu, ephemeral = True)
+        await fancy_send(char_ctx, f"[ <@{ctx.author.id}>, select a face. ]", components=select_menu, ephemeral = True)
             
         char_ctx : ComponentContext = await self.client.wait_for_component(select_menu)
 
         value = char_ctx.data.values[0]
 
-        msg = await char_ctx.send("[ Generating Image... <a:loading:1026539890382483576> ]")
+        msg = await fancy_send(char_ctx, "[ Generating Image... <a:loading:1026539890382483576> ]")
         
         uuid = uuid4()
         

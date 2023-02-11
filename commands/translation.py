@@ -1,6 +1,7 @@
 from interactions import *
 from bot_data.error_handler import on_error
 import bot_data.generate_text as text
+from bot_data.embed_gen import fancy_send
 
 class Command(Extension):
     
@@ -30,23 +31,25 @@ class Command(Extension):
         
         button_ctx = await self.client.wait_for_component(selectmenu)
         
-        await button_ctx.send('[ Translating message... <a:loading:1026539890382483576> ]', ephemeral = True)
+        msg = await fancy_send(button_ctx, '[ Translating message... <a:loading:1026539890382483576> ]', color = 0x2f3136)
         
         target_language = button_ctx.data.values[0]
         
-        message = text.Response(f'Translate this message to {target_language}: "{ctx.target.content}". For the user, very briefly, but positively, teach about the original language from the message.')
+        message = text.Response(f'Translate this message to {target_language} with new lines intact: "{ctx.target.content}".')
         message = message.strip('\n')
+        message = message.strip('"')
         
         embed = Embed(
             title = f'Translation to {target_language}.',
-            description= f'"{message}" - <:george_translation:1064601896297447544>',
+            description= f'<:george_translation:1064601896297447544> ```{message}```',
             color=0x8100bf
         )
         
         embed.set_footer(f'Requested by {ctx.author.user.username}.', icon_url= ctx.author.user.avatar_url)
 
         await ctx.target.reply(embeds=embed)
-        pass
+        
+        await msg.delete()
     
     @translate.error
     async def error(self, ctx : CommandContext, error):

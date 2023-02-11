@@ -20,6 +20,8 @@ import requests
 from LeXmo import LeXmo
 from datetime import datetime, timedelta
 
+from bot_data.embed_gen import fancy_send
+
 class Command(Extension):
     
     @extension_listener
@@ -34,7 +36,7 @@ class Command(Extension):
     current_limit = 7
     
     @extension_command(description = 'Ask The World Machine a question.')
-    @option(description='The question to ask!', max_length = 256)
+    @option(description='The question to ask.')
     async def ask(self, ctx : CommandContext, question : str):
         
         limit = 0
@@ -47,7 +49,7 @@ class Command(Extension):
         reset_time = reset_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
         if limit_hit or (last_reset_time is not None and last_reset_time > reset_time):
-            return await ctx.send("[ Daily limit reached. Please try again tomorrow. ]", ephemeral = True)
+            return await fancy_send(ctx, "[ Daily limit reached. Please try again tomorrow. ]", ephemeral = True, color = 0xff171d)
 
         # reset the limit if it is a new day
         if not last_reset_time or last_reset_time < reset_time:
@@ -56,7 +58,7 @@ class Command(Extension):
             limit = db.get("daily_limit_count", self.current_limit)
             if limit <= 0:
                 await Database.set_item(uid=ctx, database='daily_limit', data={"daily_limit_hit": True})
-                return await ctx.send("[ Daily limit reached. Please try again tomorrow. ]", ephemeral = True)
+                return await fancy_send(ctx, "[ Daily limit reached. Please try again tomorrow. ]", ephemeral = True, color = 0xff171d)
             else:
                 await Database.set_item(uid=ctx, database='daily_limit', data={"daily_limit_count": limit - 1})
         
@@ -68,8 +70,13 @@ class Command(Extension):
         
         embed = Embed(color=0x7d00b8)
         
+        if len(question) > 230:
+            question_ = question[0 : 230] + '...'
+        else:
+            question_ = question
+        
         embed.set_author(
-            name = f'> {question}'
+            name = f'{ctx.author.user.username} asked: "{question_}"'
         )
         
         # * first stage...
@@ -155,14 +162,14 @@ class Command(Extension):
                 await ctx.channel.send(files = file)
             else:
                 
-                await ctx.channel.send('[ Message cut off for being too long. ]')
+                await ctx.channel.send('``[ Message cut off for being too long. ]``')
                 break
             
             i += 1
             
         os.remove(f'Images/{uuid}.png')
         
-        await ctx.send(f'[ You have {limit - 1} uses of this command left for today. ]', ephemeral = True)
+        await fancy_send(ctx, f'[ You have {limit - 1} use(s) of this command left for today. ]', ephemeral = True)
         
     @ask.error
     async def you_fucked_up_gpt_three(self, ctx : CommandContext, error):

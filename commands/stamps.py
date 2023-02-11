@@ -4,6 +4,8 @@ import Badges.stamp_list as stamp_list
 import Badges.stamp_system as stamps
 import uuid
 
+from bot_data.embed_gen import fancy_send
+
 class Command_(Extension):
     
     @extension_command(description = 'Send or recieve letters, and use stamps!')
@@ -21,7 +23,7 @@ class Command_(Extension):
             custom_id = 'selectmenuuusfkhjfsdkhjfsdhj'
         )
 
-        await ctx.send('[ Select a stamp you have unlocked. ]', components = select, ephemeral = True)
+        await fancy_send(ctx, '[ Select a stamp you have unlocked. ]', components = select, ephemeral = True)
 
         async def check(ctx):
             return True
@@ -30,7 +32,7 @@ class Command_(Extension):
 
         await stamps.GetCurrentBadge(int(ctx.author.id), True, select_ctx.data.values[0])
 
-        await select_ctx.send(f'[ Stamp change successful! ]', ephemeral = True)
+        await fancy_send(select_ctx, f'[ Stamp change successful! ]', ephemeral = True)
         
     @letters.subcommand(name = 'opt-in', description='Opt in or out for letter sending.')
     async def awesome(self, ctx : CommandContext):
@@ -54,9 +56,9 @@ class Command_(Extension):
                     
                     db.write(result)
 
-                await ctx.send('[ You have opted out from recieving (and sending!) letters. If you wish to recieve or send letters again, run this command again. ]', ephemeral=True)
+                await fancy_send(ctx, '[ You have opted out from recieving (and sending!) letters. If you wish to recieve or send letters again, run this command again. ]', ephemeral=True)
             else:        
-                await ctx.send('[ Are you sure you want to recieve (and send) letters? ]', components=button, ephemeral=True)
+                await fancy_send(ctx, '[ Are you sure you want to recieve (and send) letters? ]', components=button, ephemeral=True)
 
                 button_ctx = await self.client.wait_for_component(components=button)
                 
@@ -67,7 +69,7 @@ class Command_(Extension):
                     
                     db.write(result)
                     
-                await button_ctx.send('[ You will now recieve letters. To opt out of this, run this command again. ]', ephemeral=True)
+                await fancy_send(button_ctx, '[ You will now recieve letters. To opt out of this, run this command again. ]', ephemeral=True)
                 
     async def letter(self, ctx : CommandContext, user : Member, message : str):
         
@@ -86,16 +88,16 @@ class Command_(Extension):
         awesome = None
         
         if user.user.bot:
-            await ctx.send('[ Cannot send letters to bots. ]', ephemeral=True)
+            await fancy_send(ctx, '[ Cannot send letters to bots. ]', ephemeral=True)
             return
 
         if (user.id in lllist and ctx.author.id in lllist or ctx.author.id == 302883948424462346):
             try:
                 awesome = await user.send(embeds=embed)
                 
-                await ctx.send('[ Successfully sent letter! ]', ephemeral=True)
+                await fancy_send(ctx, '[ Successfully sent letter! ]', ephemeral=True)
             except:
-                await ctx.send('[ Cannot send letters to this user. ]', ephemeral=True)
+                await fancy_send(ctx, '[ Cannot send letters to this user. ]', ephemeral=True)
                 return
 
             await stamps.IncrementValue(ctx, 'letters_sent', int(ctx.author.id))
@@ -103,9 +105,9 @@ class Command_(Extension):
                 await stamps.IncrementValue(ctx, 'owner_letter', int(user.id))
             
         elif (not user.id in lllist):
-            await ctx.send('[ This user has not opted in for recieving letters. Ask the other person to use `/letters opt-in` to recieve letters. ]', ephemeral=True)
+            await fancy_send(ctx, '[ This user has not opted in for recieving letters. Ask the other person to use `/letters opt-in` to recieve letters. ]', ephemeral=True)
         else:
-            await ctx.send('[ In order to send letters, you need to opt in. Use `/letters opt-in` to recieve and send letters. ]', ephemeral=True)
+            await fancy_send(ctx, '[ In order to send letters, you need to opt in. Use `/letters opt-in` to recieve and send letters. ]', ephemeral=True)
 
     async def send_letter(self, ctx, user):
         modal_ = Modal(
