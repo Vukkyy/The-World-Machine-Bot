@@ -52,7 +52,7 @@ class Command(Extension):
         reset_time = datetime.combine(now.date(), datetime.min.time()) + timedelta(days=1)
         reset_time = reset_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        if limit_hit or (last_reset_time is not None and last_reset_time > reset_time):
+        if (last_reset_time is not None and last_reset_time > reset_time):
             return await fancy_send(ctx, "[ You've already collected your daily wool for today. Don't be greedy. ]", ephemeral = True, color = 0xff171d)
 
         # reset the limit if it is a new day
