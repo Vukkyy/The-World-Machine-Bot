@@ -246,7 +246,7 @@ class BATTLES(Extension):
                     
                     while len(battle_list) > 1:
                         if not b_index == 0:
-                            await ctx.chanfancy_send(ctx, '**Starting Next Round!**')
+                            await fancy_send(ctx, '**Starting Next Round!**')
                             battles = []
                             
                             i = 1
@@ -261,7 +261,7 @@ class BATTLES(Extension):
                             
                             c_one = battle[0].split('►')
                             c_two = battle[1].split('►')
-                            btl = await ctx.chanfancy_send(ctx, f"**A battle begins! {c_one[0]} versus {c_two[0]}!**")
+                            btl = await fancy_send(ctx, f"**A battle begins! {c_one[0]} versus {c_two[0]}!**")
                             
                             btl1 = await btl.reply('Generating battle... <a:loading:1026539890382483576>')
                             
