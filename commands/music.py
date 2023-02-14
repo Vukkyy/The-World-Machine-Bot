@@ -84,7 +84,7 @@ class Command(Extension):
         random.shuffle(player.queue)
         
         await fancy_send(ctx, '[ Successfully shuffled queue. ]', ephemeral = True)
-        await ctx.channel.send(f'[ <@{int(ctx.author.id)}> shuffled the queue. ]')
+        await fancy_send(ctx.channel, f'[ <@{int(ctx.author.id)}> shuffled the queue. ]')
     
     @extension_component('jump')
     async def on_jump(self, ctx : CommandContext):
@@ -166,7 +166,7 @@ class Command(Extension):
                 )
             )
             
-        await ctx.send(components = select_list, ephemeral = True, color = 0xff0d13)
+        await ctx.send(components = select_list, ephemeral = True)
         
         s_ctx = await self.client.wait_for_component(select_list)
         
@@ -177,7 +177,7 @@ class Command(Extension):
         del player.queue[0 : data]
         
         await s_ctx.send('[ Successfully jumped to song. ]', ephemeral = True)
-        await s_ctx.channel.send(f'[ <@{int(ctx.author.id)}> jumped to **{song.title}** on the queue. ]')
+        await fancy_send(s_ctx.channel, f'[ <@{int(ctx.author.id)}> jumped to **{song.title}** on the queue. ]')
         
         await player.skip()
     
@@ -232,7 +232,7 @@ class Command(Extension):
                               options=page_list
                           )
                 
-            await ctx.send(components = select_page_list, ephemeral = True, color = 0xff0d13)
+            await ctx.send(components = select_page_list, ephemeral = True)
             
             s_ctx = await self.client.wait_for_component(select_page_list)
         
@@ -261,7 +261,7 @@ class Command(Extension):
                 )
             )
             
-        await ctx.send(components = select_list, ephemeral = True, color = 0xff0d13)
+        await ctx.send(components = select_list, ephemeral = True)
         
         s_ctx = await self.client.wait_for_component(select_list)
         
@@ -271,8 +271,8 @@ class Command(Extension):
         
         del player.queue[data]
         
-        await s_ctx.send('[ Successfully removed song. ]', ephemeral = True, color = 0xff0d13)
-        await s_ctx.channel.send(f'[ <@{int(ctx.author.id)}> removed **{song.title}** from the queue. ]')  
+        await s_ctx.send('[ Successfully removed song. ]', ephemeral = True)
+        await fancy_send(s_ctx.channel, f'[ <@{int(ctx.author.id)}> removed **{song.title}** from the queue. ]')  
     
     def get_music_stopped_embed(self, song_title : str, song_artist : str, song_cover : str, song_url : str):
         description = f'By **{song_artist}** <:spotify:1066028282623037541>'
@@ -371,7 +371,7 @@ class Command(Extension):
             result = search_['tracks']['items'][0]
         
         song_name = result['name']
-        artists = result['artists'][0]['name']
+        artists = result['artists']
         url = result['id']
         
         cover = result['album']['images'][0]['url']
@@ -508,7 +508,7 @@ class Command(Extension):
                 if ctx_.author.id == ctx.author.id:
                     return True
                 else:
-                    await ctx_.send('[ Only the requester of this track can search for this track. ]', ephemeral = True, color = 0xff0d13)
+                    await fancy_send(ctx_, '[ Only the requester of this track can search for this track. ]', ephemeral = True, color = 0xff0d13)
                     return False
             
             button_ctx = await self.client.wait_for_component(button, check = check_)
@@ -521,7 +521,7 @@ class Command(Extension):
             
                 search = song['url']
             else:
-                await button_ctx.send('[ Cancelled decision. ]', ephemeral = True, color = 0xff0d13)
+                await fancy_send(button_ctx, '[ Cancelled decision. ]', ephemeral = True, color = 0xff0d13)
                 await youtube_message.delete()
                 return
             
@@ -599,8 +599,8 @@ class Command(Extension):
             await fancy_send(ctx, f'[ No results for **{search}**. ]', ephemeral = True, color = 0xff0d13)
             return
         
-        search = f'{song["name"]} by {song["artists"]} - audio'
-
+        search = f'{song["name"]} by {song["artists"]} "Lyrics" "OST"'
+ 
         # Selecting first founded track
          # Getting tracks from youtube
         tracks = await player.search_youtube(search)
@@ -609,10 +609,13 @@ class Command(Extension):
         
         for track_ in tracks[0 : 30]:
             if 'extended' in track_.title.lower(): # Prevents extended tracks from playing, unless it's a specified URL.
+                print('sad')
                 continue
             
             track = track_
             break
+        
+        print(track.title)
         
         track.title = song["name"]
         track.author = song["artists"]
@@ -871,11 +874,11 @@ class Command(Extension):
         
         player : lavalink.DefaultPlayer = self.lavalink.get_player(int(ctx.guild_id))
         
-        if not player.is_playing:
-            await ctx.send("[ Player needs to playing something in order to show! ]", ephemeral = True, color = 0xff0d13)
+        if not player or not player.is_playing:
+            await fancy_send(ctx, "[ Cannot open the player while nothing is playing. ]", ephemeral = True, color = 0xff151c)
             return
             
-        await ctx.send("[ Opened the player. ]", ephemeral = True, color = 0xff0d13)
+        await fancy_send(ctx, "[ Opened the player. ]", ephemeral = True)
         await self.on_player(ctx = ctx)
         
     async def on_player(self, event: lavalink.TrackStartEvent = None, ctx : CommandContext = None):
@@ -932,7 +935,11 @@ class Command(Extension):
         stopped_playing_embed = self.get_music_stopped_embed(song['name'], song['artists'], song['cover'], song['url'])
         niko = '<:nikosleepy:1027492467337080872>'
 
-        await msg.edit(niko, embeds = stopped_playing_embed, components=[])
+        msg = await msg.edit(niko, embeds = stopped_playing_embed, components=[])
+        
+        await asyncio.sleep(10)
+        
+        await msg.delete()
         
         return
 
@@ -979,6 +986,9 @@ class Command(Extension):
         
         embed = await on_error(error)
         
-        await ctx.send(embeds=embed)
+        try:
+            await ctx.send(embeds=embed)
+        except:
+            pass
 def setup(client):
     Command(client)

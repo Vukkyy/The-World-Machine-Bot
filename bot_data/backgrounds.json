@@ -1,0 +1,53 @@
+{
+    "background":
+    [
+        {
+            "name": "Normal",
+            "cost": 0
+        },
+        {
+            "name": "Green",
+            "cost": "0"
+        },
+        {
+            "name": "Yellow",
+            "cost": "0"
+        },
+        {
+            "name": "Pink",
+            "cost": "0"
+        },
+        {
+            "name": "Red",
+            "cost": "0"
+        },
+        {
+            "name": "Barrens",
+            "cost": "300"
+        },
+        {
+            "name": "Glens",
+            "cost": "300"
+        },
+        {
+            "name": "Refuge",
+            "cost": "300"
+        },
+        {
+            "name": "The Author",
+            "cost": "500"
+        },
+        {
+            "name": "The World Machine",
+            "cost": "500"
+        },
+        {
+            "name": "",
+            "cost": ""
+        },
+        {
+            "name": "Custom",
+            "cost": "9999"
+        }
+    ]
+}
