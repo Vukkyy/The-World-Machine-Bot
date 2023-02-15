@@ -17,15 +17,11 @@ class Command(Extension):
     ]
     
     random_message = [
-        "Well, aren't we just the brightest bulb in the box!",
-        "Oh great, another day in darkness thanks to you.",
-        "Who needs the sun anyway, right?",
-        "Thanks for ruining everything, genius.",
-        "You just had to go and destroy the one source of light we had.",
-        "It's official, we're all doomed now.",
-        "Thanks for bringing the end of the world a little closer, champ.",
-        "At least the vampires will be happy about this.",
-        "Just what we needed, even more darkness to add to the chaos."
+        "oh no",
+        "whoops",
+        "nice",
+        "good job",
+        "we're doomed",
     ]
     
     sad_image = 'https://images-ext-1.discordapp.net/external/47E2RmeY6Ro21ig0pkcd3HaYDPel0K8CWf6jumdJzr8/https/i.ibb.co/bKG17c2/image.png'
@@ -60,16 +56,16 @@ class Command(Extension):
         if not sad:
             embed = Embed(description = ' ')
             
-            embed.set_author(name = f'[ {self.random_message[random.randint(0, len(self.random_message) - 1)]} ]')
+            embed.set_author(name = f'{self.random_message[random.randint(0, len(self.random_message) - 1)]}')
             
             if explosion_amount == 69:
-                embed.set_author(name = '[ Nice. ]')
+                embed.set_author(name = 'nice')
             if explosion_amount == 420:
-                embed.set_author(name = '[ Nice. ]')
+                embed.set_author(name = 'nice')
             if explosion_amount == 42069:
-                embed.set_author(name = '[ Nice. ]')
+                embed.set_author(name = 'nice')
             if explosion_amount == 69420:
-                embed.set_author(name = '[ Nice. ]')
+                embed.set_author(name = 'nice')
             
             embed.set_image(url = Command.explosion_image[random_number])
             embed.set_footer(f'The Sun has been exploded {explosion_amount} times.')

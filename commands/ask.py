@@ -124,51 +124,11 @@ class Command(Extension):
             twm = 'https://cdn.discordapp.com/emojis/1023573459676172359.webp?size=96&quality=lossless'
         
         # * third stage...
-        embed.description = '[ Last decisions... <a:loading:1026539890382483576> ]'
         
+        embed.description = f'```{result_}```'
+        embed.set_thumbnail(url=twm)
+
         await msg.edit(embeds=embed)
-        
-        result_ = result_.replace('\n', ' ')
-        
-        n = 165
-        r = ">".join(textwrap.wrap(result_, n, max_lines=4))
-        finalresult_ = r.split('>')
-        
-        print(len(finalresult_))
-        
-        embed.description = ''
-        
-        await msg.delete()
-        
-        uuid = uuid4()
-        
-        uuid = str(uuid)
-        
-        i = 0
-        for text in finalresult_:
-            
-            if i < 5:
-                if text == ' ' or text == '':
-                    continue
-                
-                text = text.strip(' ')
-                if not i == 0:
-                    text = '...' + text
-                
-                await dialogue_generator.test(f'[{text}]', twm, uuid)
-                
-                file = File(f'Images/{uuid}.png', description=text)
-                
-                await ctx.channel.send(embeds = embed)
-                await ctx.channel.send(files = file)
-            else:
-                
-                await ctx.channel.send('``[ Message cut off for being too long. ]``')
-                break
-            
-            i += 1
-            
-        os.remove(f'Images/{uuid}.png')
         
         await fancy_send(ctx, f'[ You have {limit - 1} use(s) of this command left for today. ]', ephemeral = True)
         

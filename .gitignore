@@ -6,6 +6,8 @@ profile_pictures.pfp
 Badges/Images/*
 Badges/result.png
 config.json
+response.aidata
+response_battle.aidata
 
 interaction-database/*
 
@@ -118,3 +120,4 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+response.aidata

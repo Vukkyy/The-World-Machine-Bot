@@ -84,7 +84,7 @@ class Command(Extension):
         random.shuffle(player.queue)
         
         await fancy_send(ctx, '[ Successfully shuffled queue. ]', ephemeral = True)
-        await fancy_send(ctx.channel, f'[ <@{int(ctx.author.id)}> shuffled the queue. ]')
+        await fancy_send(ctx.channel, f'[ <@{int(ctx.author.id)}> shuffled the queue. ]', channel = True)
     
     @extension_component('jump')
     async def on_jump(self, ctx : CommandContext):
@@ -176,8 +176,8 @@ class Command(Extension):
         
         del player.queue[0 : data]
         
-        await s_ctx.send('[ Successfully jumped to song. ]', ephemeral = True)
-        await fancy_send(s_ctx.channel, f'[ <@{int(ctx.author.id)}> jumped to **{song.title}** on the queue. ]')
+        await fancy_send(s_ctx, '[ Successfully jumped to song. ]', ephemeral = True)
+        await fancy_send(s_ctx.channel, f'[ <@{int(ctx.author.id)}> jumped to **{song.title}** on the queue. ]', channel = True)
         
         await player.skip()
     
@@ -271,8 +271,8 @@ class Command(Extension):
         
         del player.queue[data]
         
-        await s_ctx.send('[ Successfully removed song. ]', ephemeral = True)
-        await fancy_send(s_ctx.channel, f'[ <@{int(ctx.author.id)}> removed **{song.title}** from the queue. ]')  
+        await fancy_send(s_ctx, '[ Successfully removed song. ]', ephemeral = True)
+        await fancy_send(s_ctx.channel, f'[ <@{int(ctx.author.id)}> removed **{song.title}** from the queue. ]', channel = True)  
     
     def get_music_stopped_embed(self, song_title : str, song_artist : str, song_cover : str, song_url : str):
         description = f'By **{song_artist}** <:spotify:1066028282623037541>'
@@ -944,7 +944,7 @@ class Command(Extension):
             
             await asyncio.sleep(1)
             
-        stopped_playing_embed = self.get_music_stopped_embed(song['name'], song['artists'], song['cover'], song['url'])
+        stopped_playing_embed = self.get_music_stopped_embed(song['name'], song['artists'][0]['name'], song['cover'], song['url'])
         niko = '<:nikosleepy:1027492467337080872>'
 
         msg = await msg.edit(niko, embeds = stopped_playing_embed, components=[])
