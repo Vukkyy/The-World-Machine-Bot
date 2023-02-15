@@ -138,7 +138,7 @@ class Command(Extension):
         
         embed.description = ''
         
-        await msg.edit(embeds=embed)
+        await msg.delete()
         
         uuid = uuid4()
         
@@ -159,6 +159,7 @@ class Command(Extension):
                 
                 file = File(f'Images/{uuid}.png', description=text)
                 
+                await ctx.channel.send(embeds = embed)
                 await ctx.channel.send(files = file)
             else:
                 

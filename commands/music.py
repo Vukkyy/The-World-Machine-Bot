@@ -469,14 +469,23 @@ class Command(Extension):
             return
         
         await fancy_send(ctx, f'[ Cannot remove {user.username}. ]', ephemeral = True, color = 0xff0d13)
+        
+    async def get_artists(self, artists_list):
+        artists = ''
+        
+        if len(artists_list) > 1:        
+            for artist in artists_list:
+                artists = f'{artist["name"]}, {artists}'
+        else:
+            return artists_list[0]['name']
+        
+        return artists
     
     @music.subcommand(description='Plays a music track from Spotify.')
     @option(description = 'A song to search for.', autocomplete = True)
     async def play(self, ctx : CommandContext, search : str):
         
         await ctx.defer()
-        
-        print(search)
         
         # Getting user's voice state
         voice_state: VoiceState = ctx.author.voice_state
@@ -549,7 +558,8 @@ class Command(Extension):
                 
                 try:
                     song = await self.load_spotify_result(song)
-                    search_ = f'{song["name"]} by {song["artists"]}'
+                    artists = await self.get_artists(song['artists'])
+                    search_ = f'{song["name"]} by {artists} Lyrics OST'
                 
                     # Getting user's voice state
                     voice_state: VoiceState = ctx.author.voice_state
@@ -573,7 +583,7 @@ class Command(Extension):
                         break
             
                     track.title = song["name"]
-                    track.author = song["artists"]
+                    track.author = song["artists"][0]['name']
                     track.identifier = song["url"]
                     track.source_name = song['cover']
             
@@ -599,7 +609,9 @@ class Command(Extension):
             await fancy_send(ctx, f'[ No results for **{search}**. ]', ephemeral = True, color = 0xff0d13)
             return
         
-        search = f'{song["name"]} by {song["artists"]} "Lyrics" "OST"'
+        artists = await self.get_artists(song['artists'])
+        
+        search = f'{song["name"]} by {artists} Lyrics OST'
  
         # Selecting first founded track
          # Getting tracks from youtube
@@ -609,16 +621,13 @@ class Command(Extension):
         
         for track_ in tracks[0 : 30]:
             if 'extended' in track_.title.lower(): # Prevents extended tracks from playing, unless it's a specified URL.
-                print('sad')
                 continue
             
             track = track_
             break
         
-        print(track.title)
-        
         track.title = song["name"]
-        track.author = song["artists"]
+        track.author = song["artists"][0]['name']
         track.identifier = song["url"]
         track.source_name = song['cover']
         
@@ -632,10 +641,13 @@ class Command(Extension):
         if player.is_playing and not player.fetch(f'nothing_playing {player.guild_id}'):
             
             add_to_queue_embed = Embed(
-                title="Added to Queue",
-                description=f'[ Added **{song["name"]}** by **{song["artists"]}** to the music queue. ]',
+                title =song["name"],
+                url=song['url'],
+                description=f'by **{song["artists"][0]["name"]}** <:spotify:1066028282623037541>\n[ *Current Position in queue:* **{len(player.queue)}** ]',
                 color=0x1fef2f
             )
+            
+            add_to_queue_embed.set_author(name="Added to Queue",)
             
             add_to_queue_embed.set_thumbnail(song['cover'])
             add_to_queue_embed.set_footer(text='Requested by: ' + ctx.author.user.username, icon_url=ctx.author.user.avatar_url)
@@ -927,7 +939,7 @@ class Command(Extension):
                 
             can_control = await self.check(player.current.requester, ctx.author, True)
             
-            music_playing_embed = self.get_music_playing_embed(text, song['name'], song['artists'], song['cover'], song['url'], song_time= player.position, song_dur= player.current.duration, author= requester, allowed_control=can_control)
+            music_playing_embed = self.get_music_playing_embed(text, song['name'], song['artists'][0]['name'], song['cover'], song['url'], song_time= player.position, song_dur= player.current.duration, author= requester, allowed_control=can_control)
             await msg.edit(niko, embeds = music_playing_embed, components = self.buttons)
             
             await asyncio.sleep(1)
