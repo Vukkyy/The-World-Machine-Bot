@@ -5,8 +5,9 @@ import random
 class Command(Extension):
     
     @extension_command(description = 'Roll a dice.')
-    @option(description='What sided dice to roll.')
-    async def roll(self, ctx : CommandContext, sides : int):
+    @option(description='What sided dice to roll.', min_value = 1, max_value = 9999)
+    @option(description='How many to roll.', min_value = 1, max_value = 10)
+    async def roll(self, ctx : CommandContext, sides : int, amount : int = 1):
         
         dice = random.randint(1, sides)
         
@@ -16,11 +17,34 @@ class Command(Extension):
         
         color = (0, g_val, 0)
         color = '0x%02x%02x%02x' % color
-            
-        embed = Embed(title = f'Rolling d{sides}...', description = f'[ Rolled a **{dice}** ]', color=eval(color))
-        embed.set_thumbnail('https://cdn.discordapp.com/emojis/1026181557230256128.png?size=96&quality=lossless')
         
-        print(dice)
+        if amount == 1:
+            description = f'[ Rolled a **{dice}**. ]'
+        else:    
+            text = ''
+            previous_total = 0
+            total = 0
+            
+            for num in range(amount):
+                    
+                dice = random.randint(1, sides)
+                
+                if num == 0:
+                    text = f'**{dice}**'
+                    
+                    previous_total = dice
+                    continue
+                
+                text = f'{text}, **{dice}**'
+                
+                total = previous_total + dice
+                
+                previous_total = total
+                    
+            description = f'[ Rolled a {text}, totaling at **{total}**. ]'
+            
+        embed = Embed(title = f'Rolling d{sides}...', description = description, color=eval(color))
+        embed.set_thumbnail('https://cdn.discordapp.com/emojis/1026181557230256128.png?size=96&quality=lossless')
         
         await ctx.send(embeds=embed)
     
