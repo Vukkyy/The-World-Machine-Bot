@@ -33,7 +33,9 @@ class Command(Extension):
                 default_data = default_data
             )
         
-    current_limit = 7
+    current_limit = 15
+    
+    limit_message = "[ Daily limit reached. Please try asking questions tomorrow. ]"
     
     @extension_command(description = 'Ask The World Machine a question.')
     @option(description='The question to ask.')
@@ -49,7 +51,7 @@ class Command(Extension):
         reset_time = reset_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
         if (last_reset_time is not None and last_reset_time > reset_time):
-            return await fancy_send(ctx, "[ Daily limit reached. Please try again tomorrow. ]", ephemeral = True, color = 0xff171d)
+            return await fancy_send(ctx, self.limit_message, ephemeral = True, color = 0xff171d)
 
         # reset the limit if it is a new day
         if not last_reset_time or last_reset_time < reset_time:
@@ -58,13 +60,13 @@ class Command(Extension):
             limit = db.get("daily_limit_count", self.current_limit)
             if limit <= 0:
                 await Database.set_item(uid=ctx, database='daily_limit', data={"daily_limit_hit": True})
-                return await fancy_send(ctx, "[ Daily limit reached. Please try again tomorrow. ]", ephemeral = True, color = 0xff171d)
+                return await fancy_send(ctx, self.limit_message, ephemeral = True, color = 0xff171d)
             else:
                 await Database.set_item(uid=ctx, database='daily_limit', data={"daily_limit_count": limit - 1})
         
         limit = db.get("daily_limit_count", self.current_limit)
-        
-        c = question[len(question) - 1]
+
+        question = question.strip('?')
         
         q = question + '?'
         
@@ -130,7 +132,7 @@ class Command(Extension):
 
         await msg.edit(embeds=embed)
         
-        await fancy_send(ctx, f'[ You have {limit - 1} use(s) of this command left for today. ]', ephemeral = True)
+        await fancy_send(ctx, f'[ You have {limit - 1} question(s) left to ask for today. ]', ephemeral = True)
         
     @ask.error
     async def you_fucked_up_gpt_three(self, ctx : CommandContext, error):

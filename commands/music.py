@@ -15,6 +15,8 @@ import random
 
 from bot_data.embed_gen import fancy_send
 
+import aiofiles
+
 credentials = SpotifyClientCredentials(
     client_id=load_config('CLIENTID'),
     client_secret=load_config('CLIENT-SECRET')
@@ -41,7 +43,7 @@ class Command(Extension):
             
             i += 1
         
-        description = f'**{song_title}** by **{song_artist}** <:Sun:1026207773559619644>\n\n**Next Up...**\n{queue_list}'
+        description = f'**{song_title}** from **{song_artist}** <:Sun:1026207773559619644>\n\n**Next Up...**\n{queue_list}'
         
         queue_embed = Embed(title='**Currently Playing:**', description = description, color = 0x8b00cc)
         
@@ -274,14 +276,9 @@ class Command(Extension):
         await fancy_send(s_ctx, '[ Successfully removed song. ]', ephemeral = True)
         await fancy_send(s_ctx.channel, f'[ <@{int(ctx.author.id)}> removed **{song.title}** from the queue. ]', channel = True)  
     
-    def get_music_stopped_embed(self, song_title : str, song_artist : str, song_cover : str, song_url : str):
-        description = f'By **{song_artist}** <:spotify:1066028282623037541>'
+    def get_music_stopped_embed(self):
         
-        embed = Embed(title = song_title, description=description, url=song_url, color=0x40444b)
-
-        embed.set_author(name='Stopped Playing...')
-            
-        embed.set_thumbnail(song_cover)
+        embed = Embed(description= '[ Track stopped or player moved. ]', color=0x40444b)
         
         return embed
     
@@ -327,7 +324,7 @@ class Command(Extension):
         current = lavalink.format_time(song_time)
         total = lavalink.format_time(song_dur)
             
-        description = f'By **{song_artist}** <:spotify:1066028282623037541>\n\n{progress_bar}\n{current} <:Sun:1026207773559619644> {total}'
+        description = f'From **{song_artist}**\n\n{progress_bar}\n{current} <:Sun:1026207773559619644> {total}'
         
         embed = Embed(title = song_title, description=description, url=song_url, color=0x8b00cc)
         
@@ -480,6 +477,60 @@ class Command(Extension):
             return artists_list[0]['name']
         
         return artists
+    
+    @music.subcommand(description='Play an audio file.')
+    @option(description='The Audio file.')
+    async def play_file(self, ctx : CommandContext, file : Attachment):
+        
+        await ctx.defer()
+        
+        voice_state: VoiceState = ctx.author.voice_state
+        if not voice_state or not voice_state.joined:
+            return await fancy_send(ctx, "[ You're not connected to a voice channel. Try rejoining. ]", ephemeral = True, color = 0xff0d13)
+        
+        player = await self.lavalink.connect(voice_state.guild_id, voice_state.channel_id)
+            
+        track = await player.get_tracks(file.url)
+        
+        if len(track) == 0:
+            return await fancy_send(ctx, '[ This is not a supported audio or video file. ]', color=0xff2025)
+        
+        track : lavalink.AudioTrack = track[0]
+        
+        if len(file.filename) > 50:
+            file.filename = file.filename[0 : 50] + '...'
+        
+        track.title = file.filename
+        track.author = 'Uploaded File'
+        track.identifier = file.url
+        track.source_name = 'https://cdn.discordapp.com/attachments/1028022857877422120/1076351909138550945/disk.png'
+        
+        player.add(track, requester=int(ctx.author.id))
+            
+        if player.is_playing and not player.fetch(f'nothing_playing {player.guild_id}'):
+            
+            add_to_queue_embed = Embed(
+                title =track.title,
+                url=track.identifier,
+                description=f'Added though local file. \n[ *Current Position in queue:* **{len(player.queue)}** ]',
+                color=0x1fef2f
+            )
+            
+            add_to_queue_embed.set_author(name="Added to Queue",)
+            
+            add_to_queue_embed.set_thumbnail(track.source_name)
+            add_to_queue_embed.set_footer(text='Requested by: ' + ctx.author.user.username, icon_url=ctx.author.user.avatar_url)
+            
+            return await ctx.send(embeds = add_to_queue_embed)
+
+        msg = await fancy_send(ctx, '[ Loading Player... <a:loading:1026539890382483576> ]')
+
+        await msg.delete()
+        
+        player.store(f'playing {player.guild_id}', ctx)
+        
+        # Starting playing track
+        await player.play()
     
     @music.subcommand(description='Plays a music track from Spotify.')
     @option(description = 'A song to search for.', autocomplete = True)
@@ -643,7 +694,7 @@ class Command(Extension):
             add_to_queue_embed = Embed(
                 title =song["name"],
                 url=song['url'],
-                description=f'by **{song["artists"][0]["name"]}** <:spotify:1066028282623037541>\n[ *Current Position in queue:* **{len(player.queue)}** ]',
+                description=f'From **{song["artists"][0]["name"]}** <:spotify:1066028282623037541>\n[ *Current Position in queue:* **{len(player.queue)}** ]',
                 color=0x1fef2f
             )
             
@@ -654,7 +705,7 @@ class Command(Extension):
             
             return await ctx.send(embeds = add_to_queue_embed)
 
-        msg = await fancy_send(ctx, '[ Loading Player... <a:loading:1026539890382483576> ]', ephemeral = True)
+        msg = await fancy_send(ctx, '[ Loading Player... <a:loading:1026539890382483576> ]')
 
         await msg.delete()
         
@@ -859,6 +910,9 @@ class Command(Extension):
     @extension_listener()
     async def on_track_start(self, event: lavalink.TrackStartEvent):
         """Fires when track starts"""
+        
+        print(event.player)
+        
         await self.on_player(event)
         
     @music.subcommand(description='Disconnects the bot from the Voice Channel.')
@@ -918,7 +972,12 @@ class Command(Extension):
             
             await player.skip()
         
-        song = await self.load_spotify_result(f'{player.current.identifier}')
+        song = {
+            'name' : player.current.title,
+            'artists' : player.current.author,
+            'cover' : player.current.source_name,
+            'url' : player.current.identifier
+        }
         
         msg = await ctx.channel.send('<a:vibe:1027325436360929300>')
         
@@ -939,12 +998,12 @@ class Command(Extension):
                 
             can_control = await self.check(player.current.requester, ctx.author, True)
             
-            music_playing_embed = self.get_music_playing_embed(text, song['name'], song['artists'][0]['name'], song['cover'], song['url'], song_time= player.position, song_dur= player.current.duration, author= requester, allowed_control=can_control)
+            music_playing_embed = self.get_music_playing_embed(text, song['name'], song['artists'], song['cover'], song['url'], song_time= player.position, song_dur= player.current.duration, author= requester, allowed_control=can_control)
             await msg.edit(niko, embeds = music_playing_embed, components = self.buttons)
             
             await asyncio.sleep(1)
             
-        stopped_playing_embed = self.get_music_stopped_embed(song['name'], song['artists'][0]['name'], song['cover'], song['url'])
+        stopped_playing_embed = self.get_music_stopped_embed()
         niko = '<:nikosleepy:1027492467337080872>'
 
         msg = await msg.edit(niko, embeds = stopped_playing_embed, components=[])
