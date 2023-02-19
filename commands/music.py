@@ -25,7 +25,7 @@ credentials = SpotifyClientCredentials(
 spotify = Spotify(client_credentials_manager=credentials)
 
 class Command(Extension):
-    
+
     def get_music_queue(self,page,  queue : list[lavalink.AudioTrack], server : Guild, song_title : str, song_artist : str, song_cover : str):
         
         queue_list = ''
@@ -560,7 +560,7 @@ class Command(Extension):
                 Button(style = ButtonStyle.DANGER, label = 'Cancel', custom_id='cancel_this')
             ]
             
-            youtube_embed = Embed(description=f'[ Detected a Youtube link. Found **{song["name"]}** by **{song["artists"]}** on Spotify. Is this correct? ]', color=0xff1515)
+            youtube_embed = Embed(description=f'[ Detected a Youtube link. Found **{song["name"]}** by **{song["artists"][0]["name"]}** on Spotify. Is this correct? ]', color=0xff1515)
             
             youtube_message = await ctx.send(embeds = youtube_embed, ephemeral = True, components = button)
             
