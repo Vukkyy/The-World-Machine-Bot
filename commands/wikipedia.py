@@ -15,7 +15,7 @@ class Command(Extension):
         
         await ctx.send(embeds=embed)
     
-    @extension_command(description = 'A random wikipedia article.')
+    @extension_command(description = 'bogus')
     async def amogus(self, ctx : CommandContext):
         await ctx.send('https://media.discordapp.net/attachments/868336598067056690/958829667513667584/1c708022-7898-4121-9968-0f0d24b8f986-1.gif')
 def setup(client):
