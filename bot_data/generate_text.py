@@ -57,9 +57,12 @@ async def GenerateBattle(gender1, name1, weapon1, personality1, gender2, name2, 
 
 def Response(final_prompt : str):  
     # create a completion
-    completion = openai.Completion.create(engine="text-davinci-003", prompt=final_prompt, max_tokens = 1024)
+    completion = openai.ChatCompletion.create(
+                     model="gpt-3.5-turbo", 
+                     messages=[{"role": "user", "content": final_prompt}]
+                   )
 
-    text = completion.choices[0].text
+    text = completion['choices'][0]['message']['content']
     
     # print the completion
     return text
