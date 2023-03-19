@@ -51,7 +51,7 @@ class Command(Extension):
         reset_time = reset_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
         if (last_reset_time is not None and last_reset_time > reset_time):
-            return await fancy_send(ctx, self.limit_message, ephemeral = True, color = 0xff171d, channel = True)
+            return await fancy_send(ctx, self.limit_message, ephemeral = True, color = 0xff171d, message = True)
 
         # reset the limit if it is a new day
         if not last_reset_time or last_reset_time < reset_time:
@@ -60,7 +60,7 @@ class Command(Extension):
             limit = db.get("daily_limit_count", self.current_limit)
             if limit <= 0:
                 await Database.set_item(uid=ctx, database='daily_limit', data={"daily_limit_hit": True})
-                return await fancy_send(ctx, self.limit_message, ephemeral = True, color = 0xff171d)
+                return await fancy_send(ctx, self.limit_message, ephemeral = True, color = 0xff171d, message = True)
             else:
                 await Database.set_item(uid=ctx, database='daily_limit', data={"daily_limit_count": limit - 1})
         
@@ -72,11 +72,6 @@ class Command(Extension):
         
         embed = Embed(color=0x7d00b8)
         
-        if len(question) > 230:
-            question_ = question[0 : 230] + '...'
-        else:
-            question_ = question
-        
         # * first stage...
         embed.description = '[ Generating my thoughts... <a:loading:1026539890382483576> ]'
         embed.set_footer(text=f'[ You have {limit - 1} question(s) left to ask for today. ]')
@@ -86,6 +81,8 @@ class Command(Extension):
         result_ : str = await generate_text.GenerateText(q, ctx.author.username, 'gay gay homosexual gay')
         result_ = result_.strip()
         result_ = result_.strip('"')
+        
+        print(result_)
         
         # * second stage...
         embed.description = '[ Thinking... <a:loading:1026539890382483576> ]'
