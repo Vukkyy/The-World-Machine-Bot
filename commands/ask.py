@@ -36,12 +36,12 @@ class Command(Extension):
     current_limit = 15
     
     limit_message = "[ Daily limit reached. Please try asking questions tomorrow. ]"
-    
-    @extension_command(description = 'Ask The World Machine a question.')
-    @option(description='The question to ask.')
+
     async def ask(self, ctx : CommandContext, question : str):
         
         limit = 0
+        
+        question = question.replace('<@1015629604536463421>', 'The World Machine')
         
         db = await Database.get_item(uid = ctx, database = 'daily_limit')
         last_reset_time = datetime.strptime(db.get("last_reset_time"), '%Y-%m-%d %H:%M:%S')
@@ -51,7 +51,7 @@ class Command(Extension):
         reset_time = reset_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
         if (last_reset_time is not None and last_reset_time > reset_time):
-            return await fancy_send(ctx, self.limit_message, ephemeral = True, color = 0xff171d)
+            return await fancy_send(ctx, self.limit_message, ephemeral = True, color = 0xff171d, channel = True)
 
         # reset the limit if it is a new day
         if not last_reset_time or last_reset_time < reset_time:
@@ -77,16 +77,13 @@ class Command(Extension):
         else:
             question_ = question
         
-        embed.set_author(
-            name = f'{ctx.author.user.username} asked: "{question_}"'
-        )
-        
         # * first stage...
         embed.description = '[ Generating my thoughts... <a:loading:1026539890382483576> ]'
+        embed.set_footer(text=f'[ You have {limit - 1} question(s) left to ask for today. ]')
         
-        msg = await ctx.send(embeds = embed)
+        msg = await ctx.reply(embeds = embed)
         
-        result_ : str = await generate_text.GenerateText(q, ctx.author.user.username, 'gay gay homosexual gay')
+        result_ : str = await generate_text.GenerateText(q, ctx.author.username, 'gay gay homosexual gay')
         result_ = result_.strip()
         result_ = result_.strip('"')
         
@@ -131,15 +128,6 @@ class Command(Extension):
         embed.set_thumbnail(url=twm)
 
         await msg.edit(embeds=embed)
-        
-        await fancy_send(ctx, f'[ You have {limit - 1} question(s) left to ask for today. ]', ephemeral = True)
-        
-    @ask.error
-    async def you_fucked_up_gpt_three(self, ctx : CommandContext, error):
-        
-        embed = await on_error(error)
-        
-        await ctx.send(embeds= embed)
         
 def setup(client):
     Command(client)

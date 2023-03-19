@@ -2,6 +2,7 @@ from interactions import *
 import bot_data.command_manager as command_manager
 import bot_data.load_data as load_data
 import Badges.stamp_system as stamps
+import commands.ask as ask
 
 TOKEN = load_data.load_config('token')
 
@@ -32,5 +33,9 @@ async def on_message_create(message : Message):
     
     if not message.author.bot:
         await stamps.IncrementValue(message, 'times_messaged', int(message.author.id))
+        
+        if '<@1015629604536463421>' in message.content:
+            
+            await ask.Command.ask(ask.Command, ctx = message, question = message.content)
     
 client.start()
