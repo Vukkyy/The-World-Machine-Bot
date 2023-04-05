@@ -212,6 +212,41 @@
                     "id" : 1071085762843512983
                 }
             ]
+        },
+        {
+            "name": "Ling",
+            "faces":
+            [
+                {
+                    "face_name" : "Normal",
+                    "id" : 1090982149659836466
+                },
+
+                {
+                    "face_name" : "Looking Left",
+                    "id" : 1090982147201978400
+                },
+
+                {
+                    "face_name" : "Looking Right",
+                    "id" : 1090982151064911945
+                },
+
+                {
+                    "face_name" : "Sighing",
+                    "id" : 1090982154642653265
+                },
+
+                {
+                    "face_name" : "Shocked",
+                    "id" : 1090982152168030330
+                },
+
+                {
+                    "face_name" : "Smiling",
+                    "id" : 1090982155863199784
+                }
+            ]
         }
     ]
 }
