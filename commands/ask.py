@@ -82,8 +82,6 @@ class Command(Extension):
         result_ = result_.strip()
         result_ = result_.strip('"')
         
-        print(result_)
-        
         # * second stage...
         embed.description = '[ Thinking... <a:loading:1026539890382483576> ]'
         

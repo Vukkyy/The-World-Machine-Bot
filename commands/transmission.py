@@ -219,7 +219,7 @@ class Command(Extension):
                 
                 time = humanfriendly.format_timespan(disconnect_timer)
                 
-                embed.set_footer(text=f'[Transmission will end in {time}.')
+                embed.set_footer(text=f'Transmission will end in {time}.')
                 
                 await msg.edit(embeds=embed, components=disconnect)
                 

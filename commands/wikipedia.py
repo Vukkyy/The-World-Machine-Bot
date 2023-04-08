@@ -9,7 +9,15 @@ class Command(Extension):
     
     @extension_command(description = 'A random wikipedia article.')
     async def random_wikipedia(self, ctx : CommandContext):
-        await fancy_send(ctx, '[ [Here](https://en.wikipedia.org/wiki/Special:Random) is your random wikipedia article. ]')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f'https://en.wikipedia.org/api/rest_v1/page/random/summary') as resp:
+                if resp.status == 200:
+                    
+                    get_search = await resp.json()
+                    
+                    result = get_search['content_urls']['desktop']['page']
+                    
+                    await fancy_send(ctx, f'[ [Here]({result}) is your random wikipedia article. ]')
     
     @extension_command(description = 'Search Wikipedia.')
     @option(description='Search for a wikipedia article.', autocomplete=True)
